@@ -62,7 +62,7 @@ const CartDrawer = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-body text-sm font-medium truncate">{item.product.name}</h3>
-                        <p className="font-body text-sm text-accent mt-1">{formatPrice(item.product.price)}</p>
+                        <p className="font-body text-sm text-accent mt-1">{formatPrice(item.product.discount_price || item.product.price)}</p>
                         <div className="flex items-center gap-3 mt-2">
                           <button
                             onClick={() => updateQuantity(item.product.id, item.quantity - 1)}

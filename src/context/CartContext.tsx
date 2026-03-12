@@ -1,14 +1,29 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-import { Product } from "@/data/products";
+
+export interface CartProduct {
+  id: string;          // product ID (string to support both static & API ids)
+  name: string;
+  price: number;
+  discount_price?: number | null;
+  image: string;
+  fabric?: string;
+  color?: string;
+  sku?: string;
+  stock_qty?: number;
+  status?: string;
+  category?: string;
+  // Keep legacy fields for static data compat
+  [key: string]: unknown;
+}
 
 interface CartItem {
-  product: Product;
+  product: CartProduct;
   quantity: number;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: CartProduct) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -24,23 +39,24 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: CartProduct) => {
+    const id = String(product.id);
     setItems((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
+      const existing = prev.find((item) => String(item.product.id) === id);
       if (existing) {
         return prev.map((item) =>
-          item.product.id === product.id
+          String(item.product.id) === id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product: { ...product, id }, quantity: 1 }];
     });
     setIsCartOpen(true);
   };
 
   const removeFromCart = (productId: string) => {
-    setItems((prev) => prev.filter((item) => item.product.id !== productId));
+    setItems((prev) => prev.filter((item) => String(item.product.id) !== productId));
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -50,7 +66,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
     setItems((prev) =>
       prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
+        String(item.product.id) === productId ? { ...item, quantity } : item
       )
     );
   };
@@ -59,7 +75,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + (item.product.discount_price || item.product.price) * item.quantity,
     0
   );
 

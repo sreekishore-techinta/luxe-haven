@@ -25,8 +25,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <h3 className="font-display text-2xl font-semibold mb-4">
-              LUXE<span className="text-gold">DRAPE</span>
+            <h3 className="font-display text-2xl lg:text-3xl font-medium mb-4 italic">
+              Lishan <span className="text-gold not-italic font-semibold">Sarees</span>
             </h3>
             <p className="font-body text-xs text-gold-light/60 leading-relaxed mb-6 max-w-sm">
               Curating the finest handcrafted silk sarees and ethnic wear since 2020.
@@ -83,8 +83,8 @@ const Footer = () => {
         <div className="mt-14 pt-10 border-t border-gold/10">
           <div className="grid lg:grid-cols-2 gap-6 items-center">
             <div>
-              <h4 className="font-display text-lg text-champagne mb-1">Join the LuxeDrape World</h4>
-              <p className="font-body text-xs text-champagne/50">Subscribe for exclusive offers and new arrivals.</p>
+              <h4 className="font-display text-lg text-champagne mb-1 italic">Join the Lishan <span className="not-italic font-semibold text-gold">Sarees</span> World</h4>
+              <p className="font-body text-xs text-champagne/50">Subscribe for exclusive offers and new arrivals from our master artisans.</p>
             </div>
             <div className="flex max-w-md lg:ml-auto">
               <input
@@ -102,7 +102,7 @@ const Footer = () => {
         {/* Bottom */}
         <div className="mt-10 pt-6 border-t border-gold/10 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="font-body text-[11px] text-champagne/40">
-            © 2026 LuxeDrape. All rights reserved.
+            © 2026 Lishan Sarees. All rights reserved.
           </p>
           <div className="flex gap-6">
             {["Privacy Policy", "Terms of Service", "Cookie Policy"].map((item) => (

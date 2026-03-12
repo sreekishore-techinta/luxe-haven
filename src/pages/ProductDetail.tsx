@@ -1,17 +1,63 @@
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShoppingBag, Heart, Truck, RotateCcw, Shield, ChevronRight, Minus, Plus, Share2, ArrowRight } from "lucide-react";
 import { products } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import ProductCard from "@/components/ProductCard";
 
+const API = "http://localhost:8000";
+
 const ProductDetail = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex] = useState(0);
-  const product = products.find((p) => p.id === id);
+  const [product, setProduct] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Try finding in static first
+    const staticProduct = products.find((p) => p.id === id);
+    if (staticProduct) {
+      setProduct(staticProduct);
+      setLoading(false);
+    } else {
+      // Fetch from API
+      fetch(`${API}/products/product.php?id=${id}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json.status === 'success') {
+            const p = json.data;
+            setProduct({
+              id: String(p.id),
+              name: p.name,
+              price: parseFloat(p.price),
+              discount_price: p.discount_price ? parseFloat(p.discount_price) : undefined,
+              image: p.images?.[0]?.image_path ? `${API}/${p.images[0].image_path}` : "",
+              category: p.category,
+              description: p.description,
+              fabric: p.fabric,
+              color: p.color || "",
+              isNew: p.is_new === 1,
+              isBestSeller: p.is_bestseller === 1,
+              inStock: p.status !== "Out of Stock" && (parseInt(p.stock_qty) > 0),
+              stock_qty: parseInt(p.stock_qty),
+              status: p.status,
+              images: p.images?.map((img: any) => `${API}/${img.image_path}`) || []
+            });
+          }
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [id]);
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+      <div className="w-12 h-12 border-2 border-[#0D3B2E]/10 border-t-[#B48C5E] rounded-full animate-spin" />
+      <p className="font-display text-lg italic text-[#0D3B2E]/60">Revealing masterpiece...</p>
+    </div>
+  );
 
   if (!product) {
     return (
@@ -27,13 +73,18 @@ const ProductDetail = () => {
 
   const related = products.filter((p) => p.id !== product.id).slice(0, 4);
 
-  const discount = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const originalPrice = product.originalPrice ?? product.discount_price;
+  const discount = originalPrice
+    ? Math.round(((originalPrice - product.price) / originalPrice) * 100)
     : 0;
 
   const handleAddToCart = () => {
+    const cartProd = {
+      ...product,
+      image: product.image || product.images?.[0] || ""
+    };
     for (let i = 0; i < quantity; i++) {
-      addToCart(product);
+      addToCart(cartProd);
     }
   };
 
@@ -98,8 +149,18 @@ const ProductDetail = () => {
 
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-6 pb-6 border-b border-border">
-              <span className="font-display text-2xl lg:text-3xl font-semibold">{formatPrice(product.price)}</span>
-              {product.originalPrice && (
+              <span className="font-display text-2xl lg:text-3xl font-semibold">{formatPrice(product.discount_price || product.price)}</span>
+              {originalPrice && (
+                <>
+                  <span className="font-body text-base text-muted-foreground line-through">
+                    {formatPrice(product.price)}
+                  </span>
+                  <span className="font-body text-xs px-3 py-1 bg-burgundy text-champagne uppercase tracking-wider">
+                    Save {discount}%
+                  </span>
+                </>
+              )}
+              {product.originalPrice && !product.discount_price && (
                 <>
                   <span className="font-body text-base text-muted-foreground line-through">
                     {formatPrice(product.originalPrice)}

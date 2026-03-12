@@ -54,7 +54,7 @@ const About = () => {
                 <span className="italic font-light">One Thread at a Time</span>
               </h2>
               <p className="font-body text-sm text-muted-foreground leading-relaxed mb-4">
-                Founded in 2020, LuxeDrape was born from a simple yet profound idea: to make India's finest handloom textiles accessible to the modern woman. We believe that a saree is more than fabric — it's a canvas of cultural expression, a testament to centuries of artistic mastery.
+                Founded in 2020, Lishan Sarees was born from a simple yet profound idea: to make India's finest handloom textiles accessible to the modern woman. We believe that a saree is more than fabric — it's a canvas of cultural expression, a testament to centuries of artistic mastery.
               </p>
               <p className="font-body text-sm text-muted-foreground leading-relaxed mb-8">
                 We travel across India — from the silk-weaving clusters of Varanasi and Kanchipuram to the Patola looms of Gujarat — to handpick pieces that exemplify the highest standards of craftsmanship.

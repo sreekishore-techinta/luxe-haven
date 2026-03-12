@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -63,11 +63,26 @@
     @apply border-border;
   }
 
+  html,
   body {
     @apply bg-background text-foreground font-body antialiased;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  #root {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display;
   }
 }
@@ -136,5 +151,73 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+.navbar {
+  position: relative;
+}
+
+.categories-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #ffffff;
+  padding: 35px 0;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  border-radius: 0 0 16px 16px;
+  z-index: 999;
+}
+
+.mega-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+
+.category-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+}
+
+.category-description {
+  font-size: 13px;
+  color: #888;
+}
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category-item:hover .category-title {
+  color: #c9a45c;
+  transition: all 0.2s ease;
+}
+
+.mega-footer {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #c9a45c;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1024px) {
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

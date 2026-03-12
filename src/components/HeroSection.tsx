@@ -1,43 +1,48 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import heroImage from "@/assets/hero-1.jpg";
-import heroImage2 from "@/assets/hero-2.jpg";
 import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
   return (
-    <section className="relative">
-      {/* Main Hero */}
-      <div className="relative h-[90vh] lg:h-[95vh] overflow-hidden">
+    <section className="relative w-full">
+      {/* Main Hero Wrapper */}
+      <div className="relative w-full h-[90dvh] lg:h-[calc(100dvh-113px)] overflow-hidden">
+        {/* Background Image Container */}
         <div className="absolute inset-0">
           <img
             src={heroImage}
             alt="Luxury silk saree collection"
-            className="w-full h-full object-cover scale-105 animate-[scale-down_20s_ease-out_forwards]"
+            className="w-full h-full object-cover object-top lg:object-[70%_0%] scale-100 lg:scale-105"
+            loading="eager"
+            fetchPriority="high"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 via-foreground/50 to-foreground/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent" />
+          {/* Gradients for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60 lg:bg-gradient-to-r lg:from-foreground/90 lg:via-foreground/40 lg:to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent lg:hidden" />
         </div>
 
-        <div className="relative h-full container mx-auto px-4 lg:px-8 flex items-end pb-20 lg:pb-28">
-          <div className="max-w-2xl">
+        {/* Hero Content Container */}
+        <div className="relative h-full container mx-auto px-4 lg:px-8 flex flex-col justify-center pt-[35vh] lg:pt-0 lg:justify-end pb-12 lg:pb-28">
+          <div className="max-w-2xl text-center lg:text-left">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.3 }}
-              className="flex items-center gap-3 mb-6"
+              className="flex items-center justify-center lg:justify-start gap-3 mb-4 lg:mb-6"
             >
-              <div className="w-12 h-px bg-gold" />
-              <span className="font-body text-[11px] tracking-[0.5em] uppercase text-gold-light">
+              <div className="w-8 lg:w-12 h-px bg-gold" />
+              <span className="font-body text-[10px] lg:text-[11px] tracking-[0.4em] lg:tracking-[0.5em] uppercase text-gold-light">
                 New Collection 2026
               </span>
+              <div className="w-8 lg:hidden h-px bg-gold" />
             </motion.div>
 
             <motion.h2
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.5 }}
-              className="font-display text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-semibold text-champagne leading-[0.95] mb-8"
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="font-display text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-semibold text-white lg:text-champagne leading-[1.1] lg:leading-[0.95] mb-6 lg:mb-8"
             >
               Timeless
               <br />
@@ -47,8 +52,8 @@ const HeroSection = () => {
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="font-body text-sm text-champagne/70 mb-10 max-w-md leading-relaxed"
+              transition={{ duration: 0.6, delay: 0.7 }}
+              className="font-body text-xs lg:text-sm text-white/80 lg:text-champagne/70 mb-8 lg:mb-10 max-w-md mx-auto lg:mx-0 leading-relaxed"
             >
               Discover our curated collection of handcrafted silk sarees,
               where centuries of tradition meet contemporary luxury.
@@ -57,49 +62,22 @@ const HeroSection = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1 }}
-              className="flex flex-wrap gap-4"
+              transition={{ duration: 0.6, delay: 0.9 }}
+              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
             >
-              <Link to="/collections" className="btn-gold group">
+              <Link to="/collections" className="btn-gold group w-full sm:w-auto px-10">
                 Shop Collection
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 to="/new-arrivals"
-                className="inline-flex items-center gap-2 px-8 py-3.5 border border-champagne/30 text-champagne font-body text-sm uppercase tracking-[0.2em] hover:bg-champagne/10 transition-all duration-300"
+                className="inline-flex items-center justify-center gap-2 px-10 py-3.5 border border-white/30 lg:border-champagne/30 text-white lg:text-champagne font-body text-sm uppercase tracking-[0.2em] hover:bg-white/10 transition-all duration-300 w-full sm:w-auto"
               >
                 New Arrivals
               </Link>
             </motion.div>
           </div>
         </div>
-      </div>
-
-      {/* Secondary Split Banner */}
-      <div className="grid md:grid-cols-2">
-        <Link to="/best-sellers" className="group relative h-64 lg:h-80 overflow-hidden">
-          <img src={heroImage2} alt="Best sellers" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-          <div className="absolute inset-0 bg-foreground/50 group-hover:bg-foreground/40 transition-colors duration-500" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <p className="font-body text-[10px] tracking-[0.5em] uppercase text-gold-light mb-2">Trending Now</p>
-            <h3 className="font-display text-2xl lg:text-3xl text-champagne mb-3">Best Sellers</h3>
-            <span className="font-body text-xs tracking-[0.3em] uppercase text-gold-light/80 group-hover:text-gold transition-colors flex items-center gap-1">
-              Explore <ArrowRight size={12} />
-            </span>
-          </div>
-        </Link>
-        <Link to="/collections" className="group relative h-64 lg:h-80 overflow-hidden bg-card">
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8">
-            <p className="font-body text-[10px] tracking-[0.5em] uppercase text-accent mb-2">Handcrafted</p>
-            <h3 className="font-display text-2xl lg:text-3xl text-foreground mb-4">The Art of Silk</h3>
-            <p className="font-body text-xs text-muted-foreground max-w-sm leading-relaxed mb-4">
-              Every piece tells a story of heritage, woven with passion by master artisans across India.
-            </p>
-            <span className="font-body text-xs tracking-[0.3em] uppercase text-accent group-hover:text-gold-dark transition-colors flex items-center gap-1">
-              View All <ArrowRight size={12} />
-            </span>
-          </div>
-        </Link>
       </div>
     </section>
   );
