@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingBag, User, Menu, X, Heart, ChevronDown, ArrowRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { motion, AnimatePresence } from "framer-motion";
 import logoLishan from "@/assets/logo lishan saree.png";
 
@@ -9,8 +10,11 @@ const API = "http://localhost:8000";
 
 const Navbar = () => {
   const { totalItems, setIsCartOpen } = useCart();
+  const { totalWishlisted } = useWishlist();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
+  const [sareeTypes, setSareeTypes] = useState<any[]>([]);
+  const [isSareesOpen, setIsSareesOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [customer, setCustomer] = useState<{ name: string } | null>(null);
 
@@ -30,6 +34,15 @@ const Navbar = () => {
       })
       .catch(err => console.error("Failed to fetch nav categories", err));
 
+    fetch(`${API}/public/saree_types.php`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.status === 'success') {
+          setSareeTypes(json.data);
+        }
+      })
+      .catch(err => console.error("Failed to fetch saree types", err));
+
     // Check session
     fetch(`${API}/auth/customer_check.php`, { credentials: "include" })
       .then(r => r.json())
@@ -37,6 +50,8 @@ const Navbar = () => {
         if (json.loggedIn) setCustomer(json.customer);
       });
   }, []);
+
+  const sareeCategory = categories.find(c => c.id == 1 || c.name.toLowerCase() === 'sarees');
 
   return (
     <>
@@ -63,6 +78,90 @@ const Navbar = () => {
                 </Link>
               ))}
 
+              {/* Sarees Mega Menu Toggle */}
+              <div
+                style={{ position: "relative" }}
+                onMouseEnter={() => setIsSareesOpen(true)}
+                onMouseLeave={() => setIsSareesOpen(false)}
+              >
+                <Link
+                  to="/sarees"
+                  className={`flex items-center gap-1.5 text-[11px] xl:text-[12px] font-bold uppercase tracking-[0.12em] transition-all duration-300 ${isSareesOpen ? "text-[#B48C5E]" : "text-white"
+                    }`}
+                >
+                  Sarees
+                  <ChevronDown size={14} className={`transition-transform duration-300 ${isSareesOpen ? "rotate-180" : ""}`} />
+                </Link>
+
+                <AnimatePresence>
+                  {isSareesOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      style={{
+                        position: "absolute",
+                        top: "calc(100% + 15px)",
+                        left: "0",
+                        zIndex: 999,
+                        background: "#0D3B2E",
+                        borderRadius: "12px",
+                        boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+                        padding: "12px",
+                        width: "320px",
+                        border: "1px solid rgba(180,140,94,0.2)",
+                        maxHeight: "400px",
+                        overflowY: "auto",
+                      }}
+                    >
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
+                        {sareeTypes.map((sub: any) => (
+                          <Link
+                            key={sub.id}
+                            to={`/sarees/${sub.slug}`}
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "flex-start",
+                              gap: "4px",
+                              padding: "14px 16px",
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(180,140,94,0.15)",
+                              borderRadius: "10px",
+                              textDecoration: "none",
+                              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                              cursor: "pointer",
+                              minHeight: "70px",
+                              justifyContent: "center"
+                            }}
+                            onMouseEnter={e => {
+                              const el = e.currentTarget;
+                              el.style.background = "rgba(180,140,94,0.15)";
+                              el.style.borderColor = "#B48C5E";
+                              el.style.transform = "translateY(-2px)";
+                              el.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
+                            }}
+                            onMouseLeave={e => {
+                              const el = e.currentTarget;
+                              el.style.background = "rgba(255,255,255,0.06)";
+                              el.style.borderColor = "rgba(180,140,94,0.15)";
+                              el.style.transform = "translateY(0)";
+                              el.style.boxShadow = "none";
+                            }}
+                          >
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#B48C5E", display: "block", marginBottom: "4px" }} />
+                            <span style={{ fontWeight: 700, fontSize: "14px", color: "#ffffff", lineHeight: 1.2, textTransform: "capitalize", letterSpacing: "0.5px" }}>
+                              {sub.name}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {/* Categories Mega Menu Toggle */}
               <div
                 style={{ position: "relative" }}
@@ -87,114 +186,94 @@ const Navbar = () => {
                       transition={{ duration: 0.2, ease: "easeOut" }}
                       style={{
                         position: "absolute",
-                        top: "calc(100% + 12px)",
+                        top: "calc(100% + 15px)",
                         left: "0",
                         zIndex: 999,
                         background: "#0D3B2E",
-                        borderRadius: "16px",
-                        boxShadow: "0 30px 80px rgba(0,0,0,0.4)",
-                        padding: "24px",
-                        width: "480px",
+                        borderRadius: "12px",
+                        boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+                        padding: "12px",
+                        width: "320px",
                         border: "1px solid rgba(180,140,94,0.2)",
+                        maxHeight: "400px",
+                        overflowY: "auto",
                       }}
                     >
-                      {/* Decorative top accent */}
-                      <div style={{ marginBottom: "24px", borderBottom: "1px solid rgba(180,140,94,0.2)", paddingBottom: "14px", display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ width: "28px", height: "2px", background: "#B48C5E" }} />
-                        <span style={{ fontSize: "10px", color: "#B48C5E", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 600 }}>Shop By Category</span>
-                        <div style={{ width: "28px", height: "2px", background: "#B48C5E" }} />
-                      </div>
-
                       {/* Category cards grid */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
-                        {categories.map((cat) => (
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
+                        {(categories && categories.length > 0 ? categories : [
+                          { id: 1, name: "Blouses", slug: "blouses" },
+                          { id: 2, name: "Sarees", slug: "sarees" },
+                          { id: 3, name: "Suit Sets", slug: "suit-sets" },
+                          { id: 4, name: "New Arrivals", slug: "new-arrivals" }
+                        ]).map((cat) => (
                           <Link
                             key={cat.id}
-                            to={`/collections?category=${encodeURIComponent(cat.name)}`}
+                            to={`/category/${cat.slug}`}
                             style={{
                               display: "flex",
                               flexDirection: "column",
                               alignItems: "flex-start",
-                              gap: "6px",
-                              padding: "14px 14px",
-                              background: "rgba(255,255,255,0.05)",
-                              border: "1px solid rgba(180,140,94,0.25)",
+                              gap: "4px",
+                              padding: "14px 16px",
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(180,140,94,0.15)",
                               borderRadius: "10px",
                               textDecoration: "none",
-                              transition: "all 0.25s ease",
+                              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                               cursor: "pointer",
+                              minHeight: "70px",
+                              justifyContent: "center"
                             }}
                             onMouseEnter={e => {
                               const el = e.currentTarget;
                               el.style.background = "rgba(180,140,94,0.15)";
                               el.style.borderColor = "#B48C5E";
-                              el.style.transform = "translateY(-3px)";
+                              el.style.transform = "translateY(-2px)";
+                              el.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
                             }}
                             onMouseLeave={e => {
                               const el = e.currentTarget;
-                              el.style.background = "rgba(255,255,255,0.05)";
-                              el.style.borderColor = "rgba(180,140,94,0.25)";
+                              el.style.background = "rgba(255,255,255,0.06)";
+                              el.style.borderColor = "rgba(180,140,94,0.15)";
                               el.style.transform = "translateY(0)";
+                              el.style.boxShadow = "none";
                             }}
                           >
                             {/* Gold dot accent */}
-                            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#B48C5E", display: "block", flexShrink: 0 }} />
-                            {/* Category name bold */}
-                            <span style={{ fontWeight: 700, fontSize: "15px", color: "#ffffff", lineHeight: 1.3, textTransform: "capitalize" }}>
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#B48C5E", display: "block", marginBottom: "4px" }} />
+                            {/* Category name */}
+                            <span style={{ fontWeight: 700, fontSize: "14px", color: "#ffffff", lineHeight: 1.2, textTransform: "capitalize", letterSpacing: "0.5px" }}>
                               {cat.name}
                             </span>
-                            {/* Subcategories or tagline */}
-                            {cat.sub_categories?.length > 0 ? (
-                              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
-                                {cat.sub_categories.length} collection{cat.sub_categories.length !== 1 ? "s" : ""}
-                              </span>
-                            ) : (
-                              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>
-                                New arrivals soon
-                              </span>
-                            )}
+                            {/* Tagline */}
+                            <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)", fontStyle: "italic", letterSpacing: "0.2px" }}>
+                              {cat.sub_categories?.length ? `${cat.sub_categories.length} Collections` : "New arrivals soon"}
+                            </span>
                           </Link>
                         ))}
-                      </div>
-
-                      {/* Footer */}
-                      <div style={{ marginTop: "24px", paddingTop: "18px", borderTop: "1px solid rgba(180,140,94,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", letterSpacing: "2.5px", textTransform: "uppercase" }}>
-                          Discover Our Curated Craftsmanship
-                        </p>
-                        <Link
-                          to="/collections"
-                          style={{ fontSize: "11px", fontWeight: 700, color: "#B48C5E", textTransform: "uppercase", letterSpacing: "1.5px", textDecoration: "none", borderBottom: "1px solid rgba(180,140,94,0.4)", paddingBottom: "2px" }}
-                        >
-                          View All Collections
-                        </Link>
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              {/* Dynamic Categories as single links (only first 3 or specific ones if needed) */}
-              {categories.slice(0, 3).map((cat) => (
-                <Link
-                  key={cat.id}
-                  to={`/collections?category=${encodeURIComponent(cat.name)}`}
-                  className="hidden xl:block text-[11px] font-medium uppercase tracking-[0.12em] text-white/70 hover:text-[#B48C5E] transition-all duration-300"
-                >
-                  {cat.name}
-                </Link>
-              ))}
             </nav>
 
             <div className="flex items-center gap-4 lg:gap-8">
               <Link to="/wishlist" className="relative group p-1 hidden sm:block">
                 <Heart size={24} className="text-white/90 group-hover:text-[#B48C5E] transition-colors" />
-                <span className="absolute -top-1 -right-1.5 w-4 h-4 bg-[#B48C5E] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-[#0D3B2E]">0</span>
+                {totalWishlisted > 0 && (
+                  <span className="absolute -top-1 -right-1.5 w-4 h-4 bg-[#B48C5E] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-[#0D3B2E]">
+                    {totalWishlisted}
+                  </span>
+                )}
               </Link>
 
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="relative bg-white/10 p-3 rounded-full hover:bg-[#B48C5E]/20 group transition-all duration-300"
+                aria-label="Open Shopping Bag"
+                className="relative bg-white/10 p-3 rounded-full hover:bg-[#B48C5E]/20 group transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <ShoppingBag size={22} className="text-white/90 group-hover:text-[#B48C5E] transition-colors" />
                 {totalItems > 0 && (
@@ -216,7 +295,8 @@ const Navbar = () => {
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 text-white"
+                aria-label="Toggle Mobile Menu"
+                className="lg:hidden p-2 text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
               </button>
@@ -246,60 +326,96 @@ const Navbar = () => {
                 <Link to="/" onClick={() => setMobileMenuOpen(false)}>
                   <img src={logoLishan} alt="Lishan Sarees" className="h-14 w-auto object-contain" />
                 </Link>
-                <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-gray-400">
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-3 text-gray-400 hover:text-gray-900 transition-colors bg-gray-50 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center"
+                >
                   <X size={24} />
                 </button>
               </div>
 
-              <div className="px-6 py-8 space-y-8">
+              <div className="px-6 py-8 space-y-8 pb-32">
                 <nav className="flex flex-col gap-6">
                   {staticLinks.map((link) => (
                     <Link
                       key={link.name}
                       to={link.path}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="text-xs font-bold tracking-widest uppercase text-gray-900"
+                      className="text-[12px] font-bold tracking-[0.2em] uppercase text-gray-900 hover:text-[#B48C5E] transition-colors py-1"
                     >
                       {link.name}
                     </Link>
                   ))}
 
-                  <div className="space-y-6 pt-4 border-t border-gray-50">
+                  <div className="space-y-6 pt-6 border-t border-gray-100">
+                    <Link
+                      to="/sarees"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-[12px] font-bold uppercase tracking-[0.15em] text-gray-900 flex items-center justify-between"
+                    >
+                      Sarees
+                      <ArrowRight size={14} className="text-[#B48C5E]" />
+                    </Link>
+                    <div className="pl-4 grid grid-cols-1 gap-4">
+                      {sareeTypes.map((sub: any) => (
+                        <Link
+                          key={sub.id}
+                          to={`/sarees/${sub.slug}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="text-[11px] font-medium text-gray-500 uppercase tracking-widest hover:text-[#B48C5E] transition-colors"
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-6 pt-6 border-t border-gray-100">
                     <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#B48C5E]">Shop by Categories</p>
                     {categories.map((cat) => (
                       <div key={cat.id} className="space-y-4">
                         <Link
-                          to={`/collections?category=${encodeURIComponent(cat.name)}`}
+                          to={`/category/${cat.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
-                          className="text-xs font-bold uppercase text-gray-800 flex items-center justify-between"
+                          className="text-[12px] font-bold uppercase tracking-[0.15em] text-gray-900 flex items-center justify-between"
                         >
                           {cat.name}
                           <ArrowRight size={14} className="text-gray-300" />
                         </Link>
-                        <div className="pl-4 flex flex-col gap-3">
-                          {cat.sub_categories?.map((sub: any) => (
-                            <Link
-                              key={sub.id}
-                              to={`/collections?category=${encodeURIComponent(cat.name)}&sub=${encodeURIComponent(sub.name)}`}
-                              onClick={() => setMobileMenuOpen(false)}
-                              className="text-[11px] font-medium text-gray-500 uppercase tracking-widest"
-                            >
-                              {sub.name}
-                            </Link>
-                          ))}
-                        </div>
+                        {cat.sub_categories?.length > 0 && (
+                          <div className="pl-4 grid grid-cols-1 gap-3">
+                            {cat.sub_categories.map((sub: any) => (
+                              <Link
+                                key={sub.id}
+                                to={`/collections?category=${encodeURIComponent(cat.name)}&sub=${encodeURIComponent(sub.name)}`}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-[11px] font-medium text-gray-500 uppercase tracking-widest"
+                              >
+                                {sub.name}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </nav>
 
-                <div className="pt-8 border-t border-gray-100 flex flex-col gap-6">
-                  <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Our Story</Link>
-                  <Link to="/wishlist" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-sm text-gray-600 font-medium">
-                    <Heart size={18} /> My Wishlist
+                <div className="pt-8 border-t border-gray-100 flex flex-col gap-8">
+                  <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-gray-900">Our Story</Link>
+                  <Link to="/wishlist" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between py-2 text-sm text-gray-700 font-medium group min-h-[44px]">
+                    <div className="flex items-center gap-4">
+                      <Heart size={20} className="group-hover:text-[#B48C5E] transition-colors" />
+                      My Wishlist
+                    </div>
+                    {totalWishlisted > 0 && (
+                      <span className="bg-[#B48C5E] text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                        {totalWishlisted}
+                      </span>
+                    )}
                   </Link>
-                  <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-sm text-gray-600 font-medium">
-                    <User size={18} /> My Account
+                  <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 py-2 text-sm text-gray-700 font-medium min-h-[44px]">
+                    <User size={20} /> {customer ? "My Profile" : "Login / Register"}
                   </Link>
                 </div>
               </div>

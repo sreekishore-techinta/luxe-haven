@@ -22,11 +22,11 @@ const trustFeatures = [
 const Index = () => {
   return (
     <>
-      {/* 1. Hero Section - unchanged */}
-      <HeroSection />
-
-      {/* 2. Flash Sale Marquee Strip */}
+      {/* 1. Flash Sale Marquee Strip (Moved above Hero) */}
       <FlashSaleStrip />
+
+      {/* 2. Hero Section */}
+      <HeroSection />
 
 
       {/* 4. Editorial Lookbook Grid */}
@@ -53,10 +53,10 @@ const Index = () => {
       <TestimonialsSection />
 
       {/* 12. Trust Bar (Relocated) */}
-      <section className="py-16 px-4 lg:px-8">
+      <section className="py-12 lg:py-16 px-4 lg:px-8">
         <div className="container mx-auto">
-          <div className="bg-[#FDFBF7] rounded-sm border border-[#F5F1E8] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] py-10 px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0">
+          <div className="bg-[#FDFBF7] rounded-sm border border-[#F5F1E8] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] py-8 lg:py-10 px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0">
               {trustFeatures.map((f, i) => (
                 <div key={f.title} className="relative flex flex-col items-center text-center px-4"
                 >

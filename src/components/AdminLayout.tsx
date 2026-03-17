@@ -2,14 +2,27 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard, Package, ShoppingBag, Users, Settings,
-    Bell, Search, Menu, X, LogOut, Loader2, Database
+    Bell, Search, Menu, X, LogOut, Loader2, Database, Camera, Layers,
+    ChevronsLeft, ChevronsRight, PanelLeftClose, ChevronDown, ChevronRight, List, Tag, Palette, Scissors, Maximize
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const adminLinks = [
     { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
-    { name: "Products", path: "/admin/products", icon: Package },
-    { name: "General Master", path: "/admin/general-master", icon: Database },
+    {
+        name: "General Master",
+        path: "/admin/general-master",
+        icon: Database,
+        subItems: [
+            { name: "Categories", path: "/admin/general-master?type=categories", icon: List },
+            { name: "Saree Styles", path: "/admin/general-master?type=saree_types", icon: Tag },
+            { name: "Colours", path: "/admin/general-master?type=colours", icon: Palette },
+            { name: "Fabric Types", path: "/admin/general-master?type=fabric_types", icon: Scissors },
+            { name: "Sizes", path: "/admin/general-master?type=sizes", icon: Maximize },
+        ]
+    },
+    { name: "Product Master", path: "/admin/products", icon: Package },
+    { name: "Blouse Styles", path: "/admin/blouse-styles", icon: Camera },
     { name: "Orders", path: "/admin/orders", icon: ShoppingBag },
     { name: "Customers", path: "/admin/customers", icon: Users },
     { name: "Settings", path: "/admin/settings", icon: Settings },
@@ -17,12 +30,100 @@ const adminLinks = [
 
 const API = "http://localhost:8000";
 
+const SidebarLink = ({ link, sidebarOpen, onCloseMobile }: { link: any, sidebarOpen: boolean, onCloseMobile?: () => void }) => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [isOpen, setIsOpen] = useState(false);
+
+    const isActive = location.pathname === link.path || (link.path !== "/admin" && location.pathname.startsWith(link.path));
+    const Icon = link.icon;
+    const hasSubItems = link.subItems && link.subItems.length > 0;
+
+    useEffect(() => {
+        if (isActive && hasSubItems) setIsOpen(true);
+    }, [isActive, hasSubItems]);
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (hasSubItems && sidebarOpen) {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+        } else {
+            onCloseMobile?.();
+        }
+    };
+
+    return (
+        <div className="w-full">
+            <Link
+                to={link.path}
+                onClick={handleClick}
+                className={`group flex items-center rounded-xl transition-all duration-200 ${sidebarOpen ? "px-4 py-3 gap-3" : "p-2.5 justify-center"
+                    } ${isActive && !hasSubItems
+                        ? "bg-[#0F172A] text-white shadow-lg shadow-slate-200"
+                        : isActive && hasSubItems
+                            ? "bg-slate-50 text-slate-900"
+                            : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                    }`}>
+                <div className={`p-1.5 rounded-lg ${isActive ? "text-[#D4AF37]" : "group-hover:text-slate-950 text-slate-500"}`}>
+                    <Icon size={20} strokeWidth={isActive ? 3 : 2.5} />
+                </div>
+                {sidebarOpen && (
+                    <>
+                        <span className={`text-sm tracking-tight ${isActive ? "font-black text-slate-950" : "font-black text-slate-700 hover:text-slate-950"}`}>
+                            {link.name}
+                        </span>
+                        {hasSubItems && (
+                            <div className="ml-auto text-slate-500 group-hover:text-slate-950">
+                                {isOpen ? <ChevronDown size={14} strokeWidth={3} /> : <ChevronRight size={14} strokeWidth={3} />}
+                            </div>
+                        )}
+                    </>
+                )}
+                {isActive && sidebarOpen && !hasSubItems && (
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#D4AF37] shrink-0" />
+                )}
+            </Link>
+
+            {/* Sub Items */}
+            <AnimatePresence>
+                {hasSubItems && isOpen && sidebarOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden mt-1 ml-4 space-y-1 border-l border-slate-100"
+                    >
+                        {link.subItems.map((sub: any) => {
+                            const isSubActive = location.pathname + location.search === sub.path;
+                            const SubIcon = sub.icon;
+                            return (
+                                <Link
+                                    key={sub.path}
+                                    to={sub.path}
+                                    onClick={onCloseMobile}
+                                    className={`flex items-center gap-3 px-6 py-2 rounded-lg text-xs transition-all ${isSubActive
+                                        ? "text-slate-950 font-black"
+                                        : "text-slate-700 font-bold hover:text-slate-950 hover:bg-slate-50"
+                                        }`}
+                                >
+                                    <SubIcon size={14} strokeWidth={3} className={isSubActive ? "text-[#D4AF37]" : "text-slate-400 opacity-60"} />
+                                    {sub.name}
+                                </Link>
+                            );
+                        })}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
     const [admin, setAdmin] = useState<any>(null);
-    const location = useLocation();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -59,232 +160,166 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     };
 
     if (authLoading) return (
-        <div className="min-h-screen bg-[#FBFAF7] flex items-center justify-center">
-            <Loader2 className="animate-spin text-[#B48C5E]" size={40} />
+        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+            <Loader2 className="animate-spin text-slate-500" size={40} strokeWidth={3} />
         </div>
     );
 
     return (
-        <div className="layout-container min-h-screen bg-[#FBFAF7] font-['Inter',sans-serif]">
+        <div className="min-h-screen bg-[#F8FAFC] font-['Inter',sans-serif] flex" style={{ overflowAnchor: 'none' }}>
+            {/* Mobile Sidebar Overlay */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] lg:hidden"
+                    />
+                )}
+            </AnimatePresence>
+
             {/* Sidebar */}
-            <aside className={`sidebar bg-[#041E18] text-white flex flex-col z-50 ${!sidebarOpen ? 'collapsed' : ''}`}>
-                <div className="h-24 px-8 flex items-center justify-between border-b border-white/5">
-                    <AnimatePresence mode="wait">
-                        {sidebarOpen ? (
-                            <motion.div key="logo" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
-                                className="font-['Poppins',sans-serif] text-xl font-semibold tracking-tight flex items-center gap-3">
-                                <div className="w-9 h-9 bg-gradient-to-br from-[#D4AF37] to-[#B48C5E] rounded-xl flex items-center justify-center text-white shadow-lg shadow-gold/20">L</div>
-                                <span className="text-white/90">LuxeHaven <span className="text-[#D4AF37]">Admin</span></span>
-                            </motion.div>
-                        ) : (
-                            <motion.div key="logo-s" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                                className="w-10 h-10 bg-gradient-to-br from-[#D4AF37] to-[#B48C5E] rounded-xl flex items-center justify-center text-white shadow-lg shadow-gold/20 mx-auto font-bold">L</motion.div>
+            <aside className={`fixed inset-y-0 left-0 bg-white border-r border-slate-200 z-[70] transition-[width] duration-300 lg:sticky top-0 h-screen ${sidebarOpen ? "w-72" : "w-20"} ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} shrink-0`}>
+                <div className={`h-28 flex flex-col border-b border-slate-100 bg-white p-4 transition-all ${sidebarOpen ? "items-stretch" : "items-center"}`}>
+                    <div className={`flex items-center gap-3 ${sidebarOpen ? "justify-between" : "justify-center mb-4"}`}>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-[#0F172A] rounded-xl flex items-center justify-center text-[#D4AF37] font-bold shadow-sm shrink-0">L</div>
+                            {sidebarOpen && (
+                                <motion.span
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="font-black text-slate-950 tracking-tight whitespace-nowrap"
+                                >
+                                    LuxeHaven Admin
+                                </motion.span>
+                            )}
+                        </div>
+
+                        {/* Mobile Close Button */}
+                        <button onClick={() => setMobileMenuOpen(false)} className="lg:hidden p-2 hover:bg-slate-100 rounded-lg text-slate-600">
+                            <X size={20} strokeWidth={3} />
+                        </button>
+
+                        {/* Desktop Toggle (visible when open) */}
+                        {sidebarOpen && (
+                            <button
+                                onClick={() => setSidebarOpen(false)}
+                                className="hidden lg:flex p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
+                                title="Collapse Sidebar"
+                            >
+                                <ChevronsLeft size={18} strokeWidth={3} />
+                            </button>
                         )}
-                    </AnimatePresence>
+                    </div>
+
+                    {/* Desktop Toggle (visible when closed) */}
+                    {!sidebarOpen && (
+                        <button
+                            onClick={() => setSidebarOpen(true)}
+                            className="hidden lg:flex w-full h-10 items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-xl transition-all text-[#D4AF37]"
+                            title="Expand Sidebar"
+                        >
+                            <ChevronsRight size={18} strokeWidth={3} />
+                        </button>
+                    )}
                 </div>
 
-                <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
-                    {adminLinks.map((link) => {
-                        const isActive = location.pathname === link.path;
-                        const Icon = link.icon;
-                        return (
-                            <Link key={link.path} to={link.path}
-                                className={`group flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 relative ${isActive
-                                    ? "bg-gradient-to-r from-[#D4AF37]/20 to-transparent text-white border-l-4 border-[#D4AF37]"
-                                    : "text-white/40 hover:text-white hover:bg-white/5"
-                                    }`}>
-                                <div className={`p-2 rounded-xl transition-all duration-300 ${isActive ? "bg-[#D4AF37] text-white shadow-lg shadow-gold/20" : "bg-white/5 group-hover:bg-white/10"}`}>
-                                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                                </div>
-                                {sidebarOpen && (
-                                    <span className={`text-sm tracking-wide ${isActive ? "font-bold" : "font-medium"}`}>
-                                        {link.name}
-                                    </span>
-                                )}
-                                {isActive && sidebarOpen && (
-                                    <motion.div layoutId="active-pill" className="absolute right-4 w-1.5 h-1.5 bg-[#D4AF37] rounded-full shadow-[0_0_10px_#D4AF37]" />
-                                )}
-                            </Link>
-                        );
-                    })}
-                </nav>
+                <div className={`flex-1 flex flex-col h-[calc(100%-160px)] ${sidebarOpen ? "p-4" : "p-2"}`}>
+                    <div className="space-y-1.5 pt-4">
+                        {adminLinks.map((link) => (
+                            <SidebarLink key={link.path} link={link} sidebarOpen={sidebarOpen} onCloseMobile={() => setMobileMenuOpen(false)} />
+                        ))}
+                    </div>
 
-                <div className="p-6 space-y-4">
-                    <button onClick={handleLogout} className="w-full flex items-center gap-4 px-4 py-3.5 text-white/30 hover:text-rose-400 hover:bg-rose-500/5 rounded-2xl transition-all group">
-                        <div className="p-2 bg-white/5 group-hover:bg-rose-500/10 rounded-xl transition-all">
-                            <LogOut size={18} />
-                        </div>
-                        {sidebarOpen && <span className="text-sm font-semibold tracking-wide">Log Out</span>}
-                    </button>
-                    <button
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="w-full h-12 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 text-white/50"
-                    >
-                        {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
-                    </button>
+                    <div className="mt-auto space-y-1.5 pt-8 border-t border-slate-100">
+                        <button
+                            onClick={handleLogout}
+                            className={`w-full flex items-center text-rose-600 hover:bg-rose-50 rounded-xl transition-all font-black ${sidebarOpen ? "px-4 py-3 gap-3" : "p-2 justify-center"}`}
+                            title="Logout"
+                        >
+                            <LogOut size={20} strokeWidth={3} />
+                            {sidebarOpen && <span className="text-sm">Logout</span>}
+                        </button>
+                    </div>
                 </div>
             </aside>
 
-            {/* Main */}
-            <main className={`main-content flex flex-col min-h-screen ${!sidebarOpen ? 'expanded' : ''}`}>
-                <header className="h-24 sticky top-0 z-40 px-10 flex items-center justify-between">
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border-b border-[#041E18]/5" />
-
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            const query = (e.currentTarget.elements.namedItem("search") as HTMLInputElement).value;
-                            if (query) navigate(`/admin/products?search=${encodeURIComponent(query)}`);
-                        }}
-                        className="relative z-10 hidden md:flex items-center bg-[#041E18]/5 border border-transparent rounded-2xl px-6 py-3 w-96 group focus-within:bg-white focus-within:border-[#D4AF37]/30 focus-within:shadow-xl focus-within:shadow-gold/5 transition-all"
-                    >
-                        <Search size={18} className="text-[#041E18]/20 group-focus-within:text-[#D4AF37] transition-colors" />
-                        <input
-                            name="search"
-                            type="text"
-                            placeholder="Universal search..."
-                            className="bg-transparent border-none focus:ring-0 text-sm w-full ml-4 placeholder:text-gray-400 text-gray-700 font-medium"
-                        />
-                        <div className="hidden group-focus-within:flex items-center gap-1 ml-2">
-                            <kbd className="px-1.5 py-0.5 rounded border border-gray-200 text-[10px] text-gray-400 font-mono shadow-sm bg-white">ESC</kbd>
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden" style={{ contain: 'layout' }}>
+                {/* Navbar */}
+                <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 flex items-center justify-between px-6 lg:px-10">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => setMobileMenuOpen(true)} className="lg:hidden p-2 hover:bg-slate-100 rounded-lg text-slate-700">
+                            <Menu size={24} strokeWidth={3} />
+                        </button>
+                        <div className="hidden md:flex items-center bg-slate-100 border border-slate-200 rounded-xl px-4 py-2 w-80 group focus-within:bg-white focus-within:ring-2 focus-within:ring-slate-100 transition-all">
+                            <Search size={18} strokeWidth={3} className="text-slate-500 group-focus-within:text-slate-800" />
+                            <input type="text" placeholder="Search archives..." className="bg-transparent border-none focus:ring-0 text-sm font-black text-slate-950 w-full ml-3 placeholder:text-slate-500" />
                         </div>
-                    </form>
+                    </div>
 
-                    <div className="relative z-10 flex items-center gap-10">
+                    <div className="flex items-center gap-4 lg:gap-6">
                         <div className="relative">
-                            <button
-                                onClick={() => setNotificationsOpen(!notificationsOpen)}
-                                className="relative group p-3 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all text-gray-400 hover:text-[#D4AF37]"
-                            >
-                                <Bell size={20} />
-                                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full shadow-sm" />
+                            <button onClick={() => setNotificationsOpen(!notificationsOpen)} className="p-2.5 rounded-xl border border-slate-300 text-slate-950 hover:bg-slate-50 relative">
+                                <Bell size={20} strokeWidth={3} />
+                                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 border-2 border-white rounded-full" />
                             </button>
-
                             <AnimatePresence>
                                 {notificationsOpen && (
                                     <>
                                         <div className="fixed inset-0 z-0" onClick={() => setNotificationsOpen(false)} />
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            className="absolute right-0 mt-4 w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-10"
+                                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                                            className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl border border-slate-300 overflow-hidden z-10"
                                         >
-                                            <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-[#FBFAF7]/50">
-                                                <h3 className="text-xs font-black uppercase tracking-widest text-[#041E18]">Recent Syncs</h3>
-                                                <span className="px-2 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] text-[9px] font-black rounded-full">3 NEW</span>
+                                            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                                                <h3 className="font-black text-sm text-slate-950">Notifications</h3>
+                                                <span className="text-[10px] bg-slate-900 text-white font-black px-2 py-0.5 rounded-md">3 New</span>
                                             </div>
-                                            <div className="max-h-[360px] overflow-y-auto custom-scrollbar">
-                                                {[
-                                                    { title: "New Order Received", msg: "Order #8429 just placed by Priya S.", time: "2 mins ago", type: "order" },
-                                                    { title: "Inventory Alert", msg: "Pure Silk Sarees are running low on stock.", time: "45 mins ago", type: "stock" },
-                                                    { title: "System Synchronized", msg: "Cloud registry updated successfully.", time: "3 hours ago", type: "system" }
-                                                ].map((n, i) => (
-                                                    <div key={i} className="px-6 py-5 hover:bg-[#FBFAF7] transition-colors border-b border-gray-50 last:border-0 cursor-pointer group">
-                                                        <p className="text-[11px] font-bold text-[#041E18] mb-1 group-hover:text-[#D4AF37] transition-colors">{n.title}</p>
-                                                        <p className="text-[10px] text-gray-400 font-medium leading-relaxed mb-2">{n.msg}</p>
-                                                        <p className="text-[8px] font-black uppercase tracking-widest text-gray-300">{n.time}</p>
+                                            <div className="max-h-80 overflow-y-auto">
+                                                {[1, 2, 3].map(i => (
+                                                    <div key={i} className="p-4 hover:bg-slate-50 border-b border-slate-100 last:border-0 cursor-pointer">
+                                                        <p className="text-sm font-black text-slate-950">New order #842{i}</p>
+                                                        <p className="text-xs font-black text-slate-600 mt-0.5">March 17, 2026 • 2:3{i} PM</p>
                                                     </div>
                                                 ))}
                                             </div>
-                                            <button className="w-full py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#041E18] hover:bg-gray-50 transition-all border-t border-gray-50">
-                                                View All Activity
-                                            </button>
                                         </motion.div>
                                     </>
                                 )}
                             </AnimatePresence>
                         </div>
 
-                        <div className="flex items-center gap-5 pl-10 border-l border-gray-100">
-                            <div className="text-right flex flex-col justify-center">
-                                <p className="text-sm font-bold text-[#041E18]">{admin?.name || "Admin Panel"}</p>
-                                <p className="text-[10px] text-[#B48C5E] font-extrabold uppercase tracking-[0.15em]">{admin?.role?.replace("_", " ") || "Administrator"}</p>
-                            </div>
+                        <div className="h-8 w-px bg-slate-200" />
 
+                        <div className="flex items-center gap-3">
+                            <div className="text-right hidden sm:block">
+                                <p className="text-sm font-black text-slate-950">{admin?.name}</p>
+                                <p className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">{admin?.role?.replace("_", " ")}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center font-black text-[#D4AF37]">
+                                {admin?.name?.[0]}
+                            </div>
                         </div>
                     </div>
                 </header>
 
-                <div className="p-[30px] w-full max-w-[1300px] mx-auto min-h-screen">
-                    {children}
+                <div className="flex-1 overflow-y-auto custom-scrollbar-light p-6 lg:p-10">
+                    <div className="max-w-[1600px] mx-auto">
+                        {children}
+                    </div>
                 </div>
-            </main>
+            </div>
 
             <style>{`
-                body {
-                    overflow-x: hidden;
-                }
-                .layout-container {
-                    display: flex;
-                }
-                .sidebar {
-                    width: 260px;
-                    position: fixed;
-                    left: 0;
-                    top: 0;
-                    height: 100vh;
-                    transition: transform 0.3s ease;
-                }
-                .main-content {
-                    margin-left: 260px;
-                    padding: 30px;
-                    width: calc(100% - 260px);
-                    transition: margin-left 0.3s ease, width 0.3s ease;
-                }
-                table {
-                    width: 100%;
-                }
-                .table-container {
-                    overflow-x: auto;
-                }
-                .actions {
-                    display: flex;
-                    gap: 10px;
-                    align-items: center;
-                    justify-content: flex-start;
-                }
-                .card {
-                    background: white;
-                    border-radius: 12px;
-                    padding: 20px;
-                    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-                }
-                .page-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    flex-wrap: wrap;
-                    gap: 16px;
-                }
-                @media (max-width: 1024px) {
-                    .sidebar.collapsed {
-                        transform: translateX(-100%);
-                    }
-                    .main-content.expanded {
-                        margin-left: 0;
-                        width: 100%;
-                    }
-                    .sidebar {
-                        transform: translateX(-100%);
-                    }
-                    .main-content {
-                        margin-left: 0;
-                        width: 100%;
-                    }
-                    .sidebar:not(.collapsed) {
-                        transform: translateX(0);
-                    }
-                }
-                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.1); }
+                .custom-scrollbar-light::-webkit-scrollbar { width: 6px; }
+                .custom-scrollbar-light::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar-light::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+                .custom-scrollbar-light::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
             `}</style>
         </div>
     );
 };
 
-
 export default AdminLayout;
-

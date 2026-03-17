@@ -19,7 +19,9 @@ $allowedMasters = [
     'sleeve_types' => 'master_sleeve_types',
     'neck_types' => 'master_neck_types',
     'occasions' => 'master_occasions',
-    'patterns' => 'master_patterns'
+    'patterns' => 'master_patterns',
+    'saree_types' => 'saree_types',
+    'brands' => 'master_brands'
 ];
 
 if (!isset($allowedMasters[$type]) || $id <= 0) {
@@ -48,14 +50,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $updates[] = "name = '" . sanitize($conn, $input['name']) . "'";
     if (isset($input['status']))
         $updates[] = "status = '" . sanitize($conn, $input['status']) . "'";
-
-    // Table specific
-    if ($type === 'sub_categories' && isset($input['category_id']))
-        $updates[] = "category_id = " . intval($input['category_id']);
-    if ($type === 'colours' && isset($input['hex_code']))
-        $updates[] = "hex_code = '" . sanitize($conn, $input['hex_code']) . "'";
     if (isset($input['sort_order']))
         $updates[] = "sort_order = " . intval($input['sort_order']);
+
+    // Table specific
+    // Unified update logic for professional masters
+    if (in_array($type, ['categories', 'sub_categories', 'saree_types', 'brands'])) {
+        if (isset($input['slug']))
+            $updates[] = "slug = '" . sanitize($conn, $input['slug']) . "'";
+        if (isset($input['image']))
+            $updates[] = "image = '" . sanitize($conn, $input['image']) . "'";
+        if (isset($input['hero_image']))
+            $updates[] = "hero_image = '" . sanitize($conn, $input['hero_image']) . "'";
+        if (isset($input['description']))
+            $updates[] = "description = '" . sanitize($conn, $input['description']) . "'";
+        if (isset($input['is_featured']))
+            $updates[] = "is_featured = " . (int) $input['is_featured'];
+
+        if ($type === 'categories' || $type === 'sub_categories') {
+            if (isset($input['show_on_menu']))
+                $updates[] = "show_on_menu = " . (int) $input['show_on_menu'];
+            if (isset($input['meta_title']))
+                $updates[] = "meta_title = '" . sanitize($conn, $input['meta_title']) . "'";
+            if (isset($input['meta_description']))
+                $updates[] = "meta_description = '" . sanitize($conn, $input['meta_description']) . "'";
+        }
+        if ($type === 'sub_categories' && isset($input['category_id'])) {
+            $updates[] = "category_id = " . (int) $input['category_id'];
+        }
+    }
+
+    if ($type === 'colours' && isset($input['hex_code'])) {
+        $updates[] = "hex_code = '" . sanitize($conn, $input['hex_code']) . "'";
+    }
+
+    if ($type === 'sizes') {
+        if (isset($input['category_id']))
+            $updates[] = "category_id = " . intval($input['category_id']);
+        foreach (['chest_size', 'waist_size', 'hip_size', 'shoulder_size', 'length', 'sleeve_length', 'neck_depth', 'inseam', 'description'] as $f) {
+            if (isset($input[$f]))
+                $updates[] = "$f = '" . sanitize($conn, $input[$f]) . "'";
+        }
+    }
 
     if (empty($updates))
         jsonResponse(['status' => 'error', 'message' => 'No fields to update'], 400);

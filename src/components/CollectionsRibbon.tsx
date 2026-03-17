@@ -1,21 +1,58 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, SlidersHorizontal, Loader2 } from "lucide-react";
 import ProductCard from "./ProductCard";
-import { products, fabricTypes } from "@/data/products";
+import { fabricTypes } from "@/data/products";
 
 const SHOW_PER_PAGE = 8;
+const API = "http://localhost:8000";
 
 const CollectionsRibbon = () => {
     const [activeTab, setActiveTab] = useState("All");
     const [showAll, setShowAll] = useState(false);
+    const [apiProducts, setApiProducts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const tabsRef = useRef<HTMLDivElement>(null);
 
-    const filtered =
-        activeTab === "All"
-            ? products
-            : products.filter((p) => p.fabric === activeTab);
+    useEffect(() => {
+        const fetchProducts = async () => {
+            setLoading(true);
+            try {
+                const res = await fetch(`${API}/public/products.php?per_page=100&status=Active`);
+                const json = await res.json();
+                if (json.status === 'success') {
+                    const mapped = json.data.map((p: any) => ({
+                        id: String(p.id),
+                        name: p.name,
+                        price: parseFloat(p.price),
+                        discount_price: p.discount_price ? parseFloat(p.discount_price) : undefined,
+                        image: p.image || "",
+                        category: p.category_name || p.category,
+                        description: p.description,
+                        fabric: p.fabric,
+                        isNew: p.is_new === 1,
+                        isBestSeller: p.is_bestseller === 1,
+                        stock_qty: parseInt(p.stock_qty),
+                        status: p.status,
+                        inStock: p.status !== "Out of Stock" && (parseInt(p.stock_qty) || 0) > 0,
+                    }));
+                    setApiProducts(mapped);
+                }
+            } catch (err) {
+                console.error("Failed to fetch products for ribbon", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProducts();
+    }, []);
+
+    const filtered = useMemo(() => {
+        return activeTab === "All"
+            ? apiProducts
+            : apiProducts.filter((p) => p.fabric === activeTab);
+    }, [activeTab, apiProducts]);
 
     const displayed = showAll ? filtered : filtered.slice(0, SHOW_PER_PAGE);
 

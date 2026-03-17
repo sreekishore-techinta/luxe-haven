@@ -13,13 +13,13 @@ const iconMap: Record<string, any> = { DollarSign, ShoppingBag, Users, TrendingU
 
 const statusBadge = (s: string) => {
     const m: Record<string, string> = {
-        Delivered: "bg-emerald-50 text-emerald-600 border-emerald-100",
-        Processing: "bg-blue-50 text-blue-600 border-blue-100",
-        Shipped: "bg-purple-50 text-purple-600 border-purple-100",
-        Pending: "bg-amber-50 text-amber-600 border-amber-100",
-        Cancelled: "bg-rose-50 text-rose-600 border-rose-100",
+        Delivered: "bg-emerald-50 text-emerald-800 border-emerald-200 font-black",
+        Processing: "bg-blue-50 text-blue-800 border-blue-200 font-black",
+        Shipped: "bg-purple-50 text-purple-800 border-purple-200 font-black",
+        Pending: "bg-amber-50 text-amber-800 border-amber-200 font-black",
+        Cancelled: "bg-rose-50 text-rose-800 border-rose-200 font-black",
     };
-    return m[s] ?? "bg-gray-50 text-gray-500 border-gray-100";
+    return m[s] ?? "bg-gray-50 text-gray-700 border-gray-200 font-black";
 };
 
 export default function AdminDashboard() {
@@ -49,7 +49,7 @@ export default function AdminDashboard() {
                     <div className="w-4 h-4 bg-[#B48C5E] rounded-full animate-pulse shadow-[0_0_15px_#B48C5E]" />
                 </div>
             </div>
-            <p className="font-['Poppins',sans-serif] text-xl font-light tracking-wide text-gray-400">Loading dashboard data...</p>
+            <p className="font-['Poppins',sans-serif] text-xl font-black tracking-wide text-slate-800">Loading dashboard data...</p>
         </div>
     );
 
@@ -59,12 +59,12 @@ export default function AdminDashboard() {
                 <AlertCircle size={40} strokeWidth={1.5} />
             </div>
             <div>
-                <p className="font-['Poppins',sans-serif] text-2xl font-bold mb-2 text-rose-900 tracking-tight">Connection Error</p>
-                <p className="text-sm text-rose-600/70 mb-8 max-w-sm mx-auto leading-relaxed font-medium">Could not connect to the server. Please check your PHP server status.</p>
+                <p className="font-['Poppins',sans-serif] text-2xl font-black mb-2 text-rose-950 tracking-tight">Connection Error</p>
+                <p className="text-sm text-rose-700 mb-8 max-w-sm mx-auto leading-relaxed font-black">Could not connect to the server. Please check your PHP server status.</p>
 
-                <div className="bg-rose-50/50 p-4 rounded-xl border border-rose-100/50 text-left mb-8 shadow-inner">
-                    <p className="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-2 ml-1">Terminal Command</p>
-                    <code className="text-[11px] font-mono text-rose-700 bg-white/50 px-3 py-2 rounded-lg block">php -S localhost:8000 -t api/</code>
+                <div className="bg-rose-50/50 p-4 rounded-xl border border-rose-200 text-left mb-8 shadow-inner">
+                    <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-2 ml-1">Terminal Command</p>
+                    <code className="text-[11px] font-mono font-black text-rose-800 bg-white/50 px-3 py-2 rounded-lg block">php -S localhost:8000 -t api/</code>
                 </div>
 
                 <button onClick={fetchData} className="w-full py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-[18px] font-bold uppercase tracking-[0.15em] text-[11px] transition-all shadow-lg shadow-rose-600/20 active:scale-95">Retry Connection</button>
@@ -73,48 +73,54 @@ export default function AdminDashboard() {
     );
 
     return (
-        <div className="space-y-12 pb-20">
+        <div className="space-y-10 pb-10">
             {/* Header */}
-            <div className="page-header">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="font-['Poppins',sans-serif] text-[42px] font-bold text-[#041E18] tracking-[-0.03em] leading-tight mb-2">Dashboard <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#B48C5E] italic">Overview</span></h1>
-                    <p className="font-['Inter',sans-serif] text-base text-gray-400 font-medium tracking-wide">View your store's performance and analytics.</p>
+                    <h1 className="text-3xl font-black text-slate-950 tracking-tight">Dashboard Overview</h1>
+                    <p className="text-slate-800 mt-1 font-black italic">Welcome back to your command center.</p>
                 </div>
-                <div className="flex items-center gap-4 bg-white p-3 rounded-[24px] border border-[#041E18]/5 shadow-sm shadow-[#041E18]/5">
-                    <div className="p-3.5 bg-gradient-to-br from-[#041E18] to-[#0D3B2E] rounded-2xl text-white shadow-lg shadow-[#041E18]/10"><Calendar size={20} strokeWidth={2} /></div>
-                    <div className="pr-6">
-                        <p className="text-[10px] font-extrabold text-[#B48C5E] uppercase tracking-[0.2em] mb-0.5">Overview</p>
-                        <p className="text-sm font-bold text-[#041E18]">March 2026 Overview</p>
-                    </div>
+                <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-slate-200 shadow-sm">
+                    <Calendar size={18} className="text-slate-500" strokeWidth={2.5} />
+                    <span className="text-sm font-black text-slate-950">March 17, 2026</span>
                 </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {data.stats.map((stat: any, i: number) => {
                     const Icon = iconMap[stat.icon] || DollarSign;
                     const pathMap: Record<string, string> = {
                         "Total Revenue": "/admin/orders",
                         "New Orders": "/admin/orders",
                         "Active Customers": "/admin/customers",
-                        "Sales Velocity": "/admin/orders"
+                        "Total Products": "/admin/products"
                     };
                     const path = pathMap[stat.title] || "/admin";
 
-                    return (
-                        <motion.div key={i} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: i * 0.1 }}>
-                            <Link to={path} className="group relative block bg-white p-7 rounded-[36px] border border-[#041E18]/5 hover:border-[#D4AF37]/30 transition-all duration-500 overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-[#B48C5E]/5">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#D4AF37]/5 to-transparent rounded-bl-full transition-all group-hover:scale-110" />
+                    const colorMap: Record<string, string> = {
+                        'bg-blue-50 text-blue-600': 'text-blue-600 bg-blue-50',
+                        'bg-emerald-50 text-emerald-600': 'text-emerald-600 bg-emerald-50',
+                        'bg-orange-50 text-orange-600': 'text-orange-600 bg-orange-50',
+                        'bg-purple-50 text-purple-600': 'text-purple-600 bg-purple-50',
+                    };
+                    const colorClass = colorMap[stat.color] || 'text-slate-600 bg-slate-50';
 
-                                <div className="relative z-10 flex items-start justify-between mb-8">
-                                    <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.color.replace('bg-', 'from-').replace('text-', '')} text-white shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3`}><Icon size={22} /></div>
-                                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-widest ${stat.isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
-                                        {stat.isPositive ? <ArrowUpRight size={14} strokeWidth={3} /> : <ArrowDownRight size={14} strokeWidth={3} />} {stat.change}
+                    return (
+                        <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+                            <Link to={path} className="block group bg-white p-6 rounded-2xl border border-slate-200 hover:border-[#D4AF37]/40 transition-all hover:shadow-xl hover:shadow-slate-200/50">
+                                <div className="flex items-start justify-between">
+                                    <div className={`p-3 rounded-xl ${colorClass}`}>
+                                        <Icon size={22} />
+                                    </div>
+                                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black ${stat.isPositive ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                                        {stat.isPositive ? <ArrowUpRight size={12} strokeWidth={3} /> : <ArrowDownRight size={12} strokeWidth={3} />}
+                                        {stat.change}
                                     </div>
                                 </div>
-                                <div className="relative z-10">
-                                    <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-[0.2em] mb-1.5">{stat.title}</p>
-                                    <p className="font-['Poppins',sans-serif] text-4xl font-bold text-[#041E18] group-hover:text-[#B48C5E] transition-colors tracking-tight">{stat.value}</p>
+                                <div className="mt-5">
+                                    <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em]">{stat.title}</p>
+                                    <p className="text-2xl font-black text-slate-950 mt-1">{stat.value}</p>
                                 </div>
                             </Link>
                         </motion.div>
@@ -122,49 +128,47 @@ export default function AdminDashboard() {
                 })}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                {/* Recent Orders */}
-                <div className="lg:col-span-2 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Recent Transactions */}
+                <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="font-['Poppins',sans-serif] text-2xl font-bold text-[#041E18] tracking-tight">Recent Orders</h2>
-                            <p className="text-xs font-medium text-gray-400 mt-1 italic font-['Inter',sans-serif]">Latest orders from your store</p>
-                        </div>
-                        <Link to="/admin/orders" className="flex items-center gap-2 group p-4 pr-1">
-                            <span className="text-[11px] font-bold text-[#B48C5E] uppercase tracking-[0.2em] group-hover:translate-x-[-4px] transition-transform">View All Orders</span>
-                            <div className="w-8 h-8 rounded-full border border-[#B48C5E]/20 flex items-center justify-center text-[#B48C5E] group-hover:bg-[#B48C5E] group-hover:text-white transition-all">
-                                <ArrowUpRight size={14} />
-                            </div>
-                        </Link>
+                        <h2 className="text-xl font-black text-slate-950">Recent Transactions</h2>
+                        <Link to="/admin/orders" className="text-xs font-black text-[#D4AF37] hover:underline uppercase tracking-widest">View All Orders</Link>
                     </div>
 
-                    <div className="card">
-                        <div className="table-container">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
-                                    <tr className="border-b border-[#041E18]/5">
-                                        {["Order ID", "Customer", "Amount", "Status"].map(h => (
-                                            <th key={h} className="px-8 py-6 text-[10px] font-extrabold uppercase tracking-[0.2em] text-gray-400">{h}</th>
-                                        ))}
+                                    <tr className="bg-slate-50 border-b border-slate-200">
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-950">Order ID</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-950">Customer</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-950">Amount</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-950">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#041E18]/5 font-['Inter',sans-serif]">
+                                <tbody className="divide-y divide-slate-100">
                                     {data.recent_orders.map((order: any, i: number) => (
-                                        <tr key={i} className="hover:bg-[#FDFCF9] transition-colors group cursor-default">
-                                            <td className="px-8 py-6 font-mono text-xs font-bold text-[#041E18] group-hover:text-[#B48C5E] transition-colors">{order.order_number}</td>
-                                            <td className="px-8 py-6">
+                                        <tr key={i} className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-6 py-5">
+                                                <p className="text-xs font-black text-slate-950">{order.order_number}</p>
+                                            </td>
+                                            <td className="px-6 py-5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-400 group-hover:bg-[#D4AF37]/10 group-hover:text-[#D4AF37] transition-all">
+                                                    <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-[10px] font-black text-[#D4AF37]">
                                                         {order.customer_name?.[0]}
                                                     </div>
-                                                    <p className="text-xs font-bold text-[#041E18]">{order.customer_name}</p>
+                                                    <div>
+                                                        <p className="text-xs font-black text-slate-950">{order.customer_name}</p>
+                                                        <p className="text-[10px] text-slate-700 font-extrabold">{order.customer_email}</p>
+                                                    </div>
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-6">
-                                                <p className="text-xs font-extrabold text-[#041E18] font-['Poppins',sans-serif]">₹{Number(order.total).toLocaleString('en-IN')}</p>
+                                            <td className="px-6 py-5 text-xs font-black text-slate-950">
+                                                ₹{Number(order.total).toLocaleString('en-IN')}
                                             </td>
-                                            <td className="px-8 py-6">
-                                                <span className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] border shadow-sm transition-all duration-300 group-hover:scale-105 inline-block ${statusBadge(order.status)}`}>
+                                            <td className="px-6 py-5">
+                                                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${statusBadge(order.status)}`}>
                                                     {order.status}
                                                 </span>
                                             </td>
@@ -176,78 +180,50 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* Inventory Status */}
-                <div className="space-y-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="font-['Poppins',sans-serif] text-2xl font-bold text-[#041E18] tracking-tight">Inventory Status</h2>
-                            <p className="text-xs font-medium text-gray-400 mt-1 italic font-['Inter',sans-serif]">Current stock levels</p>
-                        </div>
-                        <Link to="/admin/products" className="p-2 text-[#041E18]/20 hover:text-[#B48C5E] transition-colors"><TooltipTrigger label="Manage Catalog"><Filter size={20} /></TooltipTrigger></Link>
-                    </div>
-
-                    <div className="bg-[#041E18] p-8 rounded-[40px] shadow-2xl shadow-[#041E18]/30 space-y-10 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/5 to-transparent rounded-full -mr-20 -mt-20 blur-3xl group-hover:scale-125 transition-transform duration-1000" />
-
+                {/* Stock Analytics */}
+                <div className="space-y-6">
+                    <h2 className="text-xl font-black text-slate-950">Inventory Health</h2>
+                    <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-8">
                         {data.inventory.map((item: any, i: number) => {
                             const percent = (item.in_stock / item.total_products) * 100;
                             const isLow = item.low_stock > 0;
-                            const accentColor = isLow ? "#D4AF37" : "#10B981";
 
                             return (
-                                <div key={i} className="relative z-10 space-y-4">
+                                <div key={i} className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] font-extrabold text-white/30 uppercase tracking-[0.25em]">{item.category}</p>
-                                            <p className="text-sm font-bold text-white tracking-wide">{item.total_stock} Units in Stock</p>
+                                        <div>
+                                            <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">{item.category}</p>
+                                            <p className="text-sm font-black text-slate-950 mt-0.5">{item.total_stock} Units</p>
                                         </div>
-                                        <div className="text-right">
-                                            <p className={`text-xs font-black uppercase italic ${isLow ? 'text-[#D4AF37]' : 'text-emerald-400'}`}>
-                                                {Math.round(percent)}% <span className="opacity-50 font-normal ml-1">In Stock</span>
-                                            </p>
-                                        </div>
+                                        <span className={`text-xs font-black ${isLow ? 'text-amber-600' : 'text-emerald-700'}`}>
+                                            {Math.round(percent)}%
+                                        </span>
                                     </div>
-
-                                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden p-[1px]">
+                                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${percent}%` }}
-                                            transition={{ duration: 1.5, delay: i * 0.1, ease: "circOut" }}
-                                            className="h-full rounded-full shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-colors"
-                                            style={{ backgroundColor: accentColor }}
+                                            className={`h-full rounded-full ${isLow ? 'bg-amber-500' : 'bg-emerald-500'}`}
                                         />
                                     </div>
-
                                     {isLow && (
-                                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 px-3 py-2 bg-[#D4AF37]/10 rounded-xl border border-[#D4AF37]/20">
-                                            <AlertCircle size={12} className="text-[#D4AF37]" />
-                                            <span className="text-[9px] font-extrabold text-[#D4AF37] uppercase tracking-widest leading-none mt-0.5">{item.low_stock} Low stock items</span>
-                                        </motion.div>
+                                        <div className="flex items-center gap-2 text-amber-700 pb-1">
+                                            <AlertCircle size={10} strokeWidth={3} />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{item.low_stock} entries low in stock</span>
+                                        </div>
                                     )}
                                 </div>
                             );
                         })}
 
-                        <div className="pt-4 mt-4 border-t border-white/5">
-                            <button className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-extrabold text-white/50 uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3">
-                                <ShoppingBasket size={14} /> Generate Restock List
-                            </button>
-                        </div>
+                        <Link to="/admin/products" className="w-full py-4 bg-[#0F172A] hover:bg-[#1E293B] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-slate-200 translate-y-2">
+                            Manage Inventory
+                        </Link>
                     </div>
                 </div>
             </div>
         </div>
     );
 }
-
-const TooltipTrigger = ({ children, label }: { children: React.ReactNode, label: string }) => (
-    <div className="relative group/tooltip">
-        {children}
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-[#041E18] text-white text-[10px] font-bold uppercase tracking-widest rounded-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl z-50">
-            {label}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#041E18]" />
-        </div>
-    </div>
-);
 
 

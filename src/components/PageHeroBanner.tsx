@@ -15,62 +15,57 @@ const PageHeroBanner = ({
   subtitle,
   description,
   backgroundImage,
-  imagePosition = "center top",
+  imagePosition = "center 20%",
   imageFit = "cover",
-  heightClass = "h-[100dvh] min-h-[500px]"
+  heightClass = "h-[80vh] md:h-[90vh] lg:h-screen"
 }: PageHeroBannerProps) => {
   return (
-    <section className={`page-hero relative w-full ${heightClass} flex flex-col justify-end text-center overflow-hidden bg-[#0a0a0a]`}>
+    <section className={`relative w-full ${heightClass} flex items-center overflow-hidden bg-[#0a0a0a]`}>
       {backgroundImage && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0">
           <img
             src={backgroundImage}
-            alt="Hero Background"
+            alt={title}
             className={`w-full h-full object-${imageFit}`}
             style={{ objectPosition: imagePosition }}
+            loading="eager"
           />
+          {/* Gradient for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 lg:bg-gradient-to-r lg:from-black/70 lg:via-black/20 lg:to-transparent" />
         </div>
       )}
 
-      {/* Very subtle gradient — just enough to make text readable at the bottom */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
-
-      {/* Content Side - Positioned to keep faces clear */}
-      <div className="relative z-10 container mx-auto px-4 lg:px-8 pb-32 lg:pb-40">
-        {subtitle && (
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
+      <div className="relative z-10 container mx-auto px-4 lg:px-20 h-full flex items-end lg:items-center justify-center lg:justify-start pb-24 lg:pb-0">
+        <div className="max-w-[520px] text-center lg:text-left">
+          {subtitle && (
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="font-body text-xs lg:text-[11px] tracking-[0.5em] uppercase text-white/70 mb-6 [text-shadow:_0_2px_10px_rgba(0,0,0,0.35)]"
+            >
+              {subtitle}
+            </motion.p>
+          )}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="font-body text-xs lg:text-sm tracking-[0.6em] uppercase text-[#F5F1E8] mb-6"
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="font-display text-5xl md:text-6xl lg:text-[68px] font-semibold text-white mb-6 [text-shadow:_0_2px_10px_rgba(0,0,0,0.35)] leading-[1.1]"
           >
-            {subtitle}
-          </motion.p>
-        )}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="font-display text-5xl md:text-7xl lg:text-9xl font-semibold text-white mb-8 drop-shadow-2xl"
-        >
-          {title}
-        </motion.h1>
-        {description && (
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="font-body text-sm lg:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed"
-          >
-            {description}
-          </motion.p>
-        )}
-        <motion.div
-          initial={{ opacity: 0, scaleX: 0 }}
-          animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="section-divider mt-12 bg-white/30"
-        />
+            {title}
+          </motion.h1>
+          {description && (
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="font-body text-sm lg:text-[18px] text-white/90 font-medium leading-[1.6] [text-shadow:_0_2px_10px_rgba(0,0,0,0.35)]"
+            >
+              {description}
+            </motion.p>
+          )}
+        </div>
       </div>
     </section>
   );

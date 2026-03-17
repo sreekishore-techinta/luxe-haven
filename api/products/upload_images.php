@@ -16,7 +16,7 @@ if (empty($_FILES['images'])) {
 }
 
 $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-$maxSize = 5 * 1024 * 1024; // 5MB
+$maxSize = 10 * 1024 * 1024; // 10MB
 $uploadDir = dirname(__DIR__, 2) . '/uploads/products/';
 $uploadUrl = 'uploads/products/';
 
@@ -25,11 +25,10 @@ if (!is_dir($uploadDir)) {
 }
 
 $conn = getDB();
-$isPrimary = (int) ($_POST['is_primary'] ?? 0);
 $uploaded = [];
 $errors = [];
 
-// Normalize $_FILES['images'] for multiple uploads
+// Normalize $_FILES['images']
 $files = $_FILES['images'];
 $count = is_array($files['name']) ? count($files['name']) : 1;
 
@@ -37,23 +36,13 @@ for ($i = 0; $i < $count; $i++) {
     $name = is_array($files['name']) ? $files['name'][$i] : $files['name'];
     $tmpName = is_array($files['tmp_name']) ? $files['tmp_name'][$i] : $files['tmp_name'];
     $size = is_array($files['size']) ? $files['size'][$i] : $files['size'];
-    $type = is_array($files['type']) ? $files['type'][$i] : $files['type'];
     $error = is_array($files['error']) ? $files['error'][$i] : $files['error'];
 
-    if ($error !== UPLOAD_ERR_OK) {
-        $errors[] = "$name: Upload error code $error";
+    if ($error !== UPLOAD_ERR_OK)
         continue;
-    }
+
     if ($size > $maxSize) {
-        $errors[] = "$name: Exceeds 5MB limit";
-        continue;
-    }
-    // Validate actual MIME type (not just extension)
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mimeType = finfo_file($finfo, $tmpName);
-    finfo_close($finfo);
-    if (!in_array($mimeType, $allowedTypes)) {
-        $errors[] = "$name: Invalid file type ($mimeType)";
+        $errors[] = "$name: Too large";
         continue;
     }
 
@@ -62,31 +51,26 @@ for ($i = 0; $i < $count; $i++) {
     $destPath = $uploadDir . $newName;
 
     if (move_uploaded_file($tmpName, $destPath)) {
-        // If first image and no primary set yet, mark as primary
-        $setAsPrimary = ($isPrimary === 1 || ($i === 0 && empty($uploaded))) ? 1 : 0;
-
-        // If setting as primary, clear other primaries
-        if ($setAsPrimary) {
-            $conn->query("UPDATE product_images SET is_primary = 0 WHERE product_id = " . intval($productId));
-        }
-
         $imgPath = $uploadUrl . $newName;
+
+        // Insert into both image_url and image_path columns for compatibility
+        $stmt = $conn->prepare("INSERT INTO product_images (product_id, image_url, image_path, is_primary, sort_order) VALUES (?, ?, ?, ?, ?)");
+        $isPrimary = ($i === 0 && empty($uploaded)) ? 1 : 0;
         $sort = $i;
-        $stmt = $conn->prepare("INSERT INTO product_images (product_id, image_path, is_primary, sort_order) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isii", $productId, $imgPath, $setAsPrimary, $sort);
+        $stmt->bind_param("issii", $productId, $imgPath, $imgPath, $isPrimary, $sort);
         $stmt->execute();
         $stmt->close();
 
-        $uploaded[] = ['path' => $imgPath, 'is_primary' => $setAsPrimary];
-    } else {
-        $errors[] = "$name: Failed to move file";
+        // Primary image logic is handled by the is_primary flag in product_images
+        $uploaded[] = $imgPath;
     }
 }
 
 $conn->close();
 jsonResponse([
-    'status' => empty($errors) ? 'success' : 'partial',
+    'status' => 'success',
     'message' => count($uploaded) . ' image(s) uploaded',
-    'uploaded' => $uploaded,
-    'errors' => $errors,
+    'data' => $uploaded,
+    'errors' => $errors
 ]);
+?>

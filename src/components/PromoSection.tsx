@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ExternalLink } from "lucide-react";
-import heroImage2 from "@/assets/hero-2.jpg";
+import heroImage2 from "@/assets/new-arrivals-hero-2.jpg";
 
 const PromoSection = () => {
   return (

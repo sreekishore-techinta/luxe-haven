@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ArrowRight } from "lucide-react";
 import categorySarees from "@/assets/category-sarees.jpg";
 import categoryBlouses from "@/assets/category-blouses.png";
 import categorySuits from "@/assets/category-suits.jpg";
-import heroImage2 from "@/assets/hero-2.jpg";
+import heroImage2 from "@/assets/new-arrivals-hero-2.jpg";
 import product3 from "@/assets/product-3.jpg";
 
 const panels = [
@@ -82,14 +82,14 @@ const LookbookGrid = () => {
                 </motion.div>
 
                 {/* Asymmetric Editorial Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 grid-rows-2 gap-3 lg:gap-4 h-[580px] lg:h-[680px]">
-                    {/* Panel 1 - Large, spans 2 rows */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+                    {/* Panel 1 - Large, spans 2 rows on lg */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.97 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.7 }}
-                        className="row-span-2 col-span-1"
+                        className="lg:row-span-2 lg:col-span-1 aspect-[4/5] sm:aspect-auto sm:h-[400px] lg:h-auto"
                     >
                         <Link
                             to={panels[0].link}
@@ -115,156 +115,159 @@ const LookbookGrid = () => {
                                     {panels[0].title}
                                 </h3>
                                 <span className="inline-flex items-center gap-1.5 font-body text-[11px] tracking-[0.3em] uppercase text-gold-light group-hover:text-gold transition-colors">
-                                    Explore <ArrowUpRight size={11} />
+                                    Explore <ArrowRight size={11} />
                                 </span>
                             </div>
                         </Link>
                     </motion.div>
 
-                    {/* Panel 2 - Top center */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.7, delay: 0.1 }}
-                        className="col-span-1"
-                    >
-                        <Link
-                            to={panels[1].link}
-                            className="group relative w-full h-full overflow-hidden block"
+                    {/* Right Side Panels - Grid within Grid or Flat on Mobile */}
+                    <div className="sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+                        {/* Panel 2 */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.97 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.7, delay: 0.1 }}
+                            className="aspect-[4/5] sm:aspect-square lg:aspect-auto lg:h-[330px]"
                         >
-                            <img
-                                src={panels[1].image}
-                                alt={panels[1].title}
-                                className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
-                                loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
-                            <div className="absolute top-3 left-3">
-                                <span className="inline-block px-2.5 py-1 bg-foreground text-champagne font-body text-[9px] tracking-[0.25em] uppercase">
-                                    {panels[1].tag}
-                                </span>
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 p-4">
-                                <h3 className="font-display text-lg text-champagne font-medium">
-                                    {panels[1].title}
-                                </h3>
-                                <p className="font-body text-[10px] tracking-[0.3em] uppercase text-gold-light">
-                                    {panels[1].subtitle}
-                                </p>
-                            </div>
-                        </Link>
-                    </motion.div>
-
-                    {/* Panel 3 - Top right (spans 2 cols on lg) */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.7, delay: 0.2 }}
-                        className="col-span-1 lg:col-span-2"
-                    >
-                        <Link
-                            to={panels[2].link}
-                            className="group relative w-full h-full overflow-hidden block"
-                        >
-                            <img
-                                src={panels[2].image}
-                                alt={panels[2].title}
-                                className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
-                                loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
-                            <div className="absolute top-3 right-3">
-                                <span className="inline-block px-2.5 py-1 bg-accent/90 text-accent-foreground font-body text-[9px] tracking-[0.25em] uppercase">
-                                    {panels[2].tag}
-                                </span>
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 p-4">
-                                <h3 className="font-display text-lg text-champagne font-medium">
-                                    {panels[2].title}
-                                </h3>
-                                <p className="font-body text-[10px] tracking-[0.3em] uppercase text-gold-light">
-                                    {panels[2].subtitle}
-                                </p>
-                            </div>
-                        </Link>
-                    </motion.div>
-
-                    {/* Panel 4 - Bottom center */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.7, delay: 0.3 }}
-                        className="col-span-1"
-                    >
-                        <Link
-                            to={panels[3].link}
-                            className="group relative w-full h-full overflow-hidden block"
-                        >
-                            <img
-                                src={panels[3].image}
-                                alt={panels[3].title}
-                                className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
-                                loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
-                            <div className="absolute top-3 left-3">
-                                <span className="inline-block px-2.5 py-1 border border-champagne/30 text-champagne font-body text-[9px] tracking-[0.25em] uppercase backdrop-blur-sm">
-                                    {panels[3].tag}
-                                </span>
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 p-4">
-                                <h3 className="font-display text-lg text-champagne font-medium">
-                                    {panels[3].title}
-                                </h3>
-                                <p className="font-body text-[10px] tracking-[0.3em] uppercase text-gold-light">
-                                    {panels[3].subtitle}
-                                </p>
-                            </div>
-                        </Link>
-                    </motion.div>
-
-                    {/* Panel 5 - Bottom right */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.7, delay: 0.4 }}
-                        className="col-span-1 lg:col-span-2"
-                    >
-                        <Link
-                            to={panels[4].link}
-                            className="group relative w-full h-full overflow-hidden block"
-                        >
-                            <img
-                                src={panels[4].image}
-                                alt={panels[4].title}
-                                className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
-                                loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
-                            <div className="absolute top-3 left-3">
-                                <span className="inline-block px-2.5 py-1 bg-burgundy/90 text-champagne font-body text-[9px] tracking-[0.25em] uppercase">
-                                    {panels[4].tag}
-                                </span>
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between">
-                                <div>
+                            <Link
+                                to={panels[1].link}
+                                className="group relative w-full h-full overflow-hidden block"
+                            >
+                                <img
+                                    src={panels[1].image}
+                                    alt={panels[1].title}
+                                    className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+                                    loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
+                                <div className="absolute top-3 left-3">
+                                    <span className="inline-block px-2.5 py-1 bg-foreground text-champagne font-body text-[9px] tracking-[0.25em] uppercase">
+                                        {panels[1].tag}
+                                    </span>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 p-4">
                                     <h3 className="font-display text-lg text-champagne font-medium">
-                                        {panels[4].title}
+                                        {panels[1].title}
                                     </h3>
                                     <p className="font-body text-[10px] tracking-[0.3em] uppercase text-gold-light">
-                                        {panels[4].subtitle}
+                                        {panels[1].subtitle}
                                     </p>
                                 </div>
-                                <span className="w-9 h-9 rounded-full bg-gold/20 backdrop-blur border border-gold/30 flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-[#1a1008] transition-all duration-500">
-                                    <ArrowUpRight size={13} />
-                                </span>
-                            </div>
-                        </Link>
-                    </motion.div>
+                            </Link>
+                        </motion.div>
+
+                        {/* Panel 3 */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.97 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.7, delay: 0.2 }}
+                            className="sm:col-span-1 lg:col-span-2 aspect-[4/5] sm:aspect-square lg:aspect-auto lg:h-[330px]"
+                        >
+                            <Link
+                                to={panels[2].link}
+                                className="group relative w-full h-full overflow-hidden block"
+                            >
+                                <img
+                                    src={panels[2].image}
+                                    alt={panels[2].title}
+                                    className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+                                    loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
+                                <div className="absolute top-3 right-3">
+                                    <span className="inline-block px-2.5 py-1 bg-accent/90 text-accent-foreground font-body text-[9px] tracking-[0.25em] uppercase">
+                                        {panels[2].tag}
+                                    </span>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 p-4">
+                                    <h3 className="font-display text-lg text-champagne font-medium">
+                                        {panels[2].title}
+                                    </h3>
+                                    <p className="font-body text-[10px] tracking-[0.3em] uppercase text-gold-light">
+                                        {panels[2].subtitle}
+                                    </p>
+                                </div>
+                            </Link>
+                        </motion.div>
+
+                        {/* Panel 4 */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.97 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.7, delay: 0.3 }}
+                            className="lg:col-span-2 aspect-[4/5] sm:aspect-square lg:aspect-auto lg:h-[330px]"
+                        >
+                            <Link
+                                to={panels[3].link}
+                                className="group relative w-full h-full overflow-hidden block"
+                            >
+                                <img
+                                    src={panels[3].image}
+                                    alt={panels[3].title}
+                                    className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+                                    loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
+                                <div className="absolute top-3 left-3">
+                                    <span className="inline-block px-2.5 py-1 border border-champagne/30 text-champagne font-body text-[9px] tracking-[0.25em] uppercase backdrop-blur-sm">
+                                        {panels[3].tag}
+                                    </span>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 p-4">
+                                    <h3 className="font-display text-lg text-champagne font-medium">
+                                        {panels[3].title}
+                                    </h3>
+                                    <p className="font-body text-[10px] tracking-[0.3em] uppercase text-gold-light">
+                                        {panels[3].subtitle}
+                                    </p>
+                                </div>
+                            </Link>
+                        </motion.div>
+
+                        {/* Panel 5 */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.97 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.7, delay: 0.4 }}
+                            className="aspect-[4/5] sm:aspect-square lg:aspect-auto lg:h-[330px]"
+                        >
+                            <Link
+                                to={panels[4].link}
+                                className="group relative w-full h-full overflow-hidden block"
+                            >
+                                <img
+                                    src={panels[4].image}
+                                    alt={panels[4].title}
+                                    className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+                                    loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
+                                <div className="absolute top-3 left-3">
+                                    <span className="inline-block px-2.5 py-1 bg-burgundy/90 text-champagne font-body text-[9px] tracking-[0.25em] uppercase">
+                                        {panels[4].tag}
+                                    </span>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between">
+                                    <div>
+                                        <h3 className="font-display text-lg text-champagne font-medium">
+                                            {panels[4].title}
+                                        </h3>
+                                        <p className="font-body text-[10px] tracking-[0.3em] uppercase text-gold-light">
+                                            {panels[4].subtitle}
+                                        </p>
+                                    </div>
+                                    <span className="w-9 h-9 rounded-full bg-gold/20 backdrop-blur border border-gold/30 flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-[#1a1008] transition-all duration-500">
+                                        <ArrowRight size={13} />
+                                    </span>
+                                </div>
+                            </Link>
+                        </motion.div>
+                    </div>
                 </div>
 
                 {/* Mobile CTA */}

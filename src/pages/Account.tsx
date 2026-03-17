@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
   User, Package, Heart, MapPin, LogOut, ChevronRight,
-  ShoppingBag, Eye, EyeOff, Loader2
+  ShoppingBag, Eye, EyeOff, Loader2, Plus, Trash2
 } from "lucide-react";
 import PageHeroBanner from "@/components/PageHeroBanner";
+import accountHero from "@/assets/account-hero.png";
 
 const API = "http://localhost:8000";
 
@@ -24,6 +25,18 @@ interface Order {
   payment_method: string;
   item_count: number;
   created_at: string;
+}
+
+interface Address {
+  id: number;
+  full_name: string;
+  phone: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  is_default: number;
 }
 
 const statusColors: Record<string, string> = {
@@ -48,6 +61,20 @@ const Account = () => {
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [regForm, setRegForm] = useState({ name: "", email: "", phone: "", password: "" });
 
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    full_name: "",
+    phone: "",
+    address_line1: "",
+    address_line2: "",
+    city: "",
+    state: "",
+    pincode: "",
+    is_default: false
+  });
+
   // Check session on mount
   useEffect(() => {
     fetch(`${API}/auth/customer_check.php`, { credentials: "include" })
@@ -58,16 +85,69 @@ const Account = () => {
       .finally(() => setAuthLoading(false));
   }, []);
 
-  // Fetch orders when on orders tab
+  // Fetch addresses when on addresses tab
   useEffect(() => {
-    if (activeTab === "orders" && customer) {
-      setLoadingOrders(true);
-      fetch(`${API}/auth/customer_orders.php`, { credentials: "include" })
-        .then(r => r.json())
-        .then(json => { if (json.status === "success") setOrders(json.data); })
-        .finally(() => setLoadingOrders(false));
+    if (activeTab === "addresses" && customer) {
+      fetchAddresses();
     }
   }, [activeTab, customer]);
+
+  const fetchAddresses = async () => {
+    setLoadingAddresses(true);
+    try {
+      const res = await fetch(`${API}/auth/customer_addresses.php`, { credentials: "include" });
+      const json = await res.json();
+      if (json.status === "success") setAddresses(json.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingAddresses(false);
+    }
+  };
+
+  const handleAddAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    try {
+      const res = await fetch(`${API}/auth/customer_addresses.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(addressForm),
+      });
+      const json = await res.json();
+      if (json.status === "success") {
+        setSuccess("Address added successfully!");
+        setIsAddingAddress(false);
+        setAddressForm({
+          full_name: "", phone: "", address_line1: "", address_line2: "", city: "", state: "", pincode: "", is_default: false
+        });
+        fetchAddresses();
+      } else {
+        setError(json.message);
+      }
+    } catch {
+      setError("Failed to add address");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const deleteAddress = async (id: number) => {
+    if (!confirm("Are you sure you want to remove this address?")) return;
+    try {
+      const res = await fetch(`${API}/auth/customer_addresses.php?id=${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (json.status === "success") {
+        fetchAddresses();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +212,11 @@ const Account = () => {
   if (!customer) {
     return (
       <div>
-        <PageHeroBanner title="My Account" subtitle="Sign In or Register" />
+        <PageHeroBanner
+          title="My Account"
+          subtitle="Sign In or Register"
+          backgroundImage={accountHero}
+        />
         <div className="container mx-auto px-4 lg:px-8 py-16">
           <div className="max-w-md mx-auto">
             {/* Toggle */}
@@ -244,7 +328,11 @@ const Account = () => {
 
   return (
     <div>
-      <PageHeroBanner title="My Account" subtitle={`Welcome, ${customer.name.split(" ")[0]}`} />
+      <PageHeroBanner
+        title="My Account"
+        subtitle={`Welcome, ${customer.name.split(" ")[0]}`}
+        backgroundImage={accountHero}
+      />
 
       <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20">
         {success && (
@@ -269,8 +357,8 @@ const Account = () => {
             {tabs.map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 font-body text-sm transition-all duration-300 rounded ${activeTab === tab.id
-                    ? "bg-card text-foreground border-l-2 border-accent"
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                  ? "bg-card text-foreground border-l-2 border-accent"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card/50"
                   }`}>
                 <tab.icon size={16} />
                 <span className="tracking-wide">{tab.label}</span>
@@ -366,13 +454,108 @@ const Account = () => {
 
             {activeTab === "addresses" && (
               <div>
-                <h2 className="font-display text-2xl font-semibold mb-6">Saved Addresses</h2>
-                <div className="flex flex-col items-center justify-center py-16 text-center bg-card rounded-lg">
-                  <MapPin size={48} strokeWidth={1} className="text-muted-foreground/30 mb-4" />
-                  <p className="font-display text-lg mb-2">No addresses saved</p>
-                  <p className="font-body text-sm text-muted-foreground mb-6">Add an address for faster checkout.</p>
-                  <button className="btn-outline">Add Address</button>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-display text-2xl font-semibold">Saved Addresses</h2>
+                  {!isAddingAddress && addresses.length > 0 && (
+                    <button onClick={() => setIsAddingAddress(true)} className="btn-gold flex items-center gap-2 py-2 px-4">
+                      <Plus size={16} /> Add New
+                    </button>
+                  )}
                 </div>
+
+                {isAddingAddress ? (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-card p-6 rounded-lg border border-border">
+                    <h3 className="font-display text-lg mb-6">Add New Address</h3>
+                    <form onSubmit={handleAddAddress} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="md:col-span-2">
+                        <label className="label-sm">Full Name *</label>
+                        <input type="text" className="input-luxury" required value={addressForm.full_name}
+                          onChange={e => setAddressForm({ ...addressForm, full_name: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="label-sm">Phone Number *</label>
+                        <input type="tel" className="input-luxury" required value={addressForm.phone}
+                          onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="label-sm">Pincode *</label>
+                        <input type="text" className="input-luxury" required value={addressForm.pincode}
+                          onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })} />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="label-sm">Address Line 1 (House No, Street) *</label>
+                        <input type="text" className="input-luxury" required value={addressForm.address_line1}
+                          onChange={e => setAddressForm({ ...addressForm, address_line1: e.target.value })} />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="label-sm">Address Line 2 (Landmark, Area)</label>
+                        <input type="text" className="input-luxury" value={addressForm.address_line2}
+                          onChange={e => setAddressForm({ ...addressForm, address_line2: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="label-sm">City *</label>
+                        <input type="text" className="input-luxury" required value={addressForm.city}
+                          onChange={e => setAddressForm({ ...addressForm, city: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="label-sm">State *</label>
+                        <input type="text" className="input-luxury" required value={addressForm.state}
+                          onChange={e => setAddressForm({ ...addressForm, state: e.target.value })} />
+                      </div>
+                      <div className="md:col-span-2 flex items-center gap-2 py-2">
+                        <input type="checkbox" id="is_default" checked={addressForm.is_default}
+                          onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })} />
+                        <label htmlFor="is_default" className="font-body text-xs cursor-pointer">Set as default address</label>
+                      </div>
+                      <div className="md:col-span-2 flex gap-3 mt-4">
+                        <button type="submit" disabled={authLoading} className="btn-primary flex-1 justify-center">
+                          {authLoading ? <Loader2 className="animate-spin" size={18} /> : "Save Address"}
+                        </button>
+                        <button type="button" onClick={() => setIsAddingAddress(false)} className="btn-outline flex-1 justify-center">
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                ) : loadingAddresses ? (
+                  <div className="flex items-center gap-3 py-12">
+                    <Loader2 size={24} className="animate-spin text-accent" />
+                    <span className="font-body text-sm">Fetching addresses...</span>
+                  </div>
+                ) : addresses.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center bg-card rounded-lg">
+                    <MapPin size={48} strokeWidth={1} className="text-muted-foreground/30 mb-4" />
+                    <p className="font-display text-lg mb-2">No addresses saved</p>
+                    <p className="font-body text-sm text-muted-foreground mb-6">Add an address for faster checkout.</p>
+                    <button onClick={() => setIsAddingAddress(true)} className="btn-gold px-8">Add Address</button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {addresses.map(addr => (
+                      <div key={addr.id} className={`p-5 rounded-lg border bg-card relative ${addr.is_default ? "border-accent shadow-sm" : "border-border"}`}>
+                        {addr.is_default === 1 && (
+                          <span className="absolute top-3 right-3 text-[9px] uppercase tracking-tighter bg-accent/10 text-accent px-2 py-0.5 rounded font-bold">Default</span>
+                        )}
+                        <p className="font-body text-sm font-bold mb-1">{addr.full_name}</p>
+                        <p className="font-body text-xs text-muted-foreground mb-3">{addr.phone}</p>
+                        <p className="font-body text-xs leading-relaxed text-muted-foreground">
+                          {addr.address_line1}<br />
+                          {addr.address_line2 && <>{addr.address_line2}<br /></>}
+                          {addr.city}, {addr.state} - {addr.pincode}
+                        </p>
+                        <div className="mt-4 pt-4 border-t border-border flex justify-end">
+                          <button onClick={() => deleteAddress(addr.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={() => setIsAddingAddress(true)} className="border-2 border-dashed border-border rounded-lg p-8 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-accent hover:text-accent transition-all group">
+                      <Plus size={24} className="group-hover:scale-110 transition-transform" />
+                      <span className="font-body text-xs uppercase tracking-widest font-semibold">New Address</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </motion.div>

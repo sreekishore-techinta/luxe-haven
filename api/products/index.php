@@ -7,7 +7,6 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
 
-    // ─── GET: List / Search / Filter products ───────────────────────────
     case 'GET':
         $where = ["1=1"];
         $params = [];
@@ -15,45 +14,59 @@ switch ($method) {
 
         if (!empty($_GET['search'])) {
             $s = "%" . $_GET['search'] . "%";
-            $where[] = "(p.name LIKE ? OR p.sku LIKE ? OR p.fabric LIKE ?)";
-            $params = array_merge($params, [$s, $s, $s]);
-            $types .= "sss";
+            $searchType = $_GET['search_type'] ?? 'name';
+
+            if ($searchType === 'id') {
+                $where[] = "p.id = ?";
+                $params[] = (int) $_GET['search'];
+                $types .= "i";
+            } elseif ($searchType === 'category') {
+                $where[] = "mc.name LIKE ?";
+                $params[] = $s;
+                $types .= "s";
+            } else {
+                $where[] = "(p.name LIKE ? OR p.sku LIKE ? OR p.description LIKE ?)";
+                $params = array_merge($params, [$s, $s, $s]);
+                $types .= "sss";
+            }
         }
-        if (!empty($_GET['category']) && $_GET['category'] !== 'All') {
-            $where[] = "p.category = ?";
-            $params[] = $_GET['category'];
-            $types .= "s";
+
+        if (!empty($_GET['category_id'])) {
+            $where[] = "p.category_id = ?";
+            $params[] = (int) $_GET['category_id'];
+            $types .= "i";
         }
-        if (!empty($_GET['status']) && $_GET['status'] !== 'All') {
+
+        if (!empty($_GET['status']) && $_GET['status'] !== 'All Status') {
             $where[] = "p.status = ?";
             $params[] = $_GET['status'];
             $types .= "s";
         }
-        if (!empty($_GET['fabric']) && $_GET['fabric'] !== 'All') {
-            $where[] = "p.fabric = ?";
-            $params[] = $_GET['fabric'];
-            $types .= "s";
-        }
+
         if (!empty($_GET['min_price'])) {
             $where[] = "p.price >= ?";
             $params[] = (float) $_GET['min_price'];
             $types .= "d";
         }
+
         if (!empty($_GET['max_price'])) {
             $where[] = "p.price <= ?";
             $params[] = (float) $_GET['max_price'];
             $types .= "d";
         }
 
-        // Pagination
+        // Sorting
+        $allowedSort = ['price', 'created_at', 'stock_quantity'];
+        $sortBy = in_array($_GET['sort_by'] ?? '', $allowedSort) ? $_GET['sort_by'] : 'created_at';
+        $order = strtoupper($_GET['order'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+
         $page = max(1, (int) ($_GET['page'] ?? 1));
-        $per_page = (int) ($_GET['per_page'] ?? 20);
+        $per_page = (int) ($_GET['per_page'] ?? 10);
         $offset = ($page - 1) * $per_page;
 
         $whereStr = implode(" AND ", $where);
 
-        // Count total
-        $countSql = "SELECT COUNT(*) as total FROM products p WHERE $whereStr";
+        $countSql = "SELECT COUNT(*) as total FROM products p LEFT JOIN master_categories mc ON mc.id = p.category_id WHERE $whereStr";
         $countStmt = $conn->prepare($countSql);
         if ($types && $params)
             $countStmt->bind_param($types, ...$params);
@@ -61,13 +74,22 @@ switch ($method) {
         $total = $countStmt->get_result()->fetch_assoc()['total'];
         $countStmt->close();
 
-        // Fetch products with primary image
-        $sql = "SELECT p.*, pi.image_path as primary_image
+        $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
+            . '://' . $_SERVER['HTTP_HOST'] . '/';
+
+        $sql = "SELECT p.*, mc.name as category_name,
+                       mcl.name as colour_name, mft.name as fabric_name,
+                       msz.name as size_name,
+                       (SELECT image_path FROM product_images WHERE product_id = p.id AND is_primary = 1 LIMIT 1) as primary_image
                 FROM products p
-                LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_primary = 1
+                LEFT JOIN master_categories mc ON mc.id = p.category_id
+                LEFT JOIN master_colours mcl ON mcl.id = p.colour_id
+                LEFT JOIN master_fabric_types mft ON mft.id = p.fabric_id
+                LEFT JOIN master_sizes msz ON msz.id = p.size_id
                 WHERE $whereStr
-                ORDER BY p.created_at DESC
+                ORDER BY p.$sortBy $order
                 LIMIT ? OFFSET ?";
+
         $stmt = $conn->prepare($sql);
         $allTypes = $types . "ii";
         $allParams = array_merge($params, [$per_page, $offset]);
@@ -75,7 +97,20 @@ switch ($method) {
         $stmt->execute();
         $products = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
-        $conn->close();
+
+        // Normalize images to full URLs
+        foreach ($products as &$p) {
+            if (!empty($p['primary_image'])) {
+                if (strpos($p['primary_image'], 'http') !== 0) {
+                    $p['primary_image'] = $baseUrl . ltrim($p['primary_image'], '/');
+                }
+            } else {
+                $p['primary_image'] = null;
+            }
+            // Compatibility alias
+            $p['image'] = $p['primary_image'];
+        }
+        unset($p);
 
         jsonResponse([
             'status' => 'success',
@@ -83,76 +118,106 @@ switch ($method) {
             'total' => (int) $total,
             'page' => $page,
             'per_page' => $per_page,
-            'total_pages' => (int) ceil($total / $per_page),
+            'total_pages' => (int) ceil($total / $per_page)
         ]);
         break;
 
-    // ─── POST: Create new product ───────────────────────────────────────
     case 'POST':
-        $data = json_decode(file_get_contents('php://input'), true);
+        // Silence raw errors to prevent them from breaking the JSON response
+        ini_set('display_errors', 0);
+        error_reporting(0);
 
-        $required = ['name', 'category', 'price', 'fabric', 'stock_qty'];
-        foreach ($required as $field) {
-            if (empty($data[$field])) {
-                jsonResponse(['status' => 'error', 'message' => "Field '$field' is required"], 400);
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+
+            if (empty($data['name']) || empty($data['price'])) {
+                jsonResponse(['status' => 'error', 'message' => 'Name and price are required'], 400);
             }
-        }
 
-        $sku = strtoupper('LS-' . strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $data['name']), 0, 4)) . rand(1000, 9999));
+            // Create variables for bind_param (v5.3+ requires variables for reference)
+            $name = $data['name'];
+            $slug = !empty($data['slug']) ? $data['slug'] : strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
 
-        $stmt = $conn->prepare(
-            "INSERT INTO products (sku, name, category, sub_category_id, colour_id, fabric_id, size_id, sleeve_type_id, neck_type_id, occasion_id, pattern_id, description, price, discount_price, fabric, stock_qty, status, is_new, is_bestseller)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        );
-        $qty = (int) ($data['stock_qty'] ?? 0);
-        $status = $qty === 0 ? 'Out of Stock' : ($qty < 10 ? 'Low Stock' : 'In Stock');
-        $discount = !empty($data['discount_price']) ? (float) $data['discount_price'] : null;
-        $is_new = (int) ($data['is_new'] ?? 0);
-        $is_bestseller = (int) ($data['is_bestseller'] ?? 0);
+            $cat_id = !empty($data['category_id']) ? (int) $data['category_id'] : null;
+            $fabric_id = !empty($data['fabric_id']) ? (int) $data['fabric_id'] : null;
+            $color_id = !empty($data['colour_id']) ? (int) $data['colour_id'] : null;
+            $size_id = !empty($data['size_id']) ? (int) $data['size_id'] : null;
 
-        // Convert empty strings to null for integer fields
-        $sub_cat = !empty($data['sub_category_id']) ? (int) $data['sub_category_id'] : null;
-        $col = !empty($data['colour_id']) ? (int) $data['colour_id'] : null;
-        $fab_id = !empty($data['fabric_id']) ? (int) $data['fabric_id'] : null;
-        $size = !empty($data['size_id']) ? (int) $data['size_id'] : null;
-        $sleeve = !empty($data['sleeve_type_id']) ? (int) $data['sleeve_type_id'] : null;
-        $neck = !empty($data['neck_type_id']) ? (int) $data['neck_type_id'] : null;
-        $occ = !empty($data['occasion_id']) ? (int) $data['occasion_id'] : null;
-        $pat = !empty($data['pattern_id']) ? (int) $data['pattern_id'] : null;
+            $saree_type_id = !empty($data['saree_type_id']) ? (int) $data['saree_type_id'] : null;
+            $blouse_style_id = !empty($data['blouse_style_id']) ? (int) $data['blouse_style_id'] : null;
 
-        $stmt->bind_param(
-            "sssiiiiiiiisddsisii",
-            $sku,
-            $data['name'],
-            $data['category'],
-            $sub_cat,
-            $col,
-            $fab_id,
-            $size,
-            $sleeve,
-            $neck,
-            $occ,
-            $pat,
-            $data['description'],
-            $data['price'],
-            $discount,
-            $data['fabric'],
-            $qty,
-            $status,
-            $is_new,
-            $is_bestseller
-        );
+            $desc = $data['description'] ?? '';
+            $price = (float) ($data['price'] ?? 0);
+            $mrp = !empty($data['mrp_price']) ? (float) $data['mrp_price'] : $price;
+            $discount = (float) ($data['discount'] ?? 0);
 
-        if ($stmt->execute()) {
-            $newId = $stmt->insert_id;
-            $stmt->close();
-            $conn->close();
-            jsonResponse(['status' => 'success', 'message' => 'Product created successfully', 'id' => $newId, 'sku' => $sku], 201);
-        } else {
-            jsonResponse(['status' => 'error', 'message' => 'Failed to create product: ' . $conn->error], 500);
+            // Default stock to 50 if not provided
+            $stockInput = isset($data['stock_quantity']) ? $data['stock_quantity'] : ($data['stock'] ?? null);
+            $stock = ($stockInput === null || $stockInput === '') ? 50 : (int) $stockInput;
+
+            $sku = !empty($data['sku']) ? $data['sku'] : strtoupper('LH-' . substr(uniqid(), -6));
+
+            $avail = $stock <= 0 ? 'Out of Stock' : ($stock < 10 ? 'Low Stock' : 'In Stock');
+            $status = $data['status'] ?? 'Active';
+            if ($stock <= 0)
+                $status = 'Out of Stock';
+
+            $work = $data['work_type'] ?? '';
+            $blouse = $data['blouse_included'] ?? 0;
+            $length = $data['saree_length'] ?? '';
+            $is_bestseller = (int) ($data['is_bestseller'] ?? 0);
+            $is_new_arrival = (int) ($data['is_new_arrival'] ?? 0);
+            $meta_t = $data['meta_title'] ?? '';
+            $meta_d = $data['meta_description'] ?? '';
+
+            $sql = "INSERT INTO products (name, slug, category_id, category, description, price, mrp_price, discount, stock_quantity, stock_qty, sku, availability_status, status, fabric_id, colour_id, size_id, saree_type_id, blouse_style_id, work_type, blouse_included, saree_length, is_bestseller, is_new, is_new_arrival, meta_title, meta_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            $stmt = $conn->prepare($sql);
+            if (!$stmt) {
+                throw new Exception("Prepare failed: " . $conn->error);
+            }
+
+            $stmt->bind_param(
+                "ssiisdddiisssiiiiisisiiiiss",
+                $name,
+                $slug,
+                $cat_id, // category_id
+                $cat_id, // category
+                $desc,
+                $price,
+                $mrp,
+                $discount,
+                $stock, // stock_quantity
+                $stock, // stock_qty
+                $sku,
+                $avail, // availability_status
+                $status, // status
+                $fabric_id,
+                $color_id,
+                $size_id,
+                $saree_type_id,
+                $blouse_style_id,
+                $work,
+                $blouse,
+                $length,
+                $is_bestseller,
+                $is_new_arrival, // is_new
+                $is_new_arrival, // is_new_arrival
+                $meta_t,
+                $meta_d
+            );
+
+            if ($stmt->execute()) {
+                jsonResponse(['status' => 'success', 'message' => 'Product created', 'id' => $stmt->insert_id], 201);
+            } else {
+                jsonResponse(['status' => 'error', 'message' => 'Query failed: ' . $stmt->error], 500);
+            }
+        } catch (Exception $e) {
+            jsonResponse(['status' => 'error', 'message' => 'System error: ' . $e->getMessage()], 500);
         }
         break;
 
     default:
         jsonResponse(['status' => 'error', 'message' => 'Method not allowed'], 405);
 }
+?>

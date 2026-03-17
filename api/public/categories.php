@@ -5,7 +5,7 @@ setCORSHeaders();
 $conn = getDB();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $sql = "SELECT id, name FROM master_categories WHERE status = 'Active' ORDER BY id ASC";
+    $sql = "SELECT id, name, slug FROM master_categories WHERE status = 'Active' ORDER BY sort_order ASC, name ASC";
     $result = $conn->query($sql);
 
     $data = [];

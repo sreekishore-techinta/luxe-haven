@@ -14,10 +14,7 @@ $allowedMasters = [
     'colours' => 'master_colours',
     'fabric_types' => 'master_fabric_types',
     'sizes' => 'master_sizes',
-    'sleeve_types' => 'master_sleeve_types',
-    'neck_types' => 'master_neck_types',
-    'occasions' => 'master_occasions',
-    'patterns' => 'master_patterns'
+    'saree_types' => 'saree_types'
 ];
 
 if (!isset($allowedMasters[$type])) {
@@ -59,11 +56,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $data = [];
     while ($row = $result->fetch_assoc()) {
-        if ($type === 'sub_categories') {
-            $catId = $row['category_id'];
-            $catRes = $conn->query("SELECT name FROM master_categories WHERE id = $catId");
-            $catRow = $catRes->fetch_assoc();
-            $row['category_name'] = $catRow['name'] ?? 'Unknown';
+        if ($type === 'sub_categories' || $type === 'sizes') {
+            $catId = $row['category_id'] ?? null;
+            if ($catId) {
+                $catRes = $conn->query("SELECT name FROM master_categories WHERE id = $catId");
+                $catRow = $catRes->fetch_assoc();
+                $row['category_name'] = $catRow['name'] ?? 'Unknown';
+            } else {
+                $row['category_name'] = 'General';
+            }
         }
         $data[] = $row;
     }
@@ -96,15 +97,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Table specific fields
-    if ($type === 'sub_categories') {
-        if (!isset($input['category_id']))
-            jsonResponse(['status' => 'error', 'message' => 'Category is required'], 400);
-        $fields[] = 'category_id';
-        $values[] = intval($input['category_id']);
+    // Unified creation logic for professional masters
+    if (in_array($type, ['categories', 'sub_categories', 'saree_types', 'brands'])) {
+        foreach (['slug', 'image', 'hero_image', 'description', 'meta_title', 'meta_description'] as $f) {
+            if (isset($input[$f])) {
+                $fields[] = $f;
+                $values[] = "'" . sanitize($conn, $input[$f]) . "'";
+            }
+        }
+        foreach (['is_featured', 'show_on_menu'] as $f) {
+            if (isset($input[$f])) {
+                $fields[] = $f;
+                $values[] = (int) $input[$f];
+            }
+        }
+        if ($type === 'sub_categories') {
+            if (!isset($input['category_id']))
+                jsonResponse(['status' => 'error', 'message' => 'Category is required'], 400);
+            $fields[] = 'category_id';
+            $values[] = (int) $input['category_id'];
+        }
     }
     if ($type === 'colours' && isset($input['hex_code'])) {
         $fields[] = 'hex_code';
         $values[] = "'" . sanitize($conn, $input['hex_code']) . "'";
+    }
+    if ($type === 'sizes') {
+        if (isset($input['category_id'])) {
+            $fields[] = 'category_id';
+            $values[] = intval($input['category_id']);
+        }
+        foreach (['chest_size', 'waist_size', 'hip_size', 'shoulder_size', 'length', 'sleeve_length', 'neck_depth', 'inseam', 'description'] as $f) {
+            if (isset($input[$f])) {
+                $fields[] = $f;
+                $values[] = "'" . sanitize($conn, $input[$f]) . "'";
+            }
+        }
     }
     if (isset($input['sort_order'])) {
         $fields[] = 'sort_order';
@@ -115,6 +143,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($conn->query($sql)) {
         jsonResponse(['status' => 'success', 'message' => 'Record created', 'id' => $conn->insert_id]);
+    } else {
+        jsonResponse(['status' => 'error', 'message' => $conn->error], 500);
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    $id = intval($_GET['id'] ?? 0);
+    if ($id <= 0)
+        jsonResponse(['status' => 'error', 'message' => 'Invalid ID'], 400);
+
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!$input)
+        jsonResponse(['status' => 'error', 'message' => 'Invalid JSON'], 400);
+
+    $updates = [];
+    if (isset($input['name']))
+        $updates[] = "name = '" . sanitize($conn, $input['name']) . "'";
+    if (isset($input['status']))
+        $updates[] = "status = '" . sanitize($conn, $input['status']) . "'";
+    if (isset($input['sort_order']))
+        $updates[] = "sort_order = " . intval($input['sort_order']);
+
+    if ($type === 'sub_categories') {
+        if (isset($input['category_id']))
+            $updates[] = "category_id = " . intval($input['category_id']);
+        if (isset($input['image']))
+            $updates[] = "image = '" . sanitize($conn, $input['image']) . "'";
+        if (isset($input['hero_image']))
+            $updates[] = "hero_image = '" . sanitize($conn, $input['hero_image']) . "'";
+        if (isset($input['description']))
+            $updates[] = "description = '" . sanitize($conn, $input['description']) . "'";
+    }
+    if ($type === 'categories' || $type === 'saree_styles') {
+        if (isset($input['slug']))
+            $updates[] = "slug = '" . sanitize($conn, $input['slug']) . "'";
+        if (isset($input['image']))
+            $updates[] = "image = '" . sanitize($conn, $input['image']) . "'";
+        if (isset($input['hero_image']))
+            $updates[] = "hero_image = '" . sanitize($conn, $input['hero_image']) . "'";
+        if (isset($input['description']))
+            $updates[] = "description = '" . sanitize($conn, $input['description']) . "'";
+    }
+    if ($type === 'colours' && isset($input['hex_code'])) {
+        $updates[] = "hex_code = '" . sanitize($conn, $input['hex_code']) . "'";
+    }
+
+    if (empty($updates))
+        jsonResponse(['status' => 'error', 'message' => 'No fields to update'], 400);
+
+    $sql = "UPDATE $table SET " . implode(', ', $updates) . " WHERE id = $id";
+    if ($conn->query($sql)) {
+        jsonResponse(['status' => 'success', 'message' => 'Record updated']);
+    } else {
+        jsonResponse(['status' => 'error', 'message' => $conn->error], 500);
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $id = intval($_GET['id'] ?? 0);
+    if ($id <= 0)
+        jsonResponse(['status' => 'error', 'message' => 'Invalid ID'], 400);
+
+    $sql = "DELETE FROM $table WHERE id = $id";
+    if ($conn->query($sql)) {
+        jsonResponse(['status' => 'success', 'message' => 'Record deleted']);
     } else {
         jsonResponse(['status' => 'error', 'message' => $conn->error], 500);
     }

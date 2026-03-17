@@ -48,7 +48,7 @@ switch ($method) {
         $params = [];
         $types = "";
 
-        $updatable = ['status', 'payment_status', 'tracking_number', 'notes'];
+        $updatable = ['status', 'payment_status', 'tracking_number', 'notes', 'shipping_date', 'payment_id', 'payment_notes', 'shipping_phone'];
         foreach ($updatable as $f) {
             if (array_key_exists($f, $data)) {
                 $fields[] = "$f = ?";

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuxeHaven Admin Dashboard</title>
+    <script>
+        // Dashboard Protection Logic
+        async function checkSession() {
+            try {
+                // Adjust path based on where this file is located
+                const res = await fetch('../api/auth/check.php', { credentials: 'include' });
+                const json = await res.json();
+                if (!json.authenticated) {
+                    window.location.href = '../admin/login.html';
+                } else {
+                    document.getElementById('admin-name').innerText = json.admin.name;
+                    document.body.style.display = 'block';
+                }
+            } catch (err) {
+                window.location.href = '../admin/login.html';
+            }
+        }
+        checkSession();
+    </script>
+    <style>
+        body {
+            display: none;
+            font-family: sans-serif;
+            padding: 50px;
+            background: #fdfcf9;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            color: #041E18;
+        }
+
+        .gold {
+            color: #B48C5E;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>LuxeHaven <span class="gold">Admin Dashboard</span></h1>
+        <p>Welcome back, <span id="admin-name">Administrator</span>!</p>
+        <hr>
+        <p>This is your standalone dashboard. You can also access the React-based admin panel at <a
+                href="../admin">/admin</a>.</p>
+        <button onclick="logout()">Log Out</button>
+    </div>
+
+    <script>
+        async function logout() {
+            await fetch('../api/auth/logout.php', { credentials: 'include' });
+            localStorage.removeItem('admin_user');
+            window.location.href = '../admin/login.html';
+        }
+    </script>
+</body>
+
+</html>

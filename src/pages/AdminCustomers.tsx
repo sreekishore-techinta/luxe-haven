@@ -21,20 +21,20 @@ type CustomerDetail = Customer & {
 
 const statusBadge = (s: string) => {
     const m: Record<string, string> = {
-        Delivered: "bg-emerald-50 text-emerald-600 border-emerald-100",
-        Processing: "bg-blue-50 text-blue-600 border-blue-100",
-        Shipped: "bg-purple-50 text-purple-600 border-purple-100",
-        Pending: "bg-amber-50 text-amber-600 border-amber-100",
-        Cancelled: "bg-rose-50 text-rose-600 border-rose-100",
+        Delivered: "bg-emerald-50 text-emerald-800 border-emerald-200 font-black",
+        Processing: "bg-blue-50 text-blue-800 border-blue-200 font-black",
+        Shipped: "bg-purple-50 text-purple-800 border-purple-200 font-black",
+        Pending: "bg-amber-50 text-amber-800 border-amber-200 font-black",
+        Cancelled: "bg-rose-50 text-rose-800 border-rose-200 font-black",
     };
-    return m[s] ?? "bg-gray-50 text-gray-500 border-gray-100";
+    return m[s] ?? "bg-gray-50 text-gray-700 border-gray-200 font-black";
 };
 
 const getTier = (spent: number) => {
-    if (spent >= 50000) return { label: "Platinum", cls: "bg-purple-50 text-purple-600 border-purple-100" };
-    if (spent >= 25000) return { label: "Gold", cls: "bg-amber-50 text-amber-600 border-amber-100" };
-    if (spent >= 10000) return { label: "Silver", cls: "bg-blue-50 text-blue-600 border-blue-100" };
-    return { label: "Regular", cls: "bg-gray-50 text-gray-500 border-gray-100" };
+    if (spent >= 50000) return { label: "Platinum", cls: "bg-purple-50 text-purple-800 border-purple-200 font-black" };
+    if (spent >= 25000) return { label: "Gold", cls: "bg-amber-50 text-amber-800 border-amber-200 font-black" };
+    if (spent >= 10000) return { label: "Silver", cls: "bg-blue-50 text-blue-800 border-blue-200 font-black" };
+    return { label: "Regular", cls: "bg-gray-50 text-gray-700 border-gray-200 font-black" };
 };
 
 export default function AdminCustomers() {
@@ -69,7 +69,10 @@ export default function AdminCustomers() {
         } finally { setLoading(false); }
     };
 
-    useEffect(() => { fetchCustomers(); }, [page, search]);
+    useEffect(() => {
+        fetchCustomers();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [page, search]);
 
     const openDetail = async (c: Customer) => {
         setDLoading(true); setDetail(null);
@@ -97,158 +100,178 @@ export default function AdminCustomers() {
     );
 
     return (
-        <div className="space-y-8">
+        <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-10 space-y-10">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div>
-                    <h1 className="font-display text-4xl font-semibold mb-2">Customer Database</h1>
-                    <p className="text-sm text-gray-400 font-medium">{total} registered customers</p>
+                    <h1 className="text-3xl font-black text-slate-950 tracking-tight">Customer Database</h1>
+                    <p className="text-xs font-black text-slate-600 mt-2">
+                        {total} REGISTERED CLIENTS IN CATALOGUE
+                    </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                    <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm focus-within:border-[#D4AF37]/50 transition-all">
+                        <Search size={18} className="text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by name, email or phone..."
+                            className="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-950 placeholder:text-slate-400 w-full sm:w-80"
+                            value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+                        />
+                    </div>
                 </div>
             </div>
 
-            {/* Search */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex gap-4 items-center">
-                <div className="flex-1 relative">
-                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input type="text" placeholder="Search by name, email or phone..."
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50/50 rounded-xl border border-gray-100 text-sm focus:ring-0 focus:border-[#B48C5E] transition-all"
-                        value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
+            {/* Table Area */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-slate-50 rounded-lg text-slate-400"><ShoppingBag size={18} /></div>
+                        <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Client Registry</h2>
+                    </div>
                 </div>
-            </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left">
                         <thead>
-                            <tr className="bg-gray-50/50">
-                                {["Customer", "Contact", "Location", "Orders", "Lifetime Value", "Tier", "Action"].map(h => (
-                                    <th key={h} className={`px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 border-b border-gray-100 italic ${h === "Action" ? "text-right" : ""}`}>{h}</th>
-                                ))}
+                            <tr className="bg-slate-50 border-b border-slate-200">
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Customer</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Contact Details</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Location</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 text-center">Orders</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Spending</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Tier</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-slate-100">
                             {customers.map((c, i) => {
                                 const tier = getTier(Number(c.lifetime_value) || 0);
                                 const initials = c.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
                                 return (
-                                    <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                                        className="hover:bg-gray-50/80 transition-colors group">
-                                        <td className="px-6 py-4">
+                                    <tr key={c.id} className="hover:bg-slate-50 transition-colors group">
+                                        <td className="px-8 py-6">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#B48C5E] to-[#8B6B43] flex items-center justify-center text-white font-bold text-xs shrink-0">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-lg">
                                                     {initials}
                                                 </div>
                                                 <div>
-                                                    <p className="text-xs font-bold text-gray-900 group-hover:text-[#B48C5E] transition-colors">{c.name}</p>
-                                                    <p className="text-[10px] text-gray-400">Since {new Date(c.created_at).getFullYear()}</p>
+                                                    <p className="text-sm font-black text-slate-950 group-hover:text-[#D4AF37] transition-colors">{c.name}</p>
+                                                    <p className="text-[10px] text-slate-600 font-extrabold uppercase tracking-widest">Client since {new Date(c.created_at).getFullYear()}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-8 py-6">
                                             <div className="space-y-1">
-                                                <div className="flex items-center gap-1.5 text-[11px] text-gray-600"><Mail size={11} className="text-gray-400" />{c.email}</div>
-                                                {c.phone && <div className="flex items-center gap-1.5 text-[11px] text-gray-600"><Phone size={11} className="text-gray-400" />{c.phone}</div>}
+                                                <div className="flex items-center gap-2 text-xs font-black text-slate-700"><Mail size={12} className="text-slate-600" />{c.email}</div>
+                                                {c.phone && <div className="flex items-center gap-2 text-xs font-black text-slate-700"><Phone size={12} className="text-slate-600" />{c.phone}</div>}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            {c.city && <p className="text-[11px] text-gray-600 font-medium">{c.city}{c.state ? `, ${c.state}` : ""}</p>}
+                                        <td className="px-8 py-6">
+                                            {c.city && <p className="text-xs font-black text-slate-700">{c.city}{c.state ? `, ${c.state}` : ""}</p>}
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <p className="text-xs font-bold text-gray-900">{c.order_count ?? c.total_orders}</p>
-                                            {c.last_order_date && <p className="text-[10px] text-gray-400">Last: {new Date(c.last_order_date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</p>}
+                                        <td className="px-8 py-6 text-center">
+                                            <p className="text-sm font-black text-slate-950">{c.order_count ?? c.total_orders}</p>
+                                            {c.last_order_date && <p className="text-[9px] text-slate-600 font-extrabold uppercase tracking-widest">Last: {new Date(c.last_order_date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</p>}
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <p className="text-xs font-bold text-gray-900 font-display italic">₹{Number(c.lifetime_value || c.total_spent || 0).toLocaleString()}</p>
+                                        <td className="px-8 py-6">
+                                            <p className="text-sm font-black text-slate-950">₹{Number(c.lifetime_value || c.total_spent || 0).toLocaleString()}</p>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border shadow-sm ${tier.cls}`}>{tier.label}</span>
+                                        <td className="px-8 py-6">
+                                            <span className={`px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest border transition-all ${tier.cls}`}>{tier.label}</span>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button onClick={() => openDetail(c)} className="p-2.5 text-gray-400 hover:text-[#B48C5E] hover:bg-[#B48C5E]/10 rounded-lg transition-all"><Eye size={15} /></button>
+                                        <td className="px-8 py-6 text-right">
+                                            <button onClick={() => openDetail(c)} className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all shadow-sm"><Eye size={16} /></button>
                                         </td>
-                                    </motion.tr>
+                                    </tr>
                                 );
                             })}
                         </tbody>
                     </table>
                 </div>
-                {/* Pagination */}
-                <div className="px-6 py-5 border-t border-gray-100 flex items-center justify-between">
-                    <p className="text-[11px] text-gray-400 font-medium uppercase tracking-widest">Showing {customers.length} of {total}</p>
-                    <div className="flex items-center gap-2">
-                        <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="p-2.5 text-gray-400 hover:text-[#B48C5E] border border-gray-100 rounded-xl disabled:opacity-30"><ChevronLeft size={16} /></button>
+
+                <div className="px-8 py-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Page {page} of {totalPages}</p>
+                    <div className="flex items-center gap-1.5">
+                        <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-slate-900 transition-all disabled:opacity-30"><ChevronLeft size={16} /></button>
                         {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(n => (
-                            <button key={n} onClick={() => setPage(n)} className={`w-9 h-9 rounded-xl text-xs font-bold ${n === page ? 'bg-[#B48C5E] text-white' : 'text-gray-400 hover:bg-gray-50'}`}>{n}</button>
+                            <button key={n} onClick={() => setPage(n)} className={`w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${n === page ? 'bg-[#0F172A] text-white shadow-md' : 'text-slate-400 hover:bg-white border border-transparent hover:border-slate-200'}`}>{n}</button>
                         ))}
-                        <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="p-2.5 text-gray-400 hover:text-[#B48C5E] border border-gray-100 rounded-xl disabled:opacity-30"><ChevronRight size={16} /></button>
+                        <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-slate-900 transition-all disabled:opacity-30"><ChevronRight size={16} /></button>
                     </div>
                 </div>
             </div>
 
-            {/* ── Customer Detail Modal ───────────────────────────────────── */}
+            {/* Customer Detail Modal */}
             <AnimatePresence>
                 {(detail || dLoading) && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setDetail(null)}>
-                        <motion.div initial={{ scale: 0.92 }} animate={{ scale: 1 }} exit={{ scale: 0.92 }}
-                            className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto"
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDetail(null)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+
+                        <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-slate-200"
                             onClick={e => e.stopPropagation()}>
                             {dLoading ? (
-                                <div className="p-16 text-center"><Loader2 size={32} className="animate-spin mx-auto text-gray-400" /></div>
+                                <div className="p-24 text-center"><Loader2 size={32} className="animate-spin mx-auto text-slate-300" /></div>
                             ) : detail && (() => {
                                 const tier = getTier(Number(detail.lifetime_value || 0));
                                 const initials = detail.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
                                 return (
                                     <>
-                                        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                                        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#B48C5E] to-[#8B6B43] flex items-center justify-center text-white font-bold">
+                                                <div className="w-12 h-12 rounded-xl bg-slate-950 flex items-center justify-center text-[#D4AF37] font-black shadow-lg">
                                                     {initials}
                                                 </div>
                                                 <div>
-                                                    <h2 className="font-display text-xl font-semibold">{detail.name}</h2>
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${tier.cls}`}>{tier.label} Member</span>
+                                                    <h2 className="text-xl font-black text-slate-950">{detail.name}</h2>
+                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg border mt-1 inline-block ${tier.cls}`}>{tier.label} Member</span>
                                                 </div>
                                             </div>
-                                            <button onClick={() => setDetail(null)} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"><X size={20} /></button>
+                                            <button onClick={() => setDetail(null)} className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-400"><X size={20} /></button>
                                         </div>
-                                        <div className="p-6 space-y-6">
-                                            {/* Contact */}
-                                            <div className="bg-gray-50 rounded-xl p-5 space-y-2">
-                                                <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Contact Info</h3>
-                                                <div className="flex items-center gap-2 text-sm text-gray-600"><Mail size={14} className="text-gray-400" />{detail.email}</div>
-                                                {detail.phone && <div className="flex items-center gap-2 text-sm text-gray-600"><Phone size={14} className="text-gray-400" />{detail.phone}</div>}
-                                                {detail.city && <div className="flex items-start gap-2 text-sm text-gray-600"><MapPin size={14} className="text-gray-400 mt-0.5 shrink-0" />{detail.address ? `${detail.address}, ` : ""}{detail.city}{detail.state ? `, ${detail.state}` : ""}{detail.pincode ? ` - ${detail.pincode}` : ""}</div>}
+
+                                        <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8 bg-[#F8FAFC] custom-scrollbar">
+                                            {/* Contact Cards */}
+                                            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                                                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Connect Identity</h3>
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-3 text-sm font-semibold text-slate-700"><Mail size={14} className="text-slate-400" />{detail.email}</div>
+                                                    {detail.phone && <div className="flex items-center gap-3 text-sm font-semibold text-slate-700"><Phone size={14} className="text-slate-400" />{detail.phone}</div>}
+                                                    {detail.city && <div className="flex items-start gap-3 text-sm font-semibold text-slate-700"><MapPin size={14} className="text-slate-400 mt-0.5 shrink-0" />{detail.address ? `${detail.address}, ` : ""}{detail.city}{detail.state ? `, ${detail.state}` : ""}{detail.pincode ? ` - ${detail.pincode}` : ""}</div>}
+                                                </div>
                                             </div>
-                                            {/* Stats */}
+
+                                            {/* Metrics */}
                                             <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-[#B48C5E]/5 rounded-xl p-4 text-center">
-                                                    <ShoppingBag size={20} className="mx-auto text-[#B48C5E] mb-2" />
-                                                    <p className="text-2xl font-bold font-display">{detail.orders?.length ?? 0}</p>
-                                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5">Total Orders</p>
+                                                <div className="bg-slate-900 p-5 rounded-2xl shadow-lg border border-slate-800 text-white">
+                                                    <ShoppingBag size={20} className="text-slate-500 mb-3" />
+                                                    <p className="text-2xl font-black">{detail.orders?.length ?? 0}</p>
+                                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Order Volume</p>
                                                 </div>
-                                                <div className="bg-emerald-50 rounded-xl p-4 text-center">
-                                                    <TrendingUp size={20} className="mx-auto text-emerald-600 mb-2" />
-                                                    <p className="text-2xl font-bold font-display text-emerald-700">₹{Number(detail.lifetime_value || 0).toLocaleString()}</p>
-                                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5">Lifetime Value</p>
+                                                <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100 shadow-sm text-amber-900 text-center">
+                                                    <TrendingUp size={20} className="text-amber-500 mb-3 mx-auto" />
+                                                    <p className="text-2xl font-black">₹{Number(detail.lifetime_value || 0).toLocaleString()}</p>
+                                                    <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mt-1 text-center">Lifetime Spending</p>
                                                 </div>
                                             </div>
-                                            {/* Order History */}
+
+                                            {/* Activity Logs */}
                                             {detail.orders?.length > 0 && (
-                                                <div>
-                                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Order History</h3>
-                                                    <div className="space-y-2">
+                                                <div className="space-y-4">
+                                                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Transaction History</h3>
+                                                    <div className="space-y-3">
                                                         {detail.orders.map(o => (
-                                                            <div key={o.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                                            <div key={o.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-[#D4AF37]/30 transition-all group">
                                                                 <div>
-                                                                    <p className="text-xs font-bold text-gray-900">{o.order_number}</p>
-                                                                    <p className="text-[10px] text-gray-400">{new Date(o.created_at).toLocaleDateString("en-IN")} · {o.item_count} items · {o.payment_method}</p>
+                                                                    <p className="text-xs font-bold text-slate-900 group-hover:text-[#D4AF37] transition-colors">{o.order_number}</p>
+                                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{new Date(o.created_at).toLocaleDateString("en-IN")} · {o.item_count} items</p>
                                                                 </div>
                                                                 <div className="text-right">
-                                                                    <p className="text-xs font-bold font-display text-gray-900">₹{Number(o.total).toLocaleString()}</p>
-                                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusBadge(o.status)}`}>{o.status}</span>
+                                                                    <p className="text-xs font-bold text-slate-900">₹{Number(o.total).toLocaleString()}</p>
+                                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-lg border inline-block mt-1 ${statusBadge(o.status)}`}>{o.status}</span>
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -256,11 +279,14 @@ export default function AdminCustomers() {
                                                 </div>
                                             )}
                                         </div>
+                                        <div className="px-8 py-5 bg-white border-t border-slate-100 flex justify-end">
+                                            <button onClick={() => setDetail(null)} className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg hover:bg-slate-800 transition-all">Dismiss Profile</button>
+                                        </div>
                                     </>
                                 );
                             })()}
                         </motion.div>
-                    </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
         </div>

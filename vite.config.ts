@@ -8,6 +8,16 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      "/api": {
+        target: "http://localhost/luxe-haven",
+        changeOrigin: true,
+      },
+      "/uploads": {
+        target: "http://localhost/luxe-haven",
+        changeOrigin: true,
+      }
+    },
     hmr: {
       overlay: false,
     },

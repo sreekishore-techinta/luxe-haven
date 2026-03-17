@@ -2,9 +2,9 @@ import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
-import PageHeroBanner from "@/components/PageHeroBanner";
-import { products as staticProducts } from "@/data/products";
-import { SlidersHorizontal, Grid3X3, LayoutGrid, X, Loader2 } from "lucide-react";
+import CategoryHero from "@/components/CategoryHero";
+import { SlidersHorizontal, Grid3X3, LayoutGrid, X, ChevronLeft, ChevronRight } from "lucide-react";
+import SkeletonCard from "@/components/SkeletonCard";
 import newCollectionsHero from "@/assets/new-collections-hero.jpg";
 
 const sortOptions = [
@@ -31,13 +31,17 @@ const Collections = () => {
   const [gridCols, setGridCols] = useState<3 | 4>(4);
   const [apiProducts, setApiProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
         const url = new URL(`${API}/public/products.php`);
-        url.searchParams.append("per_page", "100");
+        url.searchParams.append("page", String(currentPage));
+        url.searchParams.append("per_page", String(itemsPerPage));
         if (categoryParam && categoryParam !== "All") url.searchParams.append("category", categoryParam);
 
         const res = await fetch(url.toString());
@@ -49,11 +53,13 @@ const Collections = () => {
             name: p.name,
             price: parseFloat(p.price),
             discount_price: p.discount_price ? parseFloat(p.discount_price) : undefined,
-            image: p.image_url || "",
-            category: p.category_name || p.category,
+            image: p.image || "",
+            category: p.category_name || "General",
             description: p.description,
-            fabric: p.fabric,
-            color: p.color || "",
+            fabric: p.fabric_name || "Premium Quality",
+            color: p.colour_name || "",
+            sareeType: p.saree_type_name || "",
+            blouseStyle: p.blouse_style_name || "",
             isNew: p.is_new === 1,
             isBestSeller: p.is_bestseller === 1,
             stock_qty: parseInt(p.stock_qty),
@@ -61,34 +67,28 @@ const Collections = () => {
             inStock: p.status !== "Out of Stock" && parseInt(p.stock_qty) > 0,
           }));
           setApiProducts(mapped);
+          if (json.total_pages) setTotalPages(json.total_pages);
         }
       } catch (err) {
         console.error("Failed to fetch products", err);
       } finally {
         setLoading(false);
+        // Scroll to grid top after fetch
+        if (currentPage > 1) {
+          const grid = document.getElementById('collection-grid');
+          if (grid) grid.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     };
     fetchProducts();
-  }, [categoryParam]);
+  }, [categoryParam, currentPage]);
 
-  const allProducts = useMemo(() => {
-    // Combine static and API
-    const combined = [...apiProducts];
-    staticProducts.forEach(sp => {
-      // Check if already present in API (matching by name for now as loose heuristic)
-      if (!combined.find(p => p.name.toLowerCase() === sp.name.toLowerCase())) {
-        combined.push({
-          ...sp,
-          inStock: sp.inStock !== false, // Default to true if missing
-        });
-      }
-    });
-
-    return combined;
+  const displayProducts = useMemo(() => {
+    return apiProducts;
   }, [apiProducts]);
 
   const sorted = useMemo(() => {
-    let filtered = [...allProducts];
+    let filtered = [...displayProducts];
 
     // Category Filter from URL
     if (categoryParam && categoryParam !== "All") {
@@ -109,25 +109,26 @@ const Collections = () => {
       if (sortBy === "newest") return a.isNew ? -1 : 1;
       return 0; // Featured / Default
     });
-  }, [sortBy, fabricFilter, allProducts, categoryParam]);
+  }, [sortBy, fabricFilter, displayProducts, categoryParam]);
 
   return (
     <div>
-      <PageHeroBanner
+      <CategoryHero
         title={categoryParam && categoryParam !== "All" ? categoryParam : "Our Collections"}
-        subtitle="Discover"
         description="Explore our curated selection of handcrafted silk sarees, each piece a testament to India's rich textile heritage."
-        backgroundImage={newCollectionsHero}
+        backgroundImage="https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=2000&auto=format&fit=crop"
+        imagePosition="center 20%"
+        align="left"
       />
 
-      <div className="container mx-auto px-4 lg:px-8 py-10 lg:py-16">
+      <div id="collection-grid" className="container mx-auto px-4 lg:px-8 py-10 lg:py-16">
         {/* Fabric Filters */}
         <div className="flex flex-wrap gap-2 mb-8">
           {fabricFilters.map((f) => (
             <button
               key={f}
-              onClick={() => setFabricFilter(f)}
-              className={`font-body text-xs uppercase tracking-[0.15em] px-5 py-2 border transition-all duration-300 ${fabricFilter === f
+              onClick={() => { setFabricFilter(f); setCurrentPage(1); }}
+              className={`font-body text-[10px] uppercase tracking-[0.2em] px-6 py-3 border transition-all duration-300 min-h-[44px] ${fabricFilter === f
                 ? "border-foreground bg-foreground text-background"
                 : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
                 }`}
@@ -138,31 +139,31 @@ const Collections = () => {
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-8 pb-4 border-b border-border">
-          <p className="font-body text-sm text-muted-foreground">
-            {sorted.length} {sorted.length === 1 ? "Product" : "Products"}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-border">
+          <p className="font-body text-xs sm:text-sm text-muted-foreground">
+            {sorted.length} {sorted.length === 1 ? "Product" : "Products"} found
           </p>
-          <div className="flex items-center gap-4">
-            <div className="hidden lg:flex items-center gap-1 mr-2">
+          <div className="flex items-center justify-between sm:justify-end gap-6">
+            <div className="hidden lg:flex items-center gap-1">
               <button
                 onClick={() => setGridCols(3)}
-                className={`p-1.5 transition-colors ${gridCols === 3 ? "text-foreground" : "text-muted-foreground/40"}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${gridCols === 3 ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"}`}
               >
                 <Grid3X3 size={16} />
               </button>
               <button
                 onClick={() => setGridCols(4)}
-                className={`p-1.5 transition-colors ${gridCols === 4 ? "text-foreground" : "text-muted-foreground/40"}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${gridCols === 4 ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"}`}
               >
                 <LayoutGrid size={16} />
               </button>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 border-l border-border pl-6 h-8">
               <SlidersHorizontal size={14} className="text-muted-foreground" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="font-body text-sm bg-transparent border-none text-foreground focus:outline-none cursor-pointer"
+                className="font-body text-xs sm:text-sm bg-transparent border-none text-foreground focus:outline-none cursor-pointer appearance-none pr-4"
               >
                 {sortOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -174,9 +175,10 @@ const Collections = () => {
 
         {/* Grid */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center gap-6">
-            <Loader2 className="w-12 h-12 text-[#B48C5E] animate-spin" />
-            <p className="font-display text-lg italic text-[#0D3B2E]/60">Curating the finest silks...</p>
+          <div className={`grid grid-cols-2 ${gridCols === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-4 lg:gap-6`}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCard key={i} index={i} />
+            ))}
           </div>
         ) : sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -187,14 +189,50 @@ const Collections = () => {
             </button>
           </div>
         ) : (
-          <div className={`grid grid-cols-2 ${gridCols === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-4 lg:gap-6`}>
-            {sorted.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
+          <>
+            <div className={`grid grid-cols-2 ${gridCols === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-4 lg:gap-6`}>
+              {sorted.map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-16 flex items-center justify-center gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => prev - 1)}
+                  className="w-12 h-12 flex items-center justify-center border border-border rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-foreground hover:text-background transition-all"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-12 h-12 rounded-full font-body text-sm transition-all ${currentPage === i + 1
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:bg-muted"
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  className="w-12 h-12 flex items-center justify-center border border-border rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-foreground hover:text-background transition-all"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            )}
+          </>
         )}
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import { toast } from "sonner";
 
 export interface CartProduct {
   id: string;          // product ID (string to support both static & API ids)
@@ -9,7 +10,8 @@ export interface CartProduct {
   fabric?: string;
   color?: string;
   sku?: string;
-  stock_qty?: number;
+  stock_quantity?: number;
+  stock_qty?: number; // fallback
   status?: string;
   category?: string;
   // Keep legacy fields for static data compat
@@ -41,9 +43,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addToCart = (product: CartProduct) => {
     const id = String(product.id);
+    const availableStock = product.stock_quantity ?? product.stock_qty ?? 50;
+
+    if (availableStock <= 0 || product.status === "Out of Stock") {
+      toast.error("This masterpiece is currently out of stock.");
+      return;
+    }
+
     setItems((prev) => {
       const existing = prev.find((item) => String(item.product.id) === id);
       if (existing) {
+        if (existing.quantity >= availableStock) {
+          toast.error(`Maximum available quantity is ${availableStock}`);
+          return prev;
+        }
         return prev.map((item) =>
           String(item.product.id) === id
             ? { ...item, quantity: item.quantity + 1 }
@@ -64,6 +77,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       removeFromCart(productId);
       return;
     }
+
+    const item = items.find(i => String(i.product.id) === productId);
+    if (item) {
+      const availableStock = item.product.stock_quantity ?? item.product.stock_qty ?? 50;
+      if (quantity > availableStock) {
+        toast.error(`Only ${availableStock} items are currently available in our collection.`);
+        return;
+      }
+    }
+
     setItems((prev) =>
       prev.map((item) =>
         String(item.product.id) === productId ? { ...item, quantity } : item

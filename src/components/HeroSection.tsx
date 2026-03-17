@@ -1,19 +1,19 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import heroImage from "@/assets/hero-1.jpg";
+import heroImage from "@/assets/new-collections-hero.jpg";
 import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
   return (
     <section className="relative w-full">
       {/* Main Hero Wrapper */}
-      <div className="relative w-full h-[90dvh] lg:h-[calc(100dvh-113px)] overflow-hidden">
+      <div className="relative w-full h-[80vh] md:h-screen overflow-hidden">
         {/* Background Image Container */}
         <div className="absolute inset-0">
           <img
             src={heroImage}
             alt="Luxury silk saree collection"
-            className="w-full h-full object-cover object-top lg:object-[70%_0%] scale-100 lg:scale-105"
+            className="w-full h-full object-cover object-[center_20%]"
             loading="eager"
             fetchPriority="high"
           />

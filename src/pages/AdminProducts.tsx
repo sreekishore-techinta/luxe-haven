@@ -134,6 +134,7 @@ export default function AdminProducts() {
     // Open add modal
     const openAdd = () => { setEditProduct(null); setForm({ ...emptyForm }); setImageFiles([]); setSaveMsg(null); setShowModal(true); };
 
+
     // Open edit modal
     const openEdit = (p: Product) => {
         setEditProduct(p);
@@ -168,16 +169,24 @@ export default function AdminProducts() {
 
             const payload = {
                 ...form,
-                price: parseFloat(form.price),
-                discount_price: form.discount_price ? parseFloat(form.discount_price) : null,
-                stock_qty: parseInt(form.stock_qty),
+                price: parseFloat(form.price) || 0,
+                mrp_price: form.discount_price ? parseFloat(form.discount_price) : (parseFloat(form.price) || 0),
+                discount: 0,
+                stock: parseInt(form.stock_qty) || 0,
+                stock_qty: parseInt(form.stock_qty) || 0,
+                stock_quantity: parseInt(form.stock_qty) || 0,
                 colour_id: form.colour_id ? parseInt(form.colour_id) : null,
                 fabric_id: form.fabric_id ? parseInt(form.fabric_id) : null,
                 size_id: form.size_id ? parseInt(form.size_id) : null,
+                is_new: Number(form.is_new),
+                is_new_arrival: Number(form.is_new),
+                is_bestseller: Number(form.is_bestseller),
+                status: "Active",
             };
 
+            console.log("[AdminProducts] Saving payload:", payload);
+
             if (editProduct) {
-                // PUT update
                 const res = await fetch(`${API}/products/product.php?id=${editProduct.id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -185,10 +194,10 @@ export default function AdminProducts() {
                     body: JSON.stringify(payload),
                 });
                 const json = await res.json();
-                if (json.status !== "success") throw new Error(json.message);
+                console.log("[AdminProducts] PUT response:", json);
+                if (json.status !== "success") throw new Error(json.message || "Update failed");
                 productId = editProduct.id;
             } else {
-                // POST create
                 const res = await fetch(`${API}/products/index.php`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -196,11 +205,11 @@ export default function AdminProducts() {
                     body: JSON.stringify(payload),
                 });
                 const json = await res.json();
-                if (json.status !== "success") throw new Error(json.message);
+                console.log("[AdminProducts] POST response:", json);
+                if (json.status !== "success") throw new Error(json.message || "Create failed");
                 productId = json.id;
             }
 
-            // Upload images if any
             if (imageFiles.length > 0 && productId) {
                 const fd = new FormData();
                 fd.append("product_id", String(productId));
@@ -209,7 +218,7 @@ export default function AdminProducts() {
                 await fetch(`${API}/products/upload_images.php`, { method: "POST", body: fd, credentials: "include" });
             }
 
-            setSaveMsg("✓ Product saved successfully!");
+            setSaveMsg("\u2713 Product saved successfully!");
             setTimeout(() => { setShowModal(false); fetchProducts(); }, 1000);
         } catch (e: unknown) {
             setSaveMsg(e instanceof Error ? e.message : "Save failed");
@@ -311,7 +320,7 @@ export default function AdminProducts() {
                                         <div className="flex items-center gap-6">
                                             <div className="relative w-16 h-20 bg-gray-50 rounded-[18px] overflow-hidden shrink-0 shadow-sm border border-[#041E18]/5 group-hover:shadow-xl group-hover:shadow-gold/10 transition-all duration-500">
                                                 {p.primary_image
-                                                    ? <img src={`${API}/${p.primary_image}`} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
+                                                    ? <img src={p.primary_image.startsWith('http') ? p.primary_image : `${API}/${p.primary_image}`} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
                                                     : <div className="w-full h-full flex items-center justify-center bg-[#041E18]/5 text-[#B48C5E]"><LucideImage size={24} strokeWidth={1.5} /></div>}
                                                 <div className="absolute inset-0 bg-gradient-to-t from-[#041E18]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                             </div>
@@ -559,7 +568,7 @@ export default function AdminProducts() {
                                 <div className="flex flex-col md:flex-row h-full">
                                     <div className="w-full md:w-[45%] h-full min-h-[400px] relative bg-gray-50 group">
                                         {viewProduct.images?.[0]
-                                            ? <img src={`${API}/${viewProduct.images[0].image_path}`} alt={viewProduct.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                            ? <img src={viewProduct.images[0].image_path.startsWith('http') ? viewProduct.images[0].image_path : `${API}/${viewProduct.images[0].image_path}`} alt={viewProduct.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                                             : <div className="w-full h-full flex items-center justify-center text-gray-200"><LucideImage size={64} strokeWidth={1} /></div>}
                                         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#041E18]/60 to-transparent pointer-events-none" />
                                         <div className="absolute bottom-8 left-8 right-8">

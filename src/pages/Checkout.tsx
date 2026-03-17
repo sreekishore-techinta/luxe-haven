@@ -1,12 +1,14 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Minus, Plus, Trash2, ArrowRight, ShoppingBag,
-  Truck, Shield, RotateCcw, CheckCircle, Package
+  Truck, Shield, RotateCcw, CheckCircle, Package, Loader2
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import PageHeroBanner from "@/components/PageHeroBanner";
+import checkoutHero from "@/assets/checkout-hero.png";
+import { toast } from "sonner";
 
 const API = "http://localhost:8000";
 
@@ -27,14 +29,45 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<"cart" | "shipping" | "confirm">("cart");
   const [placing, setPlacing] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
   const [orderResult, setOrderResult] = useState<{ orderNumber: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [customer, setCustomer] = useState<any>(null);
 
   const [form, setForm] = useState<ShippingForm>({
     firstName: "", lastName: "", email: "",
     phone: "", address: "", city: "",
     state: "", pincode: "", paymentMethod: "COD",
   });
+
+  const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
+  const [billingForm, setBillingForm] = useState<Partial<ShippingForm>>({
+    firstName: "", lastName: "", address: "", city: "", state: "", pincode: ""
+  });
+
+  useEffect(() => {
+    // Check if user is logged in to pre-fill
+    fetch(`${API}/auth/customer_check.php`, { credentials: "include" })
+      .then(res => res.json())
+      .then(json => {
+        if (json.loggedIn && json.customer) {
+          setCustomer(json.customer);
+          const names = json.customer.name.split(" ");
+          setForm(prev => ({
+            ...prev,
+            firstName: names[0] || "",
+            lastName: names.slice(1).join(" ") || "",
+            email: json.customer.email || "",
+            phone: json.customer.phone || "",
+            address: json.customer.address || "",
+            city: json.customer.city || "",
+            state: json.customer.state || "",
+            pincode: json.customer.pincode || "",
+          }));
+        }
+      })
+      .catch(err => console.error("Session check failed", err));
+  }, []);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
@@ -49,18 +82,32 @@ const Checkout = () => {
     if (!form.firstName.trim()) return "First name is required";
     if (!form.lastName.trim()) return "Last name is required";
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) return "Valid email is required";
-    if (!form.phone.trim() || !/^\d{10,12}$/.test(form.phone.replace(/[\s+-]/g, ''))) return "Valid phone number is required";
+    const cleanPhone = form.phone.replace(/[\s+-]/g, '');
+    if (!form.phone.trim() || !/^\d{10,12}$/.test(cleanPhone)) return "Valid phone number is required";
     if (!form.address.trim()) return "Address is required";
     if (!form.city.trim()) return "City is required";
-    if (!form.pincode.trim() || !/^\d{6}$/.test(form.pincode)) return "Valid 6-digit pincode is required";
+    const cleanPincode = form.pincode.replace(/\s/g, '');
+    if (!form.pincode.trim() || !/^\d{6}$/.test(cleanPincode)) return "Valid 6-digit pincode is required";
     return null;
   };
 
   const handlePlaceOrder = async () => {
     const validationError = validateShipping();
-    if (validationError) { setError(validationError); return; }
+    if (validationError) {
+      setError(validationError);
+      toast.error(validationError);
+      return;
+    }
 
     setError(null);
+
+    // Simulate Payment Process if not COD
+    if (form.paymentMethod !== "COD") {
+      setProcessingPayment(true);
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate gateway delay
+      setProcessingPayment(false);
+    }
+
     setPlacing(true);
     try {
       const payload = {
@@ -71,6 +118,11 @@ const Checkout = () => {
         shipping_city: form.city,
         shipping_state: form.state,
         shipping_pincode: form.pincode,
+        billing_name: billingSameAsShipping ? `${form.firstName} ${form.lastName}` : `${billingForm.firstName} ${billingForm.lastName}`,
+        billing_address: billingSameAsShipping ? form.address : billingForm.address,
+        billing_city: billingSameAsShipping ? form.city : billingForm.city,
+        billing_state: billingSameAsShipping ? form.state : billingForm.state,
+        billing_pincode: billingSameAsShipping ? form.pincode : billingForm.pincode,
         payment_method: form.paymentMethod,
         subtotal: totalPrice,
         shipping_charge: shipping,
@@ -90,17 +142,29 @@ const Checkout = () => {
         credentials: "include",
         body: JSON.stringify(payload),
       });
-      const json = await res.json();
+
+      const responseText = await res.text();
+      let json;
+      try {
+        json = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error("The server encountered an unexpected error while processing your request.");
+      }
 
       if (json.status === "success") {
         setOrderResult({ orderNumber: json.order_number });
         clearCart();
         setStep("confirm");
+        toast.success("Order authorized successfully");
       } else {
-        setError(json.message || "Failed to place order. Please try again.");
+        const msg = json.message || "Failed to authorize your order.";
+        setError(msg);
+        toast.error(msg);
       }
-    } catch {
-      setError("Network error. Please check your connection and try again.");
+    } catch (err: any) {
+      const msg = err.message || "Network error. Please check your connection.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setPlacing(false);
     }
@@ -110,7 +174,12 @@ const Checkout = () => {
   if (items.length === 0 && step !== "confirm") {
     return (
       <div>
-        <PageHeroBanner title="Shopping Bag" subtitle="Checkout" />
+        <PageHeroBanner
+          title="Shopping Bag"
+          subtitle="Checkout"
+          backgroundImage={checkoutHero}
+          heightClass="h-[90vh] lg:h-screen"
+        />
         <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -135,7 +204,12 @@ const Checkout = () => {
   if (step === "confirm" && orderResult) {
     return (
       <div>
-        <PageHeroBanner title="Order Confirmed" subtitle="Thank You!" />
+        <PageHeroBanner
+          title="Order Confirmed"
+          subtitle="Thank You!"
+          backgroundImage={checkoutHero}
+          heightClass="h-[90vh] lg:h-screen"
+        />
         <div className="container mx-auto px-4 lg:px-8 py-20">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -179,27 +253,32 @@ const Checkout = () => {
   // ─── MAIN CHECKOUT ─────────────────────────────────────────────────────────
   return (
     <div>
-      <PageHeroBanner title="Checkout" subtitle="Shopping Bag" />
+      <PageHeroBanner
+        title="Checkout"
+        subtitle="Shopping Bag"
+        backgroundImage={checkoutHero}
+        heightClass="h-[90vh] lg:h-screen"
+      />
 
       <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20">
         {/* Progress Steps */}
-        <div className="flex items-center justify-center gap-4 mb-12">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-12">
           {[
             { key: "cart", label: "Cart" },
-            { key: "shipping", label: "Shipping & Payment" },
+            { key: "shipping", label: "Shipping" },
           ].map((s, i) => {
             const steps = ["cart", "shipping"];
             const isActive = steps.indexOf(step) >= i;
             return (
-              <div key={s.key} className="flex items-center gap-4">
+              <div key={s.key} className="flex items-center gap-2 sm:gap-4">
                 <div className="flex items-center gap-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-body text-xs transition-colors ${isActive ? "luxury-gradient text-champagne" : "border border-border text-muted-foreground"
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-body text-[10px] sm:text-xs transition-colors ${isActive ? "luxury-gradient text-champagne" : "border border-border text-muted-foreground"
                     }`}>{i + 1}</div>
-                  <span className={`font-body text-xs uppercase tracking-[0.15em] ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
+                  <span className={`font-body text-[10px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.15em] ${isActive ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
                     {s.label}
                   </span>
                 </div>
-                {i < 1 && <div className={`w-12 h-px ${isActive ? "bg-foreground" : "bg-border"}`} />}
+                {i < 1 && <div className={`w-8 sm:w-12 h-px ${isActive ? "bg-foreground" : "bg-border"}`} />}
               </div>
             );
           })}
@@ -214,31 +293,31 @@ const Checkout = () => {
                 <h2 className="font-display text-xl font-semibold mb-6">Your Items ({items.length})</h2>
                 <div className="space-y-6">
                   {items.map((item) => (
-                    <div key={item.product.id} className="flex gap-5 pb-6 border-b border-border">
+                    <div key={item.product.id} className="flex gap-4 sm:gap-5 pb-6 border-b border-border">
                       <Link to={`/product/${item.product.id}`} className="flex-shrink-0">
-                        <img src={item.product.image} alt={item.product.name} className="w-24 h-32 object-cover rounded" />
+                        <img src={item.product.image} alt={item.product.name} className="w-20 h-28 sm:w-24 sm:h-32 object-cover rounded" />
                       </Link>
                       <div className="flex-1 min-w-0">
                         <Link to={`/product/${item.product.id}`}>
-                          <h3 className="font-display text-sm font-medium mb-1 hover:text-accent transition-colors">{item.product.name}</h3>
+                          <h3 className="font-display text-sm font-medium mb-1 hover:text-accent transition-colors truncate">{item.product.name}</h3>
                         </Link>
-                        <p className="font-body text-xs text-muted-foreground mb-1">{item.product.fabric} · {item.product.color}</p>
+                        <p className="font-body text-[10px] sm:text-xs text-muted-foreground mb-1">{item.product.fabric} · {item.product.color}</p>
                         <p className="font-body text-sm font-semibold text-accent mb-3">{formatPrice(item.product.price)}</p>
                         <div className="flex items-center gap-3">
                           <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                            className="w-8 h-8 flex items-center justify-center border border-border hover:border-foreground transition-colors">
+                            className="w-10 h-10 flex items-center justify-center border border-border hover:border-foreground transition-colors min-h-[44px]">
                             <Minus size={12} />
                           </button>
                           <span className="font-body text-sm w-6 text-center">{item.quantity}</span>
                           <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                            className="w-8 h-8 flex items-center justify-center border border-border hover:border-foreground transition-colors">
+                            className="w-10 h-10 flex items-center justify-center border border-border hover:border-foreground transition-colors min-h-[44px]">
                             <Plus size={12} />
                           </button>
                         </div>
                       </div>
                       <div className="flex flex-col items-end justify-between">
                         <p className="font-body text-sm font-semibold">{formatPrice(item.product.price * item.quantity)}</p>
-                        <button onClick={() => removeFromCart(item.product.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                        <button onClick={() => removeFromCart(item.product.id)} className="w-10 h-10 flex items-center justify-end text-muted-foreground hover:text-destructive transition-colors min-h-[44px]">
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -288,14 +367,14 @@ const Checkout = () => {
                     <label className="font-body text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5 block">Street Address *</label>
                     <input name="address" value={form.address} onChange={handleField} type="text" className="input-luxury" placeholder="House no., Street, Area" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="font-body text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5 block">City *</label>
-                      <input name="city" value={form.city} onChange={handleField} type="text" className="input-luxury" placeholder="City" />
+                      <input name="city" value={form.city} onChange={handleField} type="text" className="input-luxury min-h-[44px]" placeholder="City" />
                     </div>
                     <div>
                       <label className="font-body text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5 block">State</label>
-                      <input name="state" value={form.state} onChange={handleField} type="text" className="input-luxury" placeholder="State" />
+                      <input name="state" value={form.state} onChange={handleField} type="text" className="input-luxury min-h-[44px]" placeholder="State" />
                     </div>
                   </div>
                   <div>
@@ -303,22 +382,70 @@ const Checkout = () => {
                     <input name="pincode" value={form.pincode} onChange={handleField} type="text" className="input-luxury" placeholder="6-digit PIN code" maxLength={6} />
                   </div>
 
+                  {/* Billing Address Toggle */}
+                  <div className="pt-2">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className={`w-5 h-5 border rounded flex items-center justify-center transition-colors ${billingSameAsShipping ? "bg-[#0D3B2E] border-[#0D3B2E]" : "border-border group-hover:border-[#0D3B2E]"}`}>
+                        {billingSameAsShipping && <CheckCircle size={12} className="text-white" />}
+                      </div>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={billingSameAsShipping}
+                        onChange={() => setBillingSameAsShipping(!billingSameAsShipping)}
+                      />
+                      <span className="font-body text-xs text-muted-foreground">Billing address same as shipping</span>
+                    </label>
+                  </div>
+
+                  {!billingSameAsShipping && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      className="space-y-4 pt-4 border-t border-border overflow-hidden"
+                    >
+                      <p className="font-body text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Billing Details</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <input name="firstName" value={billingForm.firstName} onChange={(e) => setBillingForm(f => ({ ...f, firstName: e.target.value }))} type="text" className="input-luxury" placeholder="First Name" />
+                        <input name="lastName" value={billingForm.lastName} onChange={(e) => setBillingForm(f => ({ ...f, lastName: e.target.value }))} type="text" className="input-luxury" placeholder="Last Name" />
+                      </div>
+                      <input name="address" value={billingForm.address} onChange={(e) => setBillingForm(f => ({ ...f, address: e.target.value }))} type="text" className="input-luxury" placeholder="Street Address" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <input name="city" value={billingForm.city} onChange={(e) => setBillingForm(f => ({ ...f, city: e.target.value }))} type="text" className="input-luxury" placeholder="City" />
+                        <input name="pincode" value={billingForm.pincode} onChange={(e) => setBillingForm(f => ({ ...f, pincode: e.target.value }))} type="text" className="input-luxury" placeholder="PIN Code" />
+                      </div>
+                    </motion.div>
+                  )}
+
                   {/* Payment Method */}
-                  <div className="pt-4 border-t border-border">
-                    <p className="font-body text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Payment Method</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {["COD", "UPI", "Card", "Net Banking"].map(method => (
-                        <label key={method}
-                          className={`flex items-center gap-3 p-3 border rounded cursor-pointer transition-all ${form.paymentMethod === method
-                            ? "border-accent bg-accent/5 text-foreground"
-                            : "border-border text-muted-foreground hover:border-foreground/30"
+                  <div className="pt-6 border-t border-border">
+                    <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[#0D3B2E] font-bold mb-4">Payment Selection</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {[
+                        { id: "COD", label: "Cash on Delivery", desc: "Pay at your doorstep" },
+                        { id: "UPI", label: "UPI (GPay/PhonePe)", desc: "Instant mobile payment" },
+                        { id: "Card", label: "Credit / Debit Card", desc: "Visa, Mastercard, RuPay" },
+                        { id: "Net Banking", label: "Net Banking", desc: "All major Indian banks" }
+                      ].map(method => (
+                        <label key={method.id}
+                          className={`flex flex-col gap-1 p-4 border rounded-xl cursor-pointer transition-all duration-300 ${form.paymentMethod === method.id
+                            ? "border-[#B48C5E] bg-[#B48C5E]/5 shadow-[0_0_15px_rgba(180,140,94,0.15)] ring-1 ring-[#B48C5E]/30"
+                            : "border-border bg-white hover:border-[#0D3B2E]/30"
                             }`}>
+                          <div className="flex items-center justify-between">
+                            <span className={`font-display text-sm font-semibold ${form.paymentMethod === method.id ? "text-[#0D3B2E]" : "text-gray-700"}`}>
+                              {method.label}
+                            </span>
+                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${form.paymentMethod === method.id ? "border-[#B48C5E] bg-[#B48C5E]" : "border-gray-300"}`}>
+                              {form.paymentMethod === method.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground font-body italic">{method.desc}</span>
                           <input
-                            type="radio" name="paymentMethod" value={method}
-                            checked={form.paymentMethod === method}
-                            onChange={handleField} className="accent-amber-600"
+                            type="radio" name="paymentMethod" value={method.id}
+                            checked={form.paymentMethod === method.id}
+                            onChange={handleField} className="hidden"
                           />
-                          <span className="font-body text-sm">{method === "COD" ? "Cash on Delivery" : method}</span>
                         </label>
                       ))}
                     </div>
@@ -329,11 +456,42 @@ const Checkout = () => {
                   <button onClick={() => { setStep("cart"); setError(null); }} className="btn-outline">Back</button>
                   <button
                     onClick={handlePlaceOrder}
-                    disabled={placing}
-                    className="btn-primary group disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={placing || processingPayment}
+                    className="btn-primary flex-1 md:flex-none px-12 group disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden"
                   >
-                    {placing ? "Placing Order..." : "Place Order"}
-                    {!placing && <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />}
+                    <AnimatePresence mode="wait">
+                      {processingPayment ? (
+                        <motion.span
+                          key="processing"
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: -20, opacity: 0 }}
+                          className="flex items-center gap-2"
+                        >
+                          <Loader2 className="animate-spin" size={16} /> Verifying Payment...
+                        </motion.span>
+                      ) : placing ? (
+                        <motion.span
+                          key="placing"
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: -20, opacity: 0 }}
+                          className="flex items-center gap-2"
+                        >
+                          <Loader2 className="animate-spin" size={16} /> Confirming Order...
+                        </motion.span>
+                      ) : (
+                        <motion.span
+                          key="default"
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: -20, opacity: 0 }}
+                          className="flex items-center gap-2"
+                        >
+                          Place Order <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                   </button>
                 </div>
               </motion.div>

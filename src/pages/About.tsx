@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Heart, Award, Users, MapPin } from "lucide-react";
 import PageHeroBanner from "@/components/PageHeroBanner";
-import heroImage2 from "@/assets/hero-2.jpg";
-import heroImage from "@/assets/hero-1.jpg";
+import heroImage2 from "@/assets/new-arrivals-hero-2.jpg";
+import heroImage from "@/assets/new-arrivals-hero.jpg";
 
 const values = [
   { icon: Heart, title: "Passion for Craft", desc: "Every piece we curate is a labor of love, celebrating the artisans who pour their soul into each weave." },
