@@ -99,11 +99,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Table specific fields
     // Unified creation logic for professional masters
     if (in_array($type, ['categories', 'sub_categories', 'saree_types', 'brands'])) {
-        foreach (['slug', 'image', 'hero_image', 'description', 'meta_title', 'meta_description'] as $f) {
+        foreach (['slug', 'hero_image', 'description', 'meta_title', 'meta_description'] as $f) {
             if (isset($input[$f])) {
                 $fields[] = $f;
                 $values[] = "'" . sanitize($conn, $input[$f]) . "'";
             }
+        }
+        if (isset($input['image']) && $type !== 'categories') {
+            $fields[] = 'image';
+            $values[] = "'" . sanitize($conn, $input['image']) . "'";
         }
         foreach (['is_featured', 'show_on_menu'] as $f) {
             if (isset($input[$f])) {
@@ -175,10 +179,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         if (isset($input['description']))
             $updates[] = "description = '" . sanitize($conn, $input['description']) . "'";
     }
-    if ($type === 'categories' || $type === 'saree_styles') {
+    if ($type === 'categories' || $type === 'saree_types') {
         if (isset($input['slug']))
             $updates[] = "slug = '" . sanitize($conn, $input['slug']) . "'";
-        if (isset($input['image']))
+        if (isset($input['image']) && $type !== 'categories')
             $updates[] = "image = '" . sanitize($conn, $input['image']) . "'";
         if (isset($input['hero_image']))
             $updates[] = "hero_image = '" . sanitize($conn, $input['hero_image']) . "'";

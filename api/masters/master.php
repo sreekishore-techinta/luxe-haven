@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     if (in_array($type, ['categories', 'sub_categories', 'saree_types', 'brands'])) {
         if (isset($input['slug']))
             $updates[] = "slug = '" . sanitize($conn, $input['slug']) . "'";
-        if (isset($input['image']))
+        if (isset($input['image']) && $type !== 'categories')
             $updates[] = "image = '" . sanitize($conn, $input['image']) . "'";
         if (isset($input['hero_image']))
             $updates[] = "hero_image = '" . sanitize($conn, $input['hero_image']) . "'";
