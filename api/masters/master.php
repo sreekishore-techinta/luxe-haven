@@ -16,10 +16,6 @@ $allowedMasters = [
     'colours' => 'master_colours',
     'fabric_types' => 'master_fabric_types',
     'sizes' => 'master_sizes',
-    'sleeve_types' => 'master_sleeve_types',
-    'neck_types' => 'master_neck_types',
-    'occasions' => 'master_occasions',
-    'patterns' => 'master_patterns',
     'saree_types' => 'saree_types',
     'brands' => 'master_brands'
 ];

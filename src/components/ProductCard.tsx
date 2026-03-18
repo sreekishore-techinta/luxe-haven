@@ -84,20 +84,31 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group product-card"
+      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -8, transition: { duration: 0.4, ease: "easeOut" } }}
+      className="group relative flex flex-col h-full bg-white rounded-2xl p-2 transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]"
     >
-      {/* Image */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-card mb-4">
-        <Link to={`/product/${product.id}`} className="block w-full h-full relative group/img">
+      {/* Image Container with Shimmer Effect */}
+      <div className="relative aspect-[3.2/4] overflow-hidden rounded-xl bg-slate-50 mb-4 group/img-wrapper">
+        <Link to={`/product/${product.id}`} className="block w-full h-full relative group/img overflow-hidden">
           <img
             src={imageSrc}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110 group-hover/img:scale-105"
+            className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-110"
             loading="lazy"
             decoding="async"
           />
-          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors duration-500" />
+          {/* Premium Glare Effect */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors duration-700" />
+
+          {/* Animated Shimmer Line */}
+          <motion.div
+            initial={{ x: '-100%' }}
+            whileHover={{ x: '100%' }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent z-10 pointer-events-none"
+          />
         </Link>
 
         {/* Wishlist Button On Image */}
@@ -107,94 +118,81 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             e.stopPropagation();
             toggleWishlist(wishProduct);
           }}
-          className="absolute top-3 right-3 z-10 p-2 bg-white/80 backdrop-blur rounded-full text-foreground hover:scale-110 active:scale-95 transition-all shadow-sm group/heart"
+          className="absolute top-4 right-4 z-20 p-2.5 bg-white/90 backdrop-blur-md rounded-full text-foreground hover:bg-white hover:scale-110 active:scale-95 transition-all shadow-md border border-slate-100 group/heart"
         >
           <motion.div
-            animate={isLiked ? { scale: [1, 1.2, 1] } : {}}
-            transition={{ duration: 0.3 }}
+            animate={isLiked ? { scale: [1, 1.4, 1] } : {}}
+            transition={{ duration: 0.4 }}
           >
             <Heart
               size={18}
-              className={`transition-colors duration-300 ${isLiked ? "fill-burgundy text-burgundy" : "text-foreground/40 group-hover/heart:text-burgundy"}`}
+              strokeWidth={2.5}
+              className={`transition-colors duration-500 ${isLiked ? "fill-rose-500 text-rose-500" : "text-slate-400 group-hover/heart:text-rose-500"}`}
             />
           </motion.div>
         </button>
 
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+        <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
           {(product as any).isNew && (
-            <span className="px-3 py-1 bg-foreground text-background font-body text-[10px] uppercase tracking-[0.15em]">New</span>
+            <span className="px-3 py-1 bg-slate-900/90 backdrop-blur-sm text-white font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-md shadow-sm">New</span>
           )}
           {discount > 0 && (
-            <span className="px-3 py-1 bg-burgundy text-champagne font-body text-[10px] uppercase tracking-[0.15em]">-{discount}%</span>
+            <span className="px-3 py-1 bg-rose-600 text-white font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-md shadow-sm">-{discount}% Off</span>
           )}
           {!inStock && (
-            <span className="px-3 py-1 bg-gray-700 text-white font-body text-[10px] uppercase tracking-[0.15em]">Out of Stock</span>
+            <span className="px-3 py-1 bg-slate-500/90 backdrop-blur-sm text-white font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-md shadow-sm">Sold Out</span>
           )}
         </div>
 
-        {/* Hover/Mobile Actions */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 lg:group-hover:translate-y-0 lg:translate-y-full transition-transform duration-500 ease-out max-lg:translate-y-0">
+        {/* Hover Action Triggers */}
+        <div className="absolute bottom-4 left-4 right-4 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] z-20 hidden lg:block">
           <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              {inStock ? (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    addToCart(cartProduct);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 luxury-gradient text-champagne font-body text-[10px] uppercase tracking-[0.1em] hover:opacity-90 transition-opacity min-h-[44px]"
-                >
-                  <ShoppingBag size={14} />
-                  Add to Bag
-                </button>
-              ) : (
-                <div className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gray-200 text-gray-500 font-body text-[10px] uppercase tracking-[0.1em] cursor-not-allowed min-h-[44px]">
-                  Out of Stock
-                </div>
-              )}
-            </div>
-            <Link
-              to={`/product/${product.id}`}
-              className="w-full flex items-center justify-center py-2.5 bg-background/95 text-foreground font-body text-[10px] uppercase tracking-[0.15em] border border-foreground/10 hover:bg-foreground hover:text-background transition-all duration-300 min-h-[44px]"
-            >
-              View Product
-            </Link>
+            {inStock ? (
+              <button
+                onClick={(e) => {
+                  e.preventDefault(); e.stopPropagation();
+                  addToCart(cartProduct);
+                }}
+                className="w-full flex items-center justify-center gap-3 py-3.5 bg-slate-900 text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.15em] hover:bg-slate-800 transition-all shadow-xl active:scale-95 group/btn"
+              >
+                <ShoppingBag size={14} className="group-hover/btn:rotate-12 transition-transform" />
+                Add to Bag
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
 
-      {/* Info */}
-      <Link to={`/product/${product.id}`}>
-        <p className="font-body text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
-          {(product as any).fabric}
+      {/* Info Section - Always Centered */}
+      <Link to={`/product/${product.id}`} className="flex flex-col items-center text-center px-4 pb-4 flex-1">
+        <p className="font-body text-[9px] uppercase tracking-[0.3em] text-[#B48C5E] mb-2 font-black">
+          {(product as any).fabric || (product as any).category}
         </p>
-        <h3 className="font-display text-sm font-medium text-[#0D3B2E] mb-2 leading-relaxed line-clamp-2 italic group-hover:text-[#B48C5E] transition-colors">
+        <h3 className="font-display text-[16px] font-black text-slate-900 mb-2 leading-tight line-clamp-1 italic group-hover:text-[#B48C5E] transition-all duration-300 tracking-tight">
           {product.name}
         </h3>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-body text-base font-black text-[#0D3B2E]">
+        <div className="mt-auto pt-2 flex flex-col items-center gap-3">
+          <div className="flex items-center justify-center gap-3">
+            <span className="font-body text-base font-black text-slate-900">
               {formatPrice(discountPrice || product.price)}
             </span>
-            {displayOriginal && discountPrice && (
-              <span className="font-body text-xs text-muted-foreground line-through">
-                {formatPrice(product.price)}
+            {(displayOriginal && discountPrice) || (originalPrice && !discountPrice) ? (
+              <span className="font-body text-xs text-slate-400 line-through font-medium">
+                {formatPrice(discountPrice ? product.price : (originalPrice as number))}
               </span>
-            )}
-            {originalPrice && !discountPrice && (
-              <span className="font-body text-xs text-muted-foreground line-through">
-                {formatPrice(originalPrice)}
-              </span>
-            )}
+            ) : null}
           </div>
 
-          {/* Stock in hand */}
+          {/* Stock in hand Badge */}
           {inStock && ((product as any).stock_qty > 0 || (product as any).stock_quantity > 0) && (
-            <span className="font-body text-[9px] uppercase tracking-tighter text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-sm border border-emerald-100/50">
-              {(product as any).stock_qty ?? (product as any).stock_quantity} Left
-            </span>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="font-body text-[8px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-100/50 shadow-sm"
+            >
+              {(product as any).stock_qty ?? (product as any).stock_quantity} Artisanal Pieces Left
+            </motion.span>
           )}
         </div>
       </Link>

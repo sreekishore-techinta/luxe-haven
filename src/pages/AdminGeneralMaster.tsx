@@ -272,7 +272,7 @@ export default function AdminGeneralMaster() {
     const ActiveIcon = MASTER_TYPES.find(m => m.id === activeType)?.icon || List;
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 pb-20">
             {/* Header & Action Bar */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
                 <div className="space-y-3">
@@ -319,10 +319,10 @@ export default function AdminGeneralMaster() {
                 </div>
             </div>
 
-            {/* Data Manifest Table */}
-            <div className="bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden min-h-[600px] flex flex-col">
-                <div className="p-1 flex-1">
-                    <div className="w-full h-full overflow-x-auto custom-scrollbar">
+            {/* Data Manifest Table Section */}
+            <div className="bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden">
+                <div className="p-1">
+                    <div className="w-full max-h-[420px] overflow-y-auto overflow-x-auto custom-scrollbar relative scroll-smooth overscroll-contain">
                         {loading ? (
                             <div className="py-40 text-center space-y-6">
                                 <div className="relative inline-block">
@@ -335,15 +335,15 @@ export default function AdminGeneralMaster() {
                             </div>
                         ) : (
                             <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="border-b border-slate-100 bg-slate-50/50">
-                                        <th className="py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[15%]">Registry ID</th>
-                                        <th className="py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[25%]">Master Designation</th>
-                                        {(activeType === 'sub_categories' || activeType === 'sizes') && <th className="py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[20%]">Parent Archive</th>}
-                                        {(activeType === 'categories' || activeType === 'sub_categories' || activeType === 'saree_types') && <th className="py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[15%] text-center">Visual Asset</th>}
-                                        {activeType === 'colours' && <th className="py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[15%]">Spectral Hue</th>}
-                                        <th className="py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[20%]">Status</th>
-                                        <th className="py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] text-right w-[15%] min-w-[120px]">Actions</th>
+                                <thead className="z-20">
+                                    <tr className="border-b border-slate-100 shadow-sm">
+                                        <th className="sticky top-0 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[15%] bg-white/95 backdrop-blur-sm z-30">Registry ID</th>
+                                        <th className="sticky top-0 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[25%] bg-white/95 backdrop-blur-sm z-30">Master Designation</th>
+                                        {(activeType === 'sub_categories' || activeType === 'sizes') && <th className="sticky top-0 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[20%] bg-white/95 backdrop-blur-sm z-30">Parent Archive</th>}
+                                        {(activeType === 'categories' || activeType === 'sub_categories' || activeType === 'saree_types') && <th className="sticky top-0 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[15%] text-center bg-white/95 backdrop-blur-sm z-30">Visual Asset</th>}
+                                        {activeType === 'colours' && <th className="sticky top-0 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[15%] bg-white/95 backdrop-blur-sm z-30">Spectral Hue</th>}
+                                        <th className="sticky top-0 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[20%] bg-white/95 backdrop-blur-sm z-30">Status</th>
+                                        <th className="sticky top-0 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] text-right w-[15%] min-w-[120px] bg-white/95 backdrop-blur-sm z-30">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">

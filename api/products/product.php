@@ -27,7 +27,7 @@ switch ($method) {
              LEFT JOIN master_colours      mcl ON mcl.id = p.colour_id
              LEFT JOIN master_fabric_types mft ON mft.id = p.fabric_id
              LEFT JOIN master_sizes        msz ON msz.id = p.size_id
-             LEFT JOIN master_saree_types  mst ON mst.id = p.saree_type_id
+             LEFT JOIN saree_types         mst ON mst.id = p.saree_type_id
              LEFT JOIN blouse_styles       mbs ON mbs.id = p.blouse_style_id
              WHERE p.id = ?"
         );

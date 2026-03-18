@@ -59,12 +59,23 @@ const Sarees = () => {
                                     to={`/sarees/${sub.slug}`}
                                     className="group block relative overflow-hidden bg-card rounded lg:rounded-xl shadow-sm hover:shadow-xl transition-all duration-500"
                                 >
-                                    <div className="aspect-[3/4] overflow-hidden">
+                                    <div className="aspect-[3/4] overflow-hidden bg-slate-50">
                                         <img
-                                            src={sub.image.startsWith('src') ? `/${sub.image}` : sub.image}
+                                            src={
+                                                sub.image.startsWith('http')
+                                                    ? sub.image
+                                                    : sub.image.startsWith('src')
+                                                        ? `/${sub.image}`
+                                                        : sub.image.startsWith('/')
+                                                            ? sub.image
+                                                            : `/${sub.image}`
+                                            }
                                             alt={sub.name}
                                             loading="lazy"
                                             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800'; // Fallback to a silk saree image
+                                            }}
                                         />
                                     </div>
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />

@@ -79,25 +79,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Newsletter */}
-        <div className="mt-14 pt-10 border-t border-gold/10">
-          <div className="grid lg:grid-cols-2 gap-6 items-center">
-            <div>
-              <h4 className="font-display text-lg text-champagne mb-1 italic">Join the Lishan <span className="not-italic font-semibold text-gold">Sarees</span> World</h4>
-              <p className="font-body text-xs text-champagne/50">Subscribe for exclusive offers and new arrivals from our master artisans.</p>
-            </div>
-            <div className="flex max-w-md lg:ml-auto">
-              <input
-                type="email"
-                placeholder="Your email"
-                className="flex-1 px-4 py-2.5 bg-charcoal-light border border-gold/15 text-champagne font-body text-sm placeholder:text-champagne/30 focus:outline-none focus:border-gold/40 transition-colors"
-              />
-              <button className="px-6 py-2.5 gold-gradient text-accent-foreground font-body text-xs uppercase tracking-wider hover:opacity-90 transition-opacity">
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* Bottom */}
         <div className="mt-10 pt-6 border-t border-gold/10 flex flex-col md:flex-row justify-between items-center gap-4">

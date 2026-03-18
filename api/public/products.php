@@ -68,10 +68,6 @@ $sql = "SELECT p.*,
             mcl.name as colour_name,
             mft.name as fabric_name,
             msz.name as size_name,
-            mnt.name as neck_type_name,
-            mst.name as sleeve_type_name,
-            mo.name as occasion_name,
-            mp.name as pattern_name,
             st.name as saree_type_name,
             bs.name as blouse_style_name
         FROM products p
@@ -81,10 +77,6 @@ $sql = "SELECT p.*,
         LEFT JOIN master_colours mcl ON mcl.id = p.colour_id
         LEFT JOIN master_fabric_types mft ON mft.id = p.fabric_id
         LEFT JOIN master_sizes msz ON msz.id = p.size_id
-        LEFT JOIN master_neck_types mnt ON mnt.id = p.neck_type_id
-        LEFT JOIN master_sleeve_types mst ON mst.id = p.sleeve_type_id
-        LEFT JOIN master_occasions mo ON mo.id = p.occasion_id
-        LEFT JOIN master_patterns mp ON mp.id = p.pattern_id
         LEFT JOIN saree_types st ON st.id = p.saree_type_id
         LEFT JOIN blouse_styles bs ON bs.id = p.blouse_style_id
         WHERE $whereStr
