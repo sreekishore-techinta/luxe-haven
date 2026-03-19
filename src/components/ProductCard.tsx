@@ -1,10 +1,11 @@
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingBag, Heart } from "lucide-react";
+import { ShoppingBag, Heart, Sparkles } from "lucide-react";
 import { useCart, CartProduct } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven";
 
 interface ProductCardProps {
   product: CartProduct | {
@@ -12,6 +13,7 @@ interface ProductCardProps {
     name: string;
     price: number;
     originalPrice?: number;
+    discount_price?: number;
     image: string;
     category: string;
     description: string;
@@ -27,37 +29,60 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
+  console.log("ProductCard Data:", product);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const isLiked = isInWishlist(String(product.id));
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0
+    }).format(price);
 
   // Support both static (originalPrice) and API (discount_price) products
   const originalPrice = (product as any).originalPrice ?? null;
   const discountPrice = (product as any).discount_price ?? null;
-  const displayOriginal = originalPrice || discountPrice;
+  const displayOriginal = originalPrice || (discountPrice ? product.price : null);
+  const currentPrice = discountPrice || product.price;
 
   const discount = displayOriginal
-    ? Math.round(((displayOriginal - product.price) / displayOriginal) * 100)
+    ? Math.round(((displayOriginal - currentPrice) / displayOriginal) * 100)
     : 0;
 
-  // Stock check — support both static inStock and API status/stock_qty
+  // Stock check logic
   const inStock =
     (product as any).inStock !== undefined
       ? (product as any).inStock
-      : (product as any).status !== "Out of Stock" && ((product as any).stock_quantity ?? (product as any).stock_qty ?? 1) > 0;
+      : (product as any).status !== "Out of Stock";
 
-  const imageSrc = (product as any).image
-    ? ((product as any).image.startsWith('http') ? (product as any).image : `${API}/${(product as any).image.replace(/^\/+/, '')}`)
-    : `https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80`;
+  // Fix image source path - handles absolute URLs from API and local relative paths
+  const imageSrc = useMemo(() => {
+    if (!(product as any).image) {
+      return `https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80`;
+    }
+
+    const rawImage = (product as any).image;
+    
+    // If it's already a full URL from API (often points to localhost/ without subdirectory)
+    if (rawImage.startsWith('http')) {
+      // Fix for XAMPP subdirectory hosting: if URL points to localhost but is missing luxe-haven subdirectory
+      if (rawImage.includes('localhost/') && !rawImage.includes('localhost/luxe-haven/')) {
+        return rawImage.replace('localhost/', 'localhost/luxe-haven/');
+      }
+      return rawImage;
+    }
+
+    // fallback for relative paths
+    return `${API}/${rawImage.replace(/^\/+/, '')}`;
+  }, [(product as any).image]);
 
   const cartProduct: CartProduct = {
     id: String(product.id),
     name: product.name,
-    price: product.price,
+    price: currentPrice,
     discount_price: discountPrice,
     image: imageSrc,
     fabric: (product as any).fabric,
@@ -72,7 +97,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const wishProduct = {
     id: String(product.id),
     name: product.name,
-    price: product.price,
+    price: currentPrice,
     discount_price: discountPrice || undefined,
     image: imageSrc,
     category: product.category,
@@ -84,48 +109,41 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -8, transition: { duration: 0.4, ease: "easeOut" } }}
-      className="group relative flex flex-col h-full bg-white rounded-2xl p-2 transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]"
+      transition={{ duration: 0.8, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -12, transition: { duration: 0.4, ease: "easeOut" } }}
+      whileTap={{ scale: 0.98 }}
+      className="group relative flex flex-col h-full bg-white rounded-[2rem] p-3 transition-all duration-700 hover:shadow-[0_40px_80px_-20px_rgba(13,59,46,0.15)] border border-[#0D3B2E]/5"
     >
-      {/* Image Container with Shimmer Effect */}
-      <div className="relative aspect-[3.2/4] overflow-hidden rounded-xl bg-slate-50 mb-4 group/img-wrapper">
-        <Link to={`/product/${product.id}`} className="block w-full h-full relative group/img overflow-hidden">
-          <img
+      {/* Image Container */}
+      <div className="relative aspect-[3.2/4] overflow-hidden rounded-[1.5rem] bg-[#F8F9FA] mb-5 group/img-wrapper">
+        <Link to={`/product/${product.id}`} className="block w-full h-full relative overflow-hidden">
+          <motion.img
             src={imageSrc}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-[2.5s] ease-out group-hover:scale-110"
             loading="lazy"
-            decoding="async"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              if (!target.src.includes('unsplash')) {
+                target.src = 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80';
+              }
+            }}
           />
-          {/* Premium Glare Effect */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors duration-700" />
-
-          {/* Animated Shimmer Line */}
-          <motion.div
-            initial={{ x: '-100%' }}
-            whileHover={{ x: '100%' }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent z-10 pointer-events-none"
-          />
+          
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-[#0D3B2E]/20 transition-all duration-700" />
         </Link>
 
         {/* Wishlist Button On Image */}
         <button
           onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); e.stopPropagation();
             toggleWishlist(wishProduct);
           }}
-          className="absolute top-4 right-4 z-20 p-2.5 bg-white/90 backdrop-blur-md rounded-full text-foreground hover:bg-white hover:scale-110 active:scale-95 transition-all shadow-md border border-slate-100 group/heart"
+          className="absolute top-4 right-4 z-20 p-3 bg-white/80 backdrop-blur-xl rounded-full text-foreground hover:bg-white hover:scale-110 active:scale-90 transition-all shadow-lg border border-white/40 group/heart"
         >
-          <motion.div
-            animate={isLiked ? { scale: [1, 1.4, 1] } : {}}
-            transition={{ duration: 0.4 }}
-          >
+          <motion.div animate={isLiked ? { scale: [1, 1.3, 1] } : {}}>
             <Heart
-              size={18}
+              size={16}
               strokeWidth={2.5}
               className={`transition-colors duration-500 ${isLiked ? "fill-rose-500 text-rose-500" : "text-slate-400 group-hover/heart:text-rose-500"}`}
             />
@@ -135,32 +153,44 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         {/* Badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
           {(product as any).isNew && (
-            <span className="px-3 py-1 bg-slate-900/90 backdrop-blur-sm text-white font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-md shadow-sm">New</span>
+            <span className="px-3 py-1.5 bg-[#0D3B2E] text-white font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-lg shadow-xl shadow-[#0D3B2E]/20 border border-[#0D3D2E]">New Arrival</span>
           )}
-          {discount > 0 && (
-            <span className="px-3 py-1 bg-rose-600 text-white font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-md shadow-sm">-{discount}% Off</span>
+          {discount > 0 && discount < 100 && (
+            <span className="px-3 py-1.5 bg-gold text-slate-900 font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-lg shadow-xl shadow-gold/20 flex items-center gap-1.5 border border-gold/50">
+              <Sparkles size={10} className="text-slate-800" />
+              {discount}% Off
+            </span>
           )}
           {!inStock && (
-            <span className="px-3 py-1 bg-slate-500/90 backdrop-blur-sm text-white font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-md shadow-sm">Sold Out</span>
+            <span className="px-3 py-1.5 bg-slate-900/80 backdrop-blur-md text-white font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-lg border border-white/10">Sold Out</span>
           )}
         </div>
 
-        {/* Hover Action Triggers */}
-        <div className="absolute bottom-4 left-4 right-4 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] z-20 hidden lg:block">
-          <div className="flex flex-col gap-2">
+        {/* Quick Add Button - Premium Animation */}
+        <div className={`absolute bottom-5 left-5 right-5 transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] z-20 ${
+          inStock ? "lg:translate-y-4 lg:opacity-0 group-hover:translate-y-0 group-hover:opacity-100" : "opacity-100 translate-y-0"
+        }`}>
+          <button
+            disabled={!inStock}
+            onClick={(e) => {
+              e.preventDefault(); e.stopPropagation();
+              if (inStock) addToCart(cartProduct);
+            }}
+            className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-body text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 group/btn ${
+              inStock 
+                ? "bg-[#0D3B2E] text-white hover:bg-[#0D3B2E]/90 shadow-black/20" 
+                : "bg-white/40 backdrop-blur-xl text-slate-500 border border-white/20 cursor-not-allowed grayscale"
+            }`}
+          >
             {inStock ? (
-              <button
-                onClick={(e) => {
-                  e.preventDefault(); e.stopPropagation();
-                  addToCart(cartProduct);
-                }}
-                className="w-full flex items-center justify-center gap-3 py-3.5 bg-slate-900 text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.15em] hover:bg-slate-800 transition-all shadow-xl active:scale-95 group/btn"
-              >
-                <ShoppingBag size={14} className="group-hover/btn:rotate-12 transition-transform" />
+              <>
+                <ShoppingBag size={14} className="group-hover/btn:translate-y-[-2px] transition-transform" />
                 Add to Bag
-              </button>
-            ) : null}
-          </div>
+              </>
+            ) : (
+              "Sold Out"
+            )}
+          </button>
         </div>
       </div>
 
@@ -175,11 +205,11 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         <div className="mt-auto pt-2 flex flex-col items-center gap-3">
           <div className="flex items-center justify-center gap-3">
             <span className="font-body text-base font-black text-slate-900">
-              {formatPrice(discountPrice || product.price)}
+              {formatPrice(currentPrice)}
             </span>
-            {(displayOriginal && discountPrice) || (originalPrice && !discountPrice) ? (
+            {displayOriginal > currentPrice ? (
               <span className="font-body text-xs text-slate-400 line-through font-medium">
-                {formatPrice(discountPrice ? product.price : (originalPrice as number))}
+                {formatPrice(displayOriginal)}
               </span>
             ) : null}
           </div>
@@ -189,7 +219,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             <motion.span
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="font-body text-[8px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-100/50 shadow-sm"
+              className="font-body text-[8px] font-black uppercase tracking-widest text-[#0D3B2E] bg-[#0D3B2E]/5 px-4 py-1.5 rounded-full border border-[#0D3B2E]/10"
             >
               {(product as any).stock_qty ?? (product as any).stock_quantity} Artisanal Pieces Left
             </motion.span>

@@ -10,7 +10,7 @@ const tabs = [
   { key: "best", label: "Best Sellers", icon: TrendingUp },
 ] as const;
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const FeaturedProducts = () => {
   const [activeTab, setActiveTab] = useState<"new" | "best">("new");
@@ -22,8 +22,9 @@ const FeaturedProducts = () => {
       setLoading(true);
       try {
         // Fetch products that are active and in stock
-        const res = await fetch(`${API}/public/products.php?per_page=100&status=Active`);
+        const res = await fetch(`${API}/public/products.php?per_page=100&show_oos=1`);
         const json = await res.json();
+        console.log("Featured API Response:", json);
         if (json.status === 'success') {
           const mapped = json.data.map((p: any) => ({
             id: String(p.id),
@@ -40,9 +41,9 @@ const FeaturedProducts = () => {
             created_at: p.created_at,
             stock_qty: parseInt(p.stock_qty),
             status: p.status,
-            inStock: p.status !== "Out of Stock" && (parseInt(p.stock_qty) || 0) > 0,
+            inStock: p.status !== "Out of Stock",
           }));
-          setApiProducts(mapped.filter((p: any) => p.inStock));
+          setApiProducts(mapped);
         }
       } catch (err) {
         console.error("Failed to fetch featured products", err);

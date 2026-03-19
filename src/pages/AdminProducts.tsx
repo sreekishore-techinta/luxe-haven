@@ -6,10 +6,8 @@ import {
     ChevronRight, Eye, Loader2, AlertCircle, X, Upload, CheckCircle, Image as LucideImage
 } from "lucide-react";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
-// Categories are now dynamic via fetchMasters()
-const FABRICS = ["All", "Pure Silk", "Kanjivaram Silk", "Banarasi", "Chanderi", "Organza", "Raw Silk", "Brocade Silk", "Tussar"];
 const STATUSES = ["All", "In Stock", "Low Stock", "Out of Stock"];
 
 type Product = {
@@ -134,7 +132,6 @@ export default function AdminProducts() {
     // Open add modal
     const openAdd = () => { setEditProduct(null); setForm({ ...emptyForm }); setImageFiles([]); setSaveMsg(null); setShowModal(true); };
 
-
     // Open edit modal
     const openEdit = (p: Product) => {
         setEditProduct(p);
@@ -184,8 +181,6 @@ export default function AdminProducts() {
                 status: "Active",
             };
 
-            console.log("[AdminProducts] Saving payload:", payload);
-
             if (editProduct) {
                 const res = await fetch(`${API}/products/product.php?id=${editProduct.id}`, {
                     method: "PUT",
@@ -194,7 +189,6 @@ export default function AdminProducts() {
                     body: JSON.stringify(payload),
                 });
                 const json = await res.json();
-                console.log("[AdminProducts] PUT response:", json);
                 if (json.status !== "success") throw new Error(json.message || "Update failed");
                 productId = editProduct.id;
             } else {
@@ -205,7 +199,6 @@ export default function AdminProducts() {
                     body: JSON.stringify(payload),
                 });
                 const json = await res.json();
-                console.log("[AdminProducts] POST response:", json);
                 if (json.status !== "success") throw new Error(json.message || "Create failed");
                 productId = json.id;
             }
@@ -254,14 +247,16 @@ export default function AdminProducts() {
     );
 
     return (
-        <div className="space-y-12 pb-20">
+        <div className="h-[calc(100vh-130px)] flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="page-header mb-8">
-                <div className="space-y-2">
-                    <h1 className="font-['Poppins',sans-serif] text-[42px] font-bold text-[#041E18] tracking-[-0.03em] leading-tight">Products <span className="text-[#D4AF37] italic">Inventory</span></h1>
-                    <p className="font-['Inter',sans-serif] text-base text-gray-400 font-medium">Showing <span className="text-[#041E18] font-bold">{total}</span> total products</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6 shrink-0 pt-2">
+                <div className="space-y-1">
+                    <h1 className="font-['Poppins',sans-serif] text-[32px] font-bold text-[#041E18] tracking-[-0.03em] leading-tight flex items-center gap-3">
+                        Products <span className="text-[#D4AF37] italic">Inventory</span>
+                    </h1>
+                    <p className="font-['Inter',sans-serif] text-sm text-gray-500 font-medium">Managing <span className="text-[#041E18] font-black">{total}</span> total entries</p>
                 </div>
-                <button onClick={openAdd} className="group relative flex items-center gap-3 px-10 py-5 bg-gradient-to-br from-[#D4AF37] via-[#B48C5E] to-[#8C6B3E] text-white rounded-[20px] font-bold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-gold/20 hover:shadow-gold/40 transition-all duration-500 hover:-translate-y-1 active:scale-95 overflow-hidden">
+                <button onClick={openAdd} className="group relative flex items-center justify-center gap-4 px-10 py-5 bg-gradient-to-br from-[#D4AF37] via-[#B48C5E] to-[#8C6B3E] text-white rounded-[24px] font-bold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-gold/20 hover:shadow-gold/40 transition-all duration-500 hover:-translate-y-1 active:scale-95 overflow-hidden">
                     <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <Plus size={18} strokeWidth={3} className="group-hover:rotate-90 transition-transform duration-500" />
                     <span className="relative z-10">Add New Product</span>
@@ -269,93 +264,92 @@ export default function AdminProducts() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap items-center gap-6 bg-white p-6 rounded-[32px] border border-[#041E18]/5 shadow-sm shadow-[#041E18]/5">
-                <div className="relative flex-1 min-w-[340px] group">
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-[#041E18]/5 text-[#041E18]/30 group-focus-within:text-[#D4AF37] group-focus-within:bg-[#D4AF37]/10 transition-all duration-300">
-                        <Search size={16} strokeWidth={2.5} />
+            <div className="flex flex-wrap items-center gap-4 bg-white p-5 rounded-[24px] border border-[#041E18]/5 shadow-sm mb-6 shrink-0 transition-all duration-300">
+                <div className="relative flex-1 min-w-[300px] group">
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D4AF37] transition-all duration-300">
+                        <Search size={18} strokeWidth={2.5} />
                     </div>
                     <input type="text" placeholder="Search by name, SKU or fabric..."
-                        className="w-full pl-16 pr-6 py-4 bg-[#041E18]/[0.02] rounded-[20px] border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-medium text-[#041E18] outline-none transition-all placeholder:text-gray-300"
+                        className="w-full pl-16 pr-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-black text-[#041E18] outline-none transition-all placeholder:text-gray-400"
                         value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <select value={category} onChange={e => { setCategory(e.target.value); setPage(1); }}
-                        className="pl-6 pr-10 py-4 bg-white border border-[#041E18]/5 rounded-[20px] text-[11px] font-extrabold uppercase tracking-widest text-[#041E18] outline-none focus:border-[#D4AF37]/30 transition-all cursor-pointer hover:bg-gray-50 appearance-none shadow-sm">
+                        className="pl-6 pr-10 py-4 bg-white border border-[#041E18]/5 rounded-2xl text-[11px] font-black uppercase tracking-widest text-[#041E18] outline-none focus:border-[#D4AF37]/30 transition-all cursor-pointer hover:bg-gray-50 appearance-none shadow-sm min-w-[160px]">
                         <option value="All">All Categories</option>
                         {masters.categories?.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                     </select>
 
                     <select value={statusFilter} onChange={e => { setStatus(e.target.value); setPage(1); }}
-                        className="pl-6 pr-10 py-4 bg-white border border-[#041E18]/5 rounded-[20px] text-[11px] font-extrabold uppercase tracking-widest text-[#041E18] outline-none focus:border-[#D4AF37]/30 transition-all cursor-pointer hover:bg-gray-50 appearance-none shadow-sm">
+                        className="pl-6 pr-10 py-4 bg-white border border-[#041E18]/5 rounded-2xl text-[11px] font-black uppercase tracking-widest text-[#041E18] outline-none focus:border-[#D4AF37]/30 transition-all cursor-pointer hover:bg-gray-50 appearance-none shadow-sm min-w-[160px]">
                         {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
 
                     <button onClick={() => { setSearch(""); setCategory("All"); setFabric("All"); setStatus("All"); setPage(1); }}
-                        className="p-4 bg-white border border-[#041E18]/5 text-[#041E18]/30 hover:text-rose-500 rounded-[20px] hover:border-rose-100 hover:bg-rose-50 transition-all shadow-sm">
+                        className="p-4 bg-white border border-[#041E18]/5 text-[#041E18]/30 hover:text-rose-500 rounded-2xl hover:border-rose-100 hover:bg-rose-50 transition-all shadow-sm flex items-center justify-center">
                         <Filter size={20} />
                     </button>
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="card">
-                <div className="table-container">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
+            {/* Table Area */}
+            <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-[#041E18]/5 shadow-xl shadow-[#041E18]/5 overflow-hidden flex flex-col mb-4">
+                <div className="flex-1 overflow-auto custom-scrollbar relative">
+                    <table className="w-full text-left border-collapse min-w-[1000px]">
+                        <thead className="sticky top-0 z-20 bg-[#FBFAF7]/95 backdrop-blur-sm shadow-sm">
                             <tr className="border-b border-[#041E18]/5">
-                                <th className="px-10 py-8 text-[10px] font-extrabold uppercase tracking-[0.25em] text-gray-400">Product Info</th>
-                                <th className="px-10 py-8 text-[10px] font-extrabold uppercase tracking-[0.25em] text-gray-400">Category</th>
-                                <th className="px-10 py-8 text-[10px] font-extrabold uppercase tracking-[0.25em] text-gray-400">Fabric</th>
-                                <th className="px-10 py-8 text-[10px] font-extrabold uppercase tracking-[0.25em] text-gray-400">Price</th>
-                                <th className="px-10 py-8 text-[10px] font-extrabold uppercase tracking-[0.25em] text-gray-400">Stock</th>
-                                <th className="px-10 py-8 text-[10px] font-extrabold uppercase tracking-[0.25em] text-gray-400 text-right"></th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Product Details</th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Classification</th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Fabric</th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Price Points</th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Inventory</th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#041E18]/5 font-['Inter',sans-serif]">
                             {products.map((p, i) => (
                                 <motion.tr key={p.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }}
                                     className="hover:bg-[#FBFAF7] transition-all duration-300 group cursor-default">
-                                    <td className="px-10 py-7">
-                                        <div className="flex items-center gap-6">
-                                            <div className="relative w-16 h-20 bg-gray-50 rounded-[18px] overflow-hidden shrink-0 shadow-sm border border-[#041E18]/5 group-hover:shadow-xl group-hover:shadow-gold/10 transition-all duration-500">
+                                    <td className="px-8 py-5">
+                                        <div className="flex items-center gap-5">
+                                            <div className="relative w-14 h-18 bg-gray-50 rounded-xl overflow-hidden shrink-0 shadow-sm border border-[#041E18]/5 group-hover:shadow-lg transition-all duration-500">
                                                 {p.primary_image
                                                     ? <img src={p.primary_image.startsWith('http') ? p.primary_image : `${API}/${p.primary_image}`} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
-                                                    : <div className="w-full h-full flex items-center justify-center bg-[#041E18]/5 text-[#B48C5E]"><LucideImage size={24} strokeWidth={1.5} /></div>}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-[#041E18]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                                    : <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300"><LucideImage size={20} strokeWidth={1.5} /></div>}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-[#041E18] mb-1 group-hover:text-[#D4AF37] transition-colors duration-300">{p.name}</p>
+                                                <p className="text-sm font-black text-[#041E18] mb-1 group-hover:text-[#D4AF37] transition-colors duration-300">{p.name}</p>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] font-mono font-bold text-gray-400 uppercase tracking-widest">{p.sku}</span>
-                                                    {p.is_new === 1 && <span className="bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-emerald-100 tracking-tighter">New arrival</span>}
+                                                    <span className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-widest">{p.sku}</span>
+                                                    {p.is_new === 1 && <span className="text-[8px] font-black uppercase text-emerald-600 tracking-tighter">New</span>}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-10 py-7">
-                                        <span className="px-4 py-1.5 bg-white border border-[#041E18]/5 rounded-xl text-[10px] font-black text-[#041E18] uppercase tracking-[0.1em] shadow-sm">
+                                    <td className="px-8 py-5">
+                                        <span className="px-3 py-1 bg-white border border-[#041E18]/5 rounded-lg text-[9px] font-black text-[#041E18] uppercase tracking-[0.1em] shadow-sm">
                                             {p.category}
                                         </span>
                                     </td>
-                                    <td className="px-10 py-7"><p className="text-[11px] font-bold text-gray-400 italic italic tracking-wide">{p.fabric}</p></td>
-                                    <td className="px-10 py-7">
+                                    <td className="px-8 py-5"><p className="text-[10px] font-black text-gray-500 italic tracking-wide">{p.fabric}</p></td>
+                                    <td className="px-8 py-5">
                                         <div className="space-y-0.5">
-                                            <p className="text-sm font-bold text-[#041E18] font-['Poppins',sans-serif]">₹{p.price.toLocaleString('en-IN')}</p>
-                                            {p.discount_price && <p className="text-[10px] text-rose-400 font-bold line-through opacity-60">₹{p.discount_price.toLocaleString('en-IN')}</p>}
+                                            <p className="text-sm font-black text-[#041E18] font-['Poppins',sans-serif]">₹{p.price.toLocaleString('en-IN')}</p>
+                                            {p.discount_price && <p className="text-[10px] text-rose-500/50 font-black line-through">₹{p.discount_price.toLocaleString('en-IN')}</p>}
                                         </div>
                                     </td>
-                                    <td className="px-10 py-7">
-                                        <div className="space-y-2">
-                                            <p className="text-xs font-black text-[#041E18] tracking-tight">{p.stock_qty} <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest ml-1">Pieces</span></p>
-                                            <div className={`w-fit px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.15em] border shadow-sm ${statusBadge(p.status)}`}>{p.status}</div>
+                                    <td className="px-8 py-5">
+                                        <div className="space-y-1.5">
+                                            <p className="text-[11px] font-black text-[#041E18] tracking-tight">{p.stock_qty} <span className="text-[9px] font-medium text-gray-400 uppercase tracking-widest ml-1">Pcs</span></p>
+                                            <div className={`w-fit px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-[0.1em] border shadow-sm ${statusBadge(p.status)}`}>{p.status}</div>
                                         </div>
                                     </td>
-                                    <td className="px-10 py-7">
-                                        <div className="actions sm:opacity-0 group-hover:opacity-100 sm:translate-x-4 group-hover:translate-x-0 transition-all duration-500 justify-end">
-                                            <button onClick={() => openView(p)} className="p-3 text-[#041E18]/30 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-2xl transition-all shadow-sm bg-white border border-[#041E18]/5"><Eye size={16} strokeWidth={2.5} /></button>
-                                            <button onClick={() => openEdit(p)} className="p-3 text-[#041E18]/30 hover:text-blue-500 hover:bg-blue-50 rounded-2xl transition-all shadow-sm bg-white border border-[#041E18]/5"><Edit2 size={16} strokeWidth={2.5} /></button>
-                                            <button onClick={() => setDeleteId(p.id)} className="p-3 text-[#041E18]/30 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all shadow-sm bg-white border border-[#041E18]/5"><Trash2 size={16} strokeWidth={2.5} /></button>
+                                    <td className="px-8 py-5">
+                                        <div className="flex items-center justify-end gap-1 opacity-10 md:opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                            <button onClick={() => openView(p)} className="p-2.5 text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-xl transition-all"><Eye size={16} strokeWidth={3} /></button>
+                                            <button onClick={() => openEdit(p)} className="p-2.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all"><Edit2 size={16} strokeWidth={3} /></button>
+                                            <button onClick={() => setDeleteId(p.id)} className="p-2.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"><Trash2 size={16} strokeWidth={3} /></button>
                                         </div>
                                     </td>
                                 </motion.tr>
@@ -365,21 +359,19 @@ export default function AdminProducts() {
                 </div>
 
                 {/* Pagination */}
-                <div className="px-10 py-8 border-t border-[#041E18]/5 flex items-center justify-between bg-[#FDFCF9]/50">
-                    <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-[0.25em]">Showing Results <span className="text-[#041E18] text-xs ml-2">{(page - 1) * 20 + 1}—{(page - 1) * 20 + products.length}</span> of {total}</p>
+                <div className="px-10 py-5 border-t border-[#041E18]/5 flex items-center justify-between bg-white/80 backdrop-blur-md shrink-0">
+                    <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-[0.25em]">Manifest Result <span className="text-[#041E18] text-xs ml-2">{(page - 1) * 20 + 1}—{(page - 1) * 20 + products.length}</span> / {total}</p>
                     <div className="flex items-center gap-3">
-                        <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="p-4 text-[#041E18]/40 hover:text-[#D4AF37] border border-[#041E18]/10 rounded-2xl disabled:opacity-10 bg-white shadow-sm transition-all hover:bg-gray-50"><ChevronLeft size={16} strokeWidth={3} /></button>
-                        <div className="flex items-center gap-1 bg-white border border-[#041E18]/10 p-1.5 rounded-2xl shadow-sm">
+                        <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="w-10 h-10 flex items-center justify-center text-[#041E18]/40 hover:text-[#D4AF37] border border-[#041E18]/10 rounded-xl disabled:opacity-30 bg-white shadow-sm transition-all hover:bg-gray-50"><ChevronLeft size={16} strokeWidth={3} /></button>
+                        <div className="flex items-center gap-1 bg-white border border-[#041E18]/10 p-1 rounded-xl shadow-sm">
                             {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                                <button key={n} onClick={() => setPage(n)} className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${n === page ? 'bg-[#041E18] text-white shadow-xl shadow-[#041E18]/20' : 'text-gray-400 hover:text-[#041E18] hover:bg-gray-50'}`}>{n}</button>
+                                <button key={n} onClick={() => setPage(n)} className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${n === page ? 'bg-[#041E18] text-white shadow-xl shadow-[#041E18]/20' : 'text-gray-400 hover:text-[#041E18] hover:bg-gray-50'}`}>{n}</button>
                             ))}
                         </div>
-                        <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="p-4 text-[#041E18]/40 hover:text-[#D4AF37] border border-[#041E18]/10 rounded-2xl disabled:opacity-10 bg-white shadow-sm transition-all hover:bg-gray-50"><ChevronRight size={16} strokeWidth={3} /></button>
+                        <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="w-10 h-10 flex items-center justify-center text-[#041E18]/40 hover:text-[#D4AF37] border border-[#041E18]/10 rounded-xl disabled:opacity-30 bg-white shadow-sm transition-all hover:bg-gray-50"><ChevronRight size={16} strokeWidth={3} /></button>
                     </div>
                 </div>
             </div>
-
-
 
             {/* ── Add / Edit Modal ────────────────────────────────────────── */}
             <AnimatePresence>
@@ -400,126 +392,113 @@ export default function AdminProducts() {
                             </div>
 
                             <div className="flex-1 overflow-y-auto px-10 py-8 space-y-10 custom-scrollbar">
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="md:col-span-2 space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Product Name *</label>
-                                            <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                                className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all" placeholder="e.g. Royal Kanjivaram Brocade Silk" />
-                                        </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="md:col-span-2 space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Product Name *</label>
+                                        <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all" placeholder="e.g. Royal Kanjivaram Brocade Silk" />
+                                    </div>
 
-                                        <div className="md:col-span-2 py-4 flex items-center gap-4">
-                                            <div className="h-px bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent flex-1" />
-                                            <span className="text-[9px] font-black text-[#B48C5E] uppercase tracking-[0.4em] whitespace-nowrap">Classification</span>
-                                            <div className="h-px bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent flex-1" />
-                                        </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Primary Class *</label>
+                                        <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
+                                            {masters.categories?.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                                        </select>
+                                    </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Primary Class *</label>
-                                            <select value={form.category} onChange={e => {
-                                                const val = e.target.value;
-                                                setForm(f => ({ ...f, category: val }));
-                                            }}
-                                                className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
-                                                {masters.categories?.length > 0 ? masters.categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>) : <option>Sarees</option>}
-                                            </select>
-                                        </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Colour</label>
+                                        <select value={form.colour_id} onChange={e => setForm(f => ({ ...f, colour_id: e.target.value }))}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
+                                            <option value="">Select Colour</option>
+                                            {masters.colours?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Colour</label>
-                                            <select value={form.colour_id} onChange={e => setForm(f => ({ ...f, colour_id: e.target.value }))}
-                                                className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
-                                                <option value="">Select Colour</option>
-                                                {masters.colours?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Size</label>
-                                            <select value={form.size_id} onChange={e => setForm(f => ({ ...f, size_id: e.target.value }))}
-                                                className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
-                                                <option value="">Standard Size</option>
-                                                {masters.sizes?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                            </select>
-                                        </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Size</label>
+                                        <select value={form.size_id} onChange={e => setForm(f => ({ ...f, size_id: e.target.value }))}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
+                                            <option value="">Standard Size</option>
+                                            {masters.sizes?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Fabric</label>
-                                            <select value={form.fabric_id} onChange={e => setForm(f => ({ ...f, fabric_id: e.target.value }))}
-                                                className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
-                                                <option value="">Select Fabric</option>
-                                                {masters.fabric_types?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                            </select>
-                                        </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Fabric</label>
+                                        <select value={form.fabric_id} onChange={e => setForm(f => ({ ...f, fabric_id: e.target.value }))}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
+                                            <option value="">Select Fabric</option>
+                                            {masters.fabric_types?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
 
-                                        <div className="md:col-span-2 py-4 flex items-center gap-4">
-                                            <div className="h-px bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent flex-1" />
-                                            <span className="text-[9px] font-black text-[#B48C5E] uppercase tracking-[0.4em] whitespace-nowrap">Pricing</span>
-                                            <div className="h-px bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent flex-1" />
-                                        </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Regular Price (₹) *</label>
+                                        <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-extrabold text-[#041E18] outline-none transition-all font-['Poppins',sans-serif]" placeholder="12500" />
+                                    </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Regular Price (₹) *</label>
-                                            <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-                                                className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-extrabold text-[#041E18] outline-none transition-all font-['Poppins',sans-serif]" placeholder="12500" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Discount Price (₹)</label>
-                                            <input type="number" value={form.discount_price} onChange={e => setForm(f => ({ ...f, discount_price: e.target.value }))}
-                                                className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-extrabold text-[#041E18] outline-none transition-all font-['Poppins',sans-serif]" placeholder="Institutional Price" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Units in Stock *</label>
-                                            <input type="number" value={form.stock_qty} onChange={e => setForm(f => ({ ...f, stock_qty: e.target.value }))}
-                                                className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all" placeholder="50" />
-                                        </div>
-                                        <div className="flex items-center gap-8 pt-6">
-                                            <label className="flex items-center gap-3 cursor-pointer group">
-                                                <div className={`w-10 h-6 rounded-full p-1 transition-all ${form.is_new === 1 ? 'bg-[#D4AF37]' : 'bg-gray-200'}`}>
-                                                    <motion.div animate={{ x: form.is_new === 1 ? 16 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
-                                                </div>
-                                                <input type="checkbox" checked={form.is_new === 1} onChange={e => setForm(f => ({ ...f, is_new: e.target.checked ? 1 : 0 }))} className="hidden" />
-                                                <span className="text-[11px] font-black uppercase text-[#041E18] tracking-widest group-hover:text-[#D4AF37] transition-colors">Mark as New</span>
-                                            </label>
-                                            <label className="flex items-center gap-3 cursor-pointer group">
-                                                <div className={`w-10 h-6 rounded-full p-1 transition-all ${form.is_bestseller === 1 ? 'bg-[#041E18]' : 'bg-gray-200'}`}>
-                                                    <motion.div animate={{ x: form.is_bestseller === 1 ? 16 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
-                                                </div>
-                                                <input type="checkbox" checked={form.is_bestseller === 1} onChange={e => setForm(f => ({ ...f, is_bestseller: e.target.checked ? 1 : 0 }))} className="hidden" />
-                                                <span className="text-[11px] font-black uppercase text-[#041E18] tracking-widest group-hover:text-[#D4AF37] transition-colors">Bestseller</span>
-                                            </label>
-                                        </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Discount Price (₹)</label>
+                                        <input type="number" value={form.discount_price} onChange={e => setForm(f => ({ ...f, discount_price: e.target.value }))}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-extrabold text-[#041E18] outline-none transition-all font-['Poppins',sans-serif]" placeholder="Institutional Price" />
+                                    </div>
 
-                                        <div className="md:col-span-2 space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Description</label>
-                                            <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                                                rows={4} className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-medium text-[#041E18] outline-none transition-all resize-none shadow-inner"
-                                                placeholder="Narrate the soul of this masterpiece..." />
-                                        </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Units in Stock *</label>
+                                        <input type="number" value={form.stock_qty} onChange={e => setForm(f => ({ ...f, stock_qty: e.target.value }))}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all" placeholder="50" />
+                                    </div>
 
-                                        <div className="md:col-span-2 space-y-4">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Visual Documentation</label>
-                                            <div onClick={() => fileInputRef.current?.click()}
-                                                className="group/upload border-2 border-dashed border-[#041E18]/10 rounded-[24px] p-10 text-center cursor-pointer hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5 transition-all duration-500 relative overflow-hidden">
-                                                <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 via-transparent to-transparent opacity-0 group-hover/upload:opacity-100 transition-opacity" />
-                                                <div className="relative z-10 space-y-4">
-                                                    <div className="w-16 h-16 bg-white border border-[#041E18]/5 rounded-2xl shadow-sm flex items-center justify-center mx-auto group-hover/upload:scale-110 transition-transform text-gray-300 group-hover/upload:text-[#D4AF37]">
-                                                        <Upload size={32} strokeWidth={1.5} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-[#041E18] font-bold">Import Visual Assets</p>
-                                                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">High fidelity JPG, PNG, or WebP</p>
-                                                    </div>
-                                                    {imageFiles.length > 0 && (
-                                                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="inline-flex items-center gap-2 p-3 bg-white border border-[#D4AF37]/20 rounded-xl shadow-lg">
-                                                            <div className="w-6 h-6 bg-emerald-500 text-white rounded-lg flex items-center justify-center"><CheckCircle size={14} /></div>
-                                                            <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">{imageFiles.length} Archives Staged</span>
-                                                        </motion.div>
-                                                    )}
-                                                </div>
+                                    <div className="flex items-center gap-8 pt-6">
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <div className={`w-10 h-6 rounded-full p-1 transition-all ${form.is_new === 1 ? 'bg-[#D4AF37]' : 'bg-gray-200'}`}>
+                                                <motion.div animate={{ x: form.is_new === 1 ? 16 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
                                             </div>
-                                            <input ref={fileInputRef} type="file" multiple accept=".jpg,.jpeg,.png,.webp" className="hidden"
-                                                onChange={e => setImageFiles(Array.from(e.target.files ?? []))} />
+                                            <input type="checkbox" checked={form.is_new === 1} onChange={e => setForm(f => ({ ...f, is_new: e.target.checked ? 1 : 0 }))} className="hidden" />
+                                            <span className="text-[11px] font-black uppercase text-[#041E18] tracking-widest group-hover:text-[#D4AF37] transition-colors">Mark as New</span>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <div className={`w-10 h-6 rounded-full p-1 transition-all ${form.is_bestseller === 1 ? 'bg-[#041E18]' : 'bg-gray-200'}`}>
+                                                <motion.div animate={{ x: form.is_bestseller === 1 ? 16 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
+                                            </div>
+                                            <input type="checkbox" checked={form.is_bestseller === 1} onChange={e => setForm(f => ({ ...f, is_bestseller: e.target.checked ? 1 : 0 }))} className="hidden" />
+                                            <span className="text-[11px] font-black uppercase text-[#041E18] tracking-widest group-hover:text-[#D4AF37] transition-colors">Bestseller</span>
+                                        </label>
+                                    </div>
+
+                                    <div className="md:col-span-2 space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Description</label>
+                                        <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                                            rows={4} className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-medium text-[#041E18] outline-none transition-all resize-none shadow-inner"
+                                            placeholder="Narrate the soul of this masterpiece..." />
+                                    </div>
+
+                                    <div className="md:col-span-2 space-y-4">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Visual Documentation</label>
+                                        <div onClick={() => fileInputRef.current?.click()}
+                                            className="group/upload border-2 border-dashed border-[#041E18]/10 rounded-[24px] p-10 text-center cursor-pointer hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5 transition-all duration-500 relative overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 via-transparent to-transparent opacity-0 group-hover/upload:opacity-100 transition-opacity" />
+                                            <div className="relative z-10 space-y-4">
+                                                <div className="w-16 h-16 bg-white border border-[#041E18]/5 rounded-2xl shadow-sm flex items-center justify-center mx-auto group-hover/upload:scale-110 transition-transform text-gray-300 group-hover/upload:text-[#D4AF37]">
+                                                    <Upload size={32} strokeWidth={1.5} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-[#041E18] font-bold">Import Visual Assets</p>
+                                                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">High fidelity JPG, PNG, or WebP</p>
+                                                </div>
+                                                {imageFiles.length > 0 && (
+                                                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="inline-flex items-center gap-2 p-3 bg-white border border-[#D4AF37]/20 rounded-xl shadow-lg">
+                                                        <div className="w-6 h-6 bg-emerald-500 text-white rounded-lg flex items-center justify-center"><CheckCircle size={14} /></div>
+                                                        <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">{imageFiles.length} Archives Staged</span>
+                                                    </motion.div>
+                                                )}
+                                            </div>
                                         </div>
+                                        <input ref={fileInputRef} type="file" multiple accept=".jpg,.jpeg,.png,.webp" className="hidden"
+                                            onChange={e => setImageFiles(Array.from(e.target.files ?? []))} />
                                     </div>
                                 </div>
                             </div>
@@ -630,12 +609,12 @@ export default function AdminProducts() {
                         className="fixed inset-0 bg-[#041E18]/80 backdrop-blur-xl z-[70] flex items-center justify-center p-6"
                         onClick={() => setDeleteId(null)}>
                         <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white rounded-[40px] shadow-2xl w-full max-w-sm p-10 text-center relative overflow-hidden border border-[#041E18]/5"
+                            className="bg-white rounded-[40px] shadow-2xl w-full max-sm p-10 text-center relative overflow-hidden border border-[#041E18]/5"
                             onClick={e => e.stopPropagation()}>
                             <div className="absolute -top-10 -right-10 w-32 h-32 bg-rose-500/5 rounded-full blur-2xl" />
 
                             <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-rose-100 group">
-                                <Trash2 size={32} className="text-rose-500 group-hover:shake" strokeWidth={2.5} />
+                                <Trash2 size={32} className="text-rose-500 group-hover:animate-bounce transition-all" strokeWidth={2.5} />
                             </div>
                             <h3 className="font-['Poppins',sans-serif] text-2xl font-bold text-[#041E18] mb-2 tracking-tight">Delete Product?</h3>
                             <p className="text-xs text-gray-400 font-medium mb-10 leading-relaxed font-['Inter',sans-serif]">This will permanently delete this product. This action cannot be undone.</p>
@@ -652,7 +631,6 @@ export default function AdminProducts() {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div >
+        </div>
     );
 }
-

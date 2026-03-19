@@ -6,7 +6,7 @@ import ProductCard from "./ProductCard";
 import { fabricTypes } from "@/data/products";
 
 const SHOW_PER_PAGE = 8;
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const CollectionsRibbon = () => {
     const [activeTab, setActiveTab] = useState("All");

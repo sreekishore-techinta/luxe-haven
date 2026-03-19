@@ -7,7 +7,7 @@ import categorySarees from "@/assets/category-sarees.jpg";
 import categoryBlouses from "@/assets/category-blouses.png";
 import categorySuits from "@/assets/category-suits.jpg";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const CategoryBanner = () => {
   const [categories, setCategories] = useState<any[]>([]);

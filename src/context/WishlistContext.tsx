@@ -22,7 +22,7 @@ interface WishlistContextType {
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 export const WishlistProvider = ({ children }: { children: ReactNode }) => {
     const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);

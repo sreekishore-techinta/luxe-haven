@@ -28,7 +28,7 @@ const adminLinks = [
     { name: "Settings", path: "/admin/settings", icon: Settings },
 ];
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const SidebarLink = ({ link, sidebarOpen, onCloseMobile }: { link: any, sidebarOpen: boolean, onCloseMobile?: () => void }) => {
     const location = useLocation();
@@ -160,7 +160,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     };
 
     if (authLoading) return (
-        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="h-screen bg-[#F8FAFC] flex items-center justify-center">
             <Loader2 className="animate-spin text-slate-500" size={40} strokeWidth={3} />
         </div>
     );
@@ -181,7 +181,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             </AnimatePresence>
 
             {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 bg-white border-r border-slate-200 z-[70] transition-[width] duration-300 lg:sticky top-0 h-screen ${sidebarOpen ? "w-72" : "w-20"} ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} shrink-0`}>
+            <aside className={`fixed inset-y-0 left-0 bg-white border-r border-slate-200 z-[70] transition-[width] duration-300 lg:sticky top-0 h-screen ${sidebarOpen ? "w-64" : "w-20"} ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} shrink-0`}>
                 <div className={`h-28 flex flex-col border-b border-slate-100 bg-white p-4 transition-all ${sidebarOpen ? "items-stretch" : "items-center"}`}>
                     <div className={`flex items-center gap-3 ${sidebarOpen ? "justify-between" : "justify-center mb-4"}`}>
                         <div className="flex items-center gap-3">
@@ -247,9 +247,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden" style={{ contain: 'layout' }}>
+            <div className="flex-1 flex flex-col min-w-0 min-h-screen" style={{ contain: 'layout' }}>
                 {/* Navbar */}
-                <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 flex items-center justify-between px-6 lg:px-10">
+                <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 flex items-center justify-between px-4 lg:px-6">
                     <div className="flex items-center gap-4">
                         <button onClick={() => setMobileMenuOpen(true)} className="lg:hidden p-2 hover:bg-slate-100 rounded-lg text-slate-700">
                             <Menu size={24} strokeWidth={3} />
@@ -305,11 +305,11 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar-light p-6 lg:p-10">
-                    <div className="max-w-[1600px] mx-auto">
+                <main className="flex-1 p-4 lg:p-6">
+                    <div className="w-full">
                         {children}
                     </div>
-                </div>
+                </main>
             </div>
 
             <style>{`

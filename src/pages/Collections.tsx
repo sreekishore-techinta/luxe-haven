@@ -19,7 +19,7 @@ const fabricFilters = [
   "Mysore Silk", "Patola Silk", "Chanderi Silk", "Tussar Silk"
 ];
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const Collections = () => {
   const [searchParams] = useSearchParams();
@@ -42,7 +42,12 @@ const Collections = () => {
         const url = new URL(`${API}/public/products.php`);
         url.searchParams.append("page", String(currentPage));
         url.searchParams.append("per_page", String(itemsPerPage));
-        if (categoryParam && categoryParam !== "All") url.searchParams.append("category", categoryParam);
+        url.searchParams.append("show_oos", "1");
+        
+        // Use category param if it exists and isn't "All"
+        if (categoryParam && categoryParam !== "All") {
+          url.searchParams.append("category", categoryParam);
+        }
 
         const res = await fetch(url.toString());
         const json = await res.json();
@@ -56,7 +61,7 @@ const Collections = () => {
             image: p.image || "",
             category: p.category_name || "General",
             description: p.description,
-            fabric: p.fabric_name || "Premium Quality",
+            fabric: p.fabric_name || p.fabric || "Premium Quality",
             color: p.colour_name || "",
             sareeType: p.saree_type_name || "",
             blouseStyle: p.blouse_style_name || "",
@@ -64,7 +69,7 @@ const Collections = () => {
             isBestSeller: p.is_bestseller === 1,
             stock_qty: parseInt(p.stock_qty),
             status: p.status,
-            inStock: p.status !== "Out of Stock" && parseInt(p.stock_qty) > 0,
+            inStock: p.status !== "Out of Stock",
           }));
           setApiProducts(mapped);
           if (json.total_pages) setTotalPages(json.total_pages);
@@ -83,21 +88,22 @@ const Collections = () => {
     fetchProducts();
   }, [categoryParam, currentPage]);
 
-  const displayProducts = useMemo(() => {
-    return apiProducts;
-  }, [apiProducts]);
-
   const sorted = useMemo(() => {
-    let filtered = [...displayProducts];
+    let filtered = [...apiProducts];
 
     // Category Filter from URL
     if (categoryParam && categoryParam !== "All") {
-      filtered = filtered.filter(p => p.category.toLowerCase() === categoryParam.toLowerCase());
+      filtered = filtered.filter(p => 
+        p.category.toLowerCase().includes(categoryParam.toLowerCase()) ||
+        categoryParam.toLowerCase().includes(p.category.toLowerCase())
+      );
     }
 
     // Fabric Filter from UI
     if (fabricFilter !== "All") {
-      filtered = filtered.filter((p) => p.fabric.toLowerCase() === fabricFilter.toLowerCase());
+      filtered = filtered.filter((p) => 
+        p.fabric.toLowerCase().includes(fabricFilter.toLowerCase().replace(" silk", "").trim())
+      );
     }
 
     return filtered.sort((a, b) => {
@@ -109,7 +115,7 @@ const Collections = () => {
       if (sortBy === "newest") return a.isNew ? -1 : 1;
       return 0; // Featured / Default
     });
-  }, [sortBy, fabricFilter, displayProducts, categoryParam]);
+  }, [sortBy, fabricFilter, apiProducts, categoryParam]);
 
   return (
     <div>

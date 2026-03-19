@@ -5,7 +5,7 @@ import {
     Mail, Phone, MapPin, ShoppingBag, X, TrendingUp
 } from "lucide-react";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 type Customer = {
     id: number; name: string; email: string; phone: string;
@@ -100,9 +100,9 @@ export default function AdminCustomers() {
     );
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-10 space-y-10">
+        <div className="w-full">
             {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
                 <div>
                     <h1 className="text-3xl font-black text-slate-950 tracking-tight">Customer Database</h1>
                     <p className="text-xs font-black text-slate-600 mt-2">
@@ -123,8 +123,8 @@ export default function AdminCustomers() {
                 </div>
             </div>
 
-            {/* Table Area */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* Data Manifest Section */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
                 <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-slate-50 rounded-lg text-slate-400"><ShoppingBag size={18} /></div>
@@ -132,17 +132,17 @@ export default function AdminCustomers() {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto custom-scrollbar relative">
+                    <table className="w-full text-left min-w-[800px]">
                         <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200">
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Customer</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Contact Details</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Location</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 text-center">Orders</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Spending</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Tier</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 text-right">Actions</th>
+                            <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm">Customer</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm">Contact Details</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm">Location</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm text-center">Orders</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm">Spending</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm">Tier</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -191,14 +191,25 @@ export default function AdminCustomers() {
                     </table>
                 </div>
 
-                <div className="px-8 py-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Page {page} of {totalPages}</p>
+                <div className="px-8 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between shrink-0">
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none">Entry Manifest <span className="text-slate-400 mx-2">|</span> {page} <span className="text-slate-400 mx-1">/</span> {totalPages}</p>
                     <div className="flex items-center gap-1.5">
-                        <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-slate-900 transition-all disabled:opacity-30"><ChevronLeft size={16} /></button>
-                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(n => (
-                            <button key={n} onClick={() => setPage(n)} className={`w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${n === page ? 'bg-[#0F172A] text-white shadow-md' : 'text-slate-400 hover:bg-white border border-transparent hover:border-slate-200'}`}>{n}</button>
-                        ))}
-                        <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-slate-900 transition-all disabled:opacity-30"><ChevronRight size={16} /></button>
+                        <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} 
+                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-950 transition-all disabled:opacity-20 shadow-sm">
+                            <ChevronLeft size={16} />
+                        </button>
+                        <div className="flex gap-1 bg-white p-1 rounded-xl border border-slate-100 shadow-inner">
+                            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(n => (
+                                <button key={n} onClick={() => setPage(n)} 
+                                    className={`w-7 h-7 rounded-lg text-[10px] font-black transition-all ${n === page ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'}`}>
+                                    {n}
+                                </button>
+                            ))}
+                        </div>
+                        <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} 
+                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-950 transition-all disabled:opacity-20 shadow-sm">
+                            <ChevronRight size={16} />
+                        </button>
                     </div>
                 </div>
             </div>
@@ -289,6 +300,6 @@ export default function AdminCustomers() {
                     </div>
                 )}
             </AnimatePresence>
-        </div>
-    );
+            </div>
+        );
 }

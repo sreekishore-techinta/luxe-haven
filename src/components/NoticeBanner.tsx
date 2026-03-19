@@ -9,7 +9,7 @@ const NoticeBanner = () => {
     useEffect(() => {
         const fetchNotice = async () => {
             try {
-                const response = await fetch("http://localhost:8000/public/get_settings.php");
+                const response = await fetch("http://localhost/luxe-haven/api/public/get_settings.php");
                 if (response.ok) {
                     const json = await response.json();
                     if (json.status === "success" && json.data.public_notice) {

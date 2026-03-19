@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const AdminSettings = () => {
     const [settings, setSettings] = useState<any>(null);
@@ -94,9 +94,9 @@ const AdminSettings = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-10 space-y-10">
+        <div className="h-full flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
                 <div>
                     <h1 className="text-3xl font-black text-slate-950 tracking-tight">System Configuration</h1>
                     <p className="text-xs font-black text-slate-600 mt-2">GLOBAL PARAMETERS & ENTERPRISE PREFERENCES</p>
@@ -111,7 +111,7 @@ const AdminSettings = () => {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Navigation Sidebar */}
                 <div className="lg:col-span-3 space-y-2">
                     {[
@@ -140,7 +140,8 @@ const AdminSettings = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="lg:col-span-9 space-y-8">
+                <div className="lg:col-span-9 h-full overflow-y-auto custom-scrollbar pr-2 pt-1">
+                    <div className="space-y-8 pb-10">
                     {activeTab === 'general' && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
                             {/* General Info Card */}
@@ -247,6 +248,7 @@ const AdminSettings = () => {
                             <p className="text-sm font-black text-slate-700 max-w-xs mx-auto">This module is currently undergoing security hardening. Access will be restored in the next deployment cycle.</p>
                         </div>
                     )}
+                </div>
                 </div>
             </div>
         </div>

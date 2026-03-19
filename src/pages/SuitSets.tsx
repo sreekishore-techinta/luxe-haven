@@ -6,7 +6,7 @@ import { SlidersHorizontal, Grid3X3, LayoutGrid, X, ChevronLeft, ChevronRight } 
 import SkeletonCard from "@/components/SkeletonCard";
 import suitSetsHero from "@/assets/kurtha-suit-hero.png";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const sortOptions = [
     { label: "Featured", value: "featured" },

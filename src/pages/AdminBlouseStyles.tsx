@@ -6,7 +6,7 @@ import {
     Package, Filter, Eye, AlertCircle, Upload, ChevronLeft, ChevronRight, Layers
 } from "lucide-react";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 type Product = {
     id: number; sku: string; name: string; category: string;
@@ -352,10 +352,10 @@ export default function AdminBlouseStyles() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] pb-20">
-            <div className="container mx-auto px-4 lg:px-8 pt-8">
+        <div className="w-full">
+
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                <div className="shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                     <div>
                         <h1 className="text-3xl font-black text-slate-950 tracking-tight">Blouse <span className="text-[#D4AF37] italic font-serif">Atelier</span></h1>
                         <p className="text-slate-600 text-sm font-black mt-1 uppercase tracking-widest opacity-80">Design house management &amp; inventory control.</p>
@@ -369,8 +369,8 @@ export default function AdminBlouseStyles() {
                 </div>
 
                 {activeTab === "inventory" ? (
-                    <div className="space-y-6">
-                        <div className="flex flex-col lg:flex-row gap-4 justify-between items-center bg-white p-5 rounded-[28px] border border-slate-200 shadow-sm">
+                    <div className="w-full">
+                        <div className="shrink-0 flex flex-col lg:flex-row gap-4 justify-between items-center bg-white p-5 rounded-[28px] border border-slate-200 shadow-sm mb-6">
                             <div className="flex flex-1 items-center gap-4 w-full lg:w-auto">
                                 <div className="relative flex-1 max-w-md group">
                                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#D4AF37] transition-colors" size={18} strokeWidth={2.5} />
@@ -393,41 +393,43 @@ export default function AdminBlouseStyles() {
                                 <p className="text-[10px] font-black text-slate-950 uppercase tracking-[0.25em]">Synchronizing Inventory...</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {products.map((p) => (
-                                    <div key={p.id} className="group bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-500">
-                                        <div className="aspect-[4/5] relative overflow-hidden bg-slate-100">
-                                            {p.primary_image ? (
-                                                <img src={p.primary_image} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/200x300/f1f5f9/94a3b8?text=No+Image'; }} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-slate-200"><Package size={48} /></div>
-                                            )}
-                                            <div className="absolute top-4 left-4">
-                                                <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border backdrop-blur-md ${statusBadge(p.status)}`}>{p.status}</span>
+                            <div className="pb-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-1">
+                                    {products.map((p) => (
+                                        <div key={p.id} className="group bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-500">
+                                            <div className="aspect-[4/5] relative overflow-hidden bg-slate-100">
+                                                {p.primary_image ? (
+                                                    <img src={p.primary_image} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/200x300/f1f5f9/94a3b8?text=No+Image'; }} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-slate-200"><Package size={48} /></div>
+                                                )}
+                                                <div className="absolute top-4 left-4">
+                                                    <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border backdrop-blur-md ${statusBadge(p.status)}`}>{p.status}</span>
+                                                </div>
+                                                <div className="absolute top-4 right-4 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform duration-500">
+                                                    <button onClick={() => openEditProduct(p)} className="p-3 bg-white/90 backdrop-blur-md rounded-xl text-blue-500 shadow-lg hover:bg-slate-900 hover:text-white transition-all"><Edit2 size={16} /></button>
+                                                    <button onClick={() => handleDeleteProduct(p.id)} className="p-3 bg-white/90 backdrop-blur-md rounded-xl text-rose-500 shadow-lg hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
+                                                </div>
                                             </div>
-                                            <div className="absolute top-4 right-4 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform duration-500">
-                                                <button onClick={() => openEditProduct(p)} className="p-3 bg-white/90 backdrop-blur-md rounded-xl text-blue-500 shadow-lg hover:bg-slate-900 hover:text-white transition-all"><Edit2 size={16} /></button>
-                                                <button onClick={() => handleDeleteProduct(p.id)} className="p-3 bg-white/90 backdrop-blur-md rounded-xl text-rose-500 shadow-lg hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
+                                            <div className="p-6">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">#{p.sku}</span>
+                                                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{p.fabric}</span>
+                                                </div>
+                                                <h3 className="font-black text-slate-950 text-base mb-3 truncate group-hover:text-[#D4AF37] transition-colors">{p.name}</h3>
+                                                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                                                    <p className="text-xl font-black text-slate-950">₹{p.price.toLocaleString()}</p>
+                                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{p.stock_qty} Units</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="p-6">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">#{p.sku}</span>
-                                                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{p.fabric}</span>
-                                            </div>
-                                            <h3 className="font-black text-slate-950 text-base mb-3 truncate group-hover:text-[#D4AF37] transition-colors">{p.name}</h3>
-                                            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                                                <p className="text-xl font-black text-slate-950">₹{p.price.toLocaleString()}</p>
-                                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{p.stock_qty} Units</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         )}
 
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-4 mt-8 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm w-fit mx-auto">
+                            <div className="shrink-0 flex items-center justify-center gap-4 mt-4 py-4 bg-white rounded-2xl border border-slate-200 shadow-sm w-fit mx-auto">
                                 <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="p-2.5 border border-slate-200 rounded-xl disabled:opacity-20 hover:bg-slate-50 bg-white transition-all text-slate-950"><ChevronLeft size={16} strokeWidth={3} /></button>
                                 <span className="text-xs font-black px-4 text-slate-950">Page {page} of {totalPages}</span>
                                 <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="p-2.5 border border-slate-200 rounded-xl disabled:opacity-20 hover:bg-slate-50 bg-white transition-all text-slate-950"><ChevronRight size={16} strokeWidth={3} /></button>
@@ -435,34 +437,36 @@ export default function AdminBlouseStyles() {
                         )}
                     </div>
                 ) : activeTab === "styles" ? (
-                    <div className="space-y-6">
-                        <div className="flex justify-between items-center bg-white p-5 rounded-[28px] border border-slate-200 shadow-sm">
+                    <div className="w-full">
+                        <div className="shrink-0 flex justify-between items-center bg-white p-5 rounded-[28px] border border-slate-200 shadow-sm mb-6">
                             <h2 className="text-xl font-black text-slate-950">Blouse Style Catalogue</h2>
                             <button onClick={openAddStyle} className="group flex items-center gap-3 bg-slate-950 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all">
                                 <Plus size={16} strokeWidth={3.5} className="text-[#D4AF37] group-hover:rotate-90 transition-transform duration-500" /> New Style
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {styles.map((style) => (
-                                <div key={style.id} className="group bg-white p-4 rounded-[32px] border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-500">
-                                    <div className="aspect-[3/4] rounded-[24px] overflow-hidden mb-5 relative bg-slate-100">
-                                        <img src={style.image} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x500/f1f5f9/94a3b8?text=Style'; }} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                        <div className="absolute top-4 right-4 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform duration-500">
-                                            <button onClick={() => openEditStyle(style)} className="p-3 bg-white/90 backdrop-blur-md rounded-xl text-blue-500 shadow-lg hover:bg-slate-900 hover:text-white transition-all"><Edit2 size={16} /></button>
-                                            <button onClick={() => handleDeleteStyle(style.id)} className="p-3 bg-white/90 backdrop-blur-md rounded-xl text-rose-500 shadow-lg hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
+                        <div className="pb-8 px-1">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {styles.map((style) => (
+                                    <div key={style.id} className="group bg-white p-4 rounded-[32px] border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-500">
+                                        <div className="aspect-[3/4] rounded-[24px] overflow-hidden mb-5 relative bg-slate-100">
+                                            <img src={style.image} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x500/f1f5f9/94a3b8?text=Style'; }} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                            <div className="absolute top-4 right-4 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform duration-500">
+                                                <button onClick={() => openEditStyle(style)} className="p-3 bg-white/90 backdrop-blur-md rounded-xl text-blue-500 shadow-lg hover:bg-slate-900 hover:text-white transition-all"><Edit2 size={16} /></button>
+                                                <button onClick={() => handleDeleteStyle(style.id)} className="p-3 bg-white/90 backdrop-blur-md rounded-xl text-rose-500 shadow-lg hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
+                                            </div>
+                                        </div>
+                                        <div className="px-2 pb-2">
+                                            <h3 className="font-black text-slate-950 mb-1 group-hover:text-[#D4AF37] transition-colors">{style.name}</h3>
+                                            <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">{style.category}</p>
                                         </div>
                                     </div>
-                                    <div className="px-2 pb-2">
-                                        <h3 className="font-black text-slate-950 mb-1 group-hover:text-[#D4AF37] transition-colors">{style.name}</h3>
-                                        <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">{style.category}</p>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-6">
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-5 rounded-[28px] border border-slate-200 shadow-sm">
+                    <div className="w-full">
+                        <div className="shrink-0 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-5 rounded-[28px] border border-slate-200 shadow-sm mb-6">
                             <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
                                 <button onClick={() => setActiveAttr("sleeve_types")} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeAttr === 'sleeve_types' ? 'bg-white text-slate-950 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-950 hover:bg-white'}`}>Sleeves</button>
                                 <button onClick={() => setActiveAttr("neck_types")} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeAttr === 'neck_types' ? 'bg-white text-slate-950 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-950 hover:bg-white'}`}>Necks</button>
@@ -472,39 +476,40 @@ export default function AdminBlouseStyles() {
                             </button>
                         </div>
 
-                        <div className="bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-xl shadow-slate-200/50">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="border-b border-slate-100">
-                                        <th className="px-8 py-7 text-[10px] font-black text-slate-600 uppercase tracking-widest">Type Name</th>
-                                        <th className="px-8 py-7 text-[10px] font-black text-slate-600 uppercase tracking-widest">Status</th>
-                                        <th className="px-8 py-7 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {attrs.map((a) => (
-                                        <tr key={a.id} className="hover:bg-slate-50/70 transition-colors group">
-                                            <td className="px-8 py-6 font-black text-slate-950 group-hover:text-[#D4AF37] transition-colors">{a.name}</td>
-                                            <td className="px-8 py-6">
-                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${a.status === 'Active' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'}`}>
-                                                    <div className={`w-1 h-1 rounded-full ${a.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
-                                                    {a.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-8 py-6 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                                    <button onClick={() => { setEditAttr(a); setAttrForm({ name: a.name, status: a.status, sort_order: a.sort_order }); setShowAttrModal(true); }} className="p-2.5 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-xl bg-white border border-slate-100 transition-all"><Edit2 size={15} strokeWidth={2.5} /></button>
-                                                    <button onClick={() => handleDeleteAttr(a.id)} className="p-2.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl bg-white border border-slate-100 transition-all"><Trash2 size={15} strokeWidth={2.5} /></button>
-                                                </div>
-                                            </td>
+                        <div className="bg-white rounded-[40px] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden mb-8">
+                        <div className="overflow-x-auto custom-scrollbar relative">
+                                <table className="w-full text-left min-w-[600px]">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 sticky top-0 z-10 bg-white/95 backdrop-blur-sm">
+                                            <th className="px-8 py-7 text-[10px] font-black text-slate-600 uppercase tracking-widest">Type Name</th>
+                                            <th className="px-8 py-7 text-[10px] font-black text-slate-600 uppercase tracking-widest">Status</th>
+                                            <th className="px-8 py-7 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {attrs.map((a) => (
+                                            <tr key={a.id} className="hover:bg-slate-50/70 transition-colors group">
+                                                <td className="px-8 py-6 font-black text-slate-950 group-hover:text-[#D4AF37] transition-colors">{a.name}</td>
+                                                <td className="px-8 py-6">
+                                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${a.status === 'Active' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'}`}>
+                                                        <div className={`w-1 h-1 rounded-full ${a.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+                                                        {a.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-8 py-6 text-right">
+                                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                                        <button onClick={() => { setEditAttr(a); setAttrForm({ name: a.name, status: a.status, sort_order: a.sort_order }); setShowAttrModal(true); }} className="p-2.5 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-xl bg-white border border-slate-100 transition-all"><Edit2 size={15} strokeWidth={2.5} /></button>
+                                                        <button onClick={() => handleDeleteAttr(a.id)} className="p-2.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl bg-white border border-slate-100 transition-all"><Trash2 size={15} strokeWidth={2.5} /></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 )}
-            </div>
 
             {/* ─── Product Modal (Identical to AdminProducts) ────────────────── */}
             <AnimatePresence>

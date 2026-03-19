@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 
 header("Content-Type: application/json");
 
-require_once '../config/database.php';
+require_once 'config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {

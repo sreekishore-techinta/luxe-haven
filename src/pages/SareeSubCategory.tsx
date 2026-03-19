@@ -6,7 +6,7 @@ import CategoryHero from "@/components/CategoryHero";
 import { ArrowLeft, ChevronLeft, ChevronRight, Grid3X3, LayoutGrid } from "lucide-react";
 import SkeletonCard from "@/components/SkeletonCard";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const SareeSubCategory = () => {
     const { slug } = useParams();

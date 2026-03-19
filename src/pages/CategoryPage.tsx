@@ -10,7 +10,7 @@ import blouseHero from "@/assets/blouses-hero-final.png";
 import suitHero from "@/assets/kurtha-suit-hero.png";
 import defaultHero from "@/assets/new-arrivals-hero-2.jpg";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const heroMap: Record<string, string> = {
     "sarees": sareeCollectionRed,
@@ -32,7 +32,7 @@ const CategoryPage = () => {
             if (!slug) return;
             setLoading(true);
             try {
-                const res = await fetch(`${API}/public/products_by_category.php?slug=${slug}`);
+                const res = await fetch(`${API}/public/products_by_category.php?slug=${slug}&show_oos=1`);
                 const json = await res.json();
                 if (json.status === 'success') {
                     setCategoryInfo(json.category);
@@ -42,13 +42,13 @@ const CategoryPage = () => {
                         price: parseFloat(p.price),
                         discount_price: p.discount_price ? parseFloat(p.discount_price) : undefined,
                         image: p.image || "",
-                        category: json.category.name,
+                        category: (json.category && json.category.name) || slug,
                         description: p.description,
-                        fabric: p.fabric,
+                        fabric: p.fabric || p.fabric_name,
                         isNew: p.is_new === 1,
                         isBestSeller: p.is_bestseller === 1,
                         status: p.status,
-                        inStock: p.status !== "Out of Stock" && (p.stock_qty || 0) > 0,
+                        inStock: p.status !== "Out of Stock",
                     }));
                     setProducts(mapped);
                 }

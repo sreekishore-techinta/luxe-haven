@@ -6,7 +6,7 @@ import {
     Package, Filter, Eye, AlertCircle, Upload, ChevronLeft, ChevronRight, Layers
 } from "lucide-react";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 type Product = {
     id: number; sku: string; name: string; category: string;
@@ -301,9 +301,9 @@ export default function AdminSareeManagement() {
     };
 
     return (
-        <div className="space-y-8 pb-20">
+        <div className="w-full">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                 <div>
                     <h1 className="text-3xl font-black text-slate-950 tracking-tight">Saree <span className="text-[#D4AF37] italic font-serif">Management</span></h1>
                     <p className="text-slate-600 text-sm font-black mt-1">Control your premium saree collections and inventory.</p>
@@ -316,8 +316,8 @@ export default function AdminSareeManagement() {
 
             {/* View Switching List */}
             {activeTab === "products" ? (
-                <div className="space-y-6">
-                    <div className="flex flex-wrap items-center gap-4 bg-white p-6 rounded-[28px] border border-slate-200 shadow-sm">
+                <div className="w-full">
+                    <div className="shrink-0 flex flex-wrap items-center gap-4 bg-white p-6 rounded-[28px] border border-slate-200 shadow-sm mb-6">
                         <div className="relative flex-1 min-w-[300px] group">
                             <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#D4AF37] transition-colors" />
                             <input type="text" placeholder="Search sarees by name or SKU..." value={search} onChange={e => setSearch(e.target.value)}
@@ -332,15 +332,16 @@ export default function AdminSareeManagement() {
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
-                        <table className="w-full text-left">
+                    <div className="bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden mb-8">
+                        <div className="overflow-x-auto custom-scrollbar relative">
+                            <table className="w-full text-left min-w-[800px]">
                             <thead>
-                                <tr className="border-b border-slate-100">
-                                    <th className="px-8 py-7 text-[10px] font-black text-slate-700 uppercase tracking-widest">Saree Details</th>
-                                    <th className="px-8 py-7 text-[10px] font-black text-slate-700 uppercase tracking-widest">Type / Fabric</th>
-                                    <th className="px-8 py-7 text-[10px] font-black text-slate-700 uppercase tracking-widest">Price</th>
-                                    <th className="px-8 py-7 text-[10px] font-black text-slate-700 uppercase tracking-widest">Stock Status</th>
-                                    <th className="px-8 py-7 text-[10px] font-black text-slate-700 uppercase tracking-widest text-right">Actions</th>
+                                <tr className="border-b border-slate-100 sticky top-0 z-10">
+                                    <th className="px-8 py-7 text-[10px] font-black text-slate-700 uppercase tracking-widest bg-white sticky top-0 z-10 shadow-sm first:rounded-tl-[31px]">Saree Details</th>
+                                    <th className="px-8 py-7 text-[10px] font-black text-slate-700 uppercase tracking-widest bg-white sticky top-0 z-10 shadow-sm">Type / Fabric</th>
+                                    <th className="px-8 py-7 text-[10px] font-black text-slate-700 uppercase tracking-widest bg-white sticky top-0 z-10 shadow-sm">Price</th>
+                                    <th className="px-8 py-7 text-[10px] font-black text-slate-700 uppercase tracking-widest bg-white sticky top-0 z-10 shadow-sm">Stock Status</th>
+                                    <th className="px-8 py-7 text-[10px] font-black text-slate-700 uppercase tracking-widest text-right bg-white sticky top-0 z-10 shadow-sm last:rounded-tr-[31px]">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
@@ -379,6 +380,7 @@ export default function AdminSareeManagement() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
                         <div className="px-8 py-6 border-t border-slate-50 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <p className="text-[10px] text-slate-600 font-black uppercase tracking-widest">Total</p>
@@ -393,8 +395,8 @@ export default function AdminSareeManagement() {
                     </div>
                 </div>
             ) : (
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between bg-white p-6 rounded-[28px] border border-slate-200 shadow-sm">
+                <div className="w-full">
+                    <div className="shrink-0 flex items-center justify-between bg-white p-6 rounded-[28px] border border-slate-200 shadow-sm mb-8">
                         <div className="relative flex-1 max-w-md group">
                             <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#D4AF37] transition-colors" />
                             <input type="text" placeholder="Search saree collections..." value={search} onChange={e => setSearch(e.target.value)}
@@ -405,7 +407,8 @@ export default function AdminSareeManagement() {
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="pb-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-1">
                         {sareeTypes.map((type) => (
                             <div key={type.id} className="group bg-white p-5 rounded-[32px] border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-500">
                                 <div className="relative aspect-[3/4] rounded-[24px] overflow-hidden mb-5 bg-slate-100">
@@ -421,6 +424,7 @@ export default function AdminSareeManagement() {
                         ))}
                     </div>
                 </div>
+            </div>
             )}
 
             {/* ─── Product Modal (Copied Design from AdminProducts) ────────── */}

@@ -5,7 +5,7 @@ import CategoryHero from "@/components/CategoryHero";
 import { ArrowRight } from "lucide-react";
 import sareeCollectionRed from "@/assets/saree-collection-red.png";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const Sarees = () => {
     const [subcategories, setSubcategories] = useState<any[]>([]);
@@ -63,12 +63,8 @@ const Sarees = () => {
                                         <img
                                             src={
                                                 sub.image.startsWith('http')
-                                                    ? sub.image
-                                                    : sub.image.startsWith('src')
-                                                        ? `/${sub.image}`
-                                                        : sub.image.startsWith('/')
-                                                            ? sub.image
-                                                            : `/${sub.image}`
+                                                    ? (sub.image.includes('localhost/') && !sub.image.includes('localhost/luxe-haven/') ? sub.image.replace('localhost/', 'localhost/luxe-haven/') : sub.image)
+                                                    : (sub.image.startsWith('src') || sub.image.startsWith('uploads') ? `/${sub.image}` : `/${sub.image}`)
                                             }
                                             alt={sub.name}
                                             loading="lazy"

@@ -6,7 +6,7 @@ import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import SkeletonCard from "@/components/SkeletonCard";
 import bestSellersHero from "@/assets/new-collections-hero.jpg";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const BestSellers = () => {
   const [apiProducts, setApiProducts] = useState<any[]>([]);
@@ -23,6 +23,7 @@ const BestSellers = () => {
         url.searchParams.append("is_bestseller", "1");
         url.searchParams.append("page", String(currentPage));
         url.searchParams.append("per_page", String(itemsPerPage));
+        url.searchParams.append("show_oos", "1");
 
         const res = await fetch(url.toString());
         const json = await res.json();
@@ -39,7 +40,7 @@ const BestSellers = () => {
             isNew: p.is_new === 1,
             isBestSeller: p.is_bestseller === 1,
             status: p.status,
-            inStock: p.status !== "Out of Stock" && parseInt(p.stock_qty) > 0,
+            inStock: p.status !== "Out of Stock",
           }));
           setApiProducts(mapped);
           if (json.total_pages) setTotalPages(json.total_pages);

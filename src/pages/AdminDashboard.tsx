@@ -7,7 +7,7 @@ import {
     ShoppingBasket, Clock
 } from "lucide-react";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const iconMap: Record<string, any> = { DollarSign, ShoppingBag, Users, TrendingUp };
 
@@ -73,9 +73,9 @@ export default function AdminDashboard() {
     );
 
     return (
-        <div className="space-y-10 pb-10">
+        <div className="h-full flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                 <div>
                     <h1 className="text-3xl font-black text-slate-950 tracking-tight">Dashboard Overview</h1>
                     <p className="text-slate-800 mt-1 font-black italic">Welcome back to your command center.</p>
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="shrink-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                 {data.stats.map((stat: any, i: number) => {
                     const Icon = iconMap[stat.icon] || DollarSign;
                     const pathMap: Record<string, string> = {
@@ -128,7 +128,9 @@ export default function AdminDashboard() {
                 })}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content Scroll Area */}
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2 pt-1">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
                 {/* Recent Transactions */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between">
@@ -220,6 +222,7 @@ export default function AdminDashboard() {
                             Manage Inventory
                         </Link>
                     </div>
+                </div>
                 </div>
             </div>
         </div>

@@ -93,7 +93,7 @@ $stmt->close();
 $conn->close();
 
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
-    . '://' . $_SERVER['HTTP_HOST'] . '/';
+    . '://' . $_SERVER['HTTP_HOST'] . str_replace('api/public/products.php', '', $_SERVER['SCRIPT_NAME']);
 
 // Normalize image paths and fetch gallery if single product
 foreach ($products as &$p) {

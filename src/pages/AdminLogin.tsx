@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Lock, Mail, Loader2, AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 export default function AdminLogin() {
     const [email, setEmail] = useState("");
@@ -18,7 +18,7 @@ export default function AdminLogin() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${API}/login.php`, {
+            const res = await fetch(`${API}/auth/login.php`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include", // Important for sessions

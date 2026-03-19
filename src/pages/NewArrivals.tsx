@@ -5,7 +5,7 @@ import CategoryHero from "@/components/CategoryHero";
 import newArrivalsBanner from "@/assets/new-arrivals-banner.png";
 import SkeletonCard from "@/components/SkeletonCard";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const NewArrivals = () => {
   const [apiProducts, setApiProducts] = useState<any[]>([]);
@@ -15,7 +15,7 @@ const NewArrivals = () => {
     const fetchNew = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API}/public/products.php?is_new=1&per_page=100`);
+        const res = await fetch(`${API}/public/products.php?is_new=1&per_page=100&show_oos=1`);
         const json = await res.json();
         if (json.status === 'success') {
           const mapped = json.data.map((p: any) => ({
@@ -30,7 +30,7 @@ const NewArrivals = () => {
             isNew: p.is_new === 1,
             isBestSeller: p.is_bestseller === 1,
             status: p.status,
-            inStock: p.status !== "Out of Stock" && parseInt(p.stock_qty) > 0,
+            inStock: p.status !== "Out of Stock",
           }));
           setApiProducts(mapped);
         }

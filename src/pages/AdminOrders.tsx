@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import {
     Search, Eye, Trash2, Check, Filter, Loader2, Edit3, ShoppingBag, Package,
-    Truck, CheckCircle, XCircle, AlertTriangle, Calendar, X, ChevronRight
+    Truck, CheckCircle, XCircle, AlertTriangle, X, ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 type Order = {
     id: number;
@@ -121,9 +121,9 @@ export default function AdminOrders() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-10 space-y-10">
+        <div className="w-full">
             {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                 <div>
                     <h1 className="text-3xl font-black text-slate-950 tracking-tight">Order Fulfillment</h1>
                     <div className="flex items-center gap-2 mt-2 text-xs font-black text-slate-600">
@@ -134,55 +134,58 @@ export default function AdminOrders() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                    <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm focus-within:border-[#D4AF37]/50 transition-all">
-                        <Search size={18} className="text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search orders..."
-                            className="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-950 placeholder:text-slate-400 w-full sm:w-64"
-                        />
-                    </div>
+                    {/* Filter Suite */}
+                    <div className="flex flex-wrap items-center gap-4 bg-white p-6 rounded-[28px] border border-slate-200 shadow-sm mb-6">
+                        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm focus-within:border-[#D4AF37]/50 transition-all">
+                            <Search size={18} className="text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search orders..."
+                                className="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-950 placeholder:text-slate-400 w-full sm:w-64"
+                            />
+                        </div>
 
-                    <div className="relative">
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="appearance-none bg-[#0F172A] text-white border-none rounded-2xl pl-6 pr-12 py-3 text-xs font-bold uppercase tracking-widest focus:ring-0 cursor-pointer shadow-lg shadow-slate-200 hover:bg-[#1E293B] transition-all"
-                        >
-                            <option value="All">All Statuses</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Processing">Processing</option>
-                            <option value="Shipped">Shipped</option>
-                            <option value="Delivered">Delivered</option>
-                            <option value="Cancelled">Cancelled</option>
-                        </select>
-                        <Filter size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
+                        <div className="relative">
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="appearance-none bg-[#0F172A] text-white border-none rounded-2xl pl-6 pr-12 py-3 text-xs font-bold uppercase tracking-widest focus:ring-0 cursor-pointer shadow-lg shadow-slate-200 hover:bg-[#1E293B] transition-all"
+                            >
+                                <option value="All">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Shipped">Shipped</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                            <Filter size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
+            {/* Data Manifest Section */}
+            <div className="bg-white rounded-[40px] border border-[#041E18]/5 shadow-sm overflow-hidden mb-8">
+                <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-slate-50 rounded-lg text-slate-400"><ShoppingBag size={18} /></div>
-                        <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Order Registry</h2>
+                        <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Order Pipeline</h2>
                     </div>
                     <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
                         {orders.length} ACTIVE RECORDS
                     </span>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto custom-scrollbar relative">
+                    <table className="w-full text-left min-w-[800px]">
                         <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200">
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Order ID</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Date & Payment</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Customer</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Total Price</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Status</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 text-right">Actions</th>
+                            <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm">Order ID</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm">Date & Payment</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm">Customer</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm">Total Price</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm text-center">Status</th>
+                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-slate-50/95 backdrop-blur-sm text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -197,16 +200,13 @@ export default function AdminOrders() {
                                         <p className="text-sm font-black text-slate-950">{o.order_number}</p>
                                     </td>
                                     <td className="px-8 py-8">
-                                        <div className="flex items-center gap-2 text-xs font-black text-slate-700 mb-2">
-                                            <Calendar size={14} className="text-slate-600" strokeWidth={3} /> {new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                        <div className="text-xs font-black text-slate-700 mb-2">
+                                            {new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                         </div>
                                         <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded inline-block border border-slate-200">{o.payment_id || "OFFLINE"}</p>
                                     </td>
                                     <td className="px-8 py-8">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center text-[#D4AF37] text-xs font-black shadow-lg">
-                                                {o.customer_name[0]}
-                                            </div>
                                             <div>
                                                 <p className="text-sm font-black text-slate-950">{o.customer_name}</p>
                                                 <p className="text-xs font-bold text-slate-500">{o.customer_email}</p>
@@ -251,6 +251,14 @@ export default function AdminOrders() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            {/* Footer Pagination (Draft) */}
+            <div className="px-8 py-4 border-t border-slate-50 flex items-center justify-between bg-slate-50/30 shrink-0">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">End of pipeline</p>
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Records shown: {orders.length}</span>
                 </div>
             </div>
         </div>

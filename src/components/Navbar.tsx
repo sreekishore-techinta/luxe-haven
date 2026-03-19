@@ -6,7 +6,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { motion, AnimatePresence } from "framer-motion";
 import logoLishan from "@/assets/logo lishan saree.png";
 
-const API = "http://localhost:8000";
+const API = "http://localhost/luxe-haven/api";
 
 const Navbar = () => {
   const { totalItems, setIsCartOpen } = useCart();
