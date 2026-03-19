@@ -20,7 +20,10 @@ const ProductDetail = () => {
     setLoading(true);
     // Always fetch from API
     fetch(`${API}/public/products.php?id=${id}`)
-      .then(res => res.json())
+      .then(res => {
+        console.log("Product fetch status:", res.status);
+        return res.json();
+      })
       .then(json => {
         if (json.status === 'success' && json.data && json.data.length > 0) {
           const p = json.data[0];
@@ -43,7 +46,7 @@ const ProductDetail = () => {
             blouseStyle: p.blouse_style_name || "",
             isNew: p.is_new === 1,
             isBestSeller: p.is_bestseller === 1,
-            inStock: p.status !== "Out of Stock" && (parseInt(p.stock_qty || p.stock_quantity) > 0),
+            inStock: (p.status !== "Out of Stock" && (parseInt(p.stock_qty || p.stock_quantity || 0) > 0)) || (p.status === "Active" && parseInt(p.stock_qty || 0) > 0),
             stock_qty: parseInt(p.stock_qty || p.stock_quantity || 0),
             status: p.status,
             images: p.images?.map((img: any) => img.url) || []

@@ -1,17 +1,22 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Package, Search, Filter, Edit2, Trash2, Plus, ChevronLeft,
     ChevronRight, Eye, Loader2, AlertCircle, X, Upload, CheckCircle, Image as LucideImage
 } from "lucide-react";
 
+const BASE_URL = "http://localhost/luxe-haven";
 const API = "http://localhost/luxe-haven/api";
 
 const STATUSES = ["All", "In Stock", "Low Stock", "Out of Stock"];
 
 type Product = {
     id: number; sku: string; name: string; category: string;
+    category_id: number | null;
+    saree_type_id: number | null;
+    category_name?: string; fabric_name?: string;
+    saree_type_name?: string;
     colour_id: number | null; fabric_id: number | null;
     size_id: number | null;
     description: string; price: number; discount_price: number | null;
@@ -22,8 +27,8 @@ type Product = {
 };
 
 const emptyForm = {
-    name: "", category: "Sarees", description: "", price: "",
-    discount_price: "", fabric: "Pure Silk", stock_qty: "", is_new: 0, is_bestseller: 0,
+    name: "", category_id: "", saree_type_id: "", description: "", price: "",
+    discount_price: "", stock_qty: "50", is_new: 1, is_bestseller: 0,
     colour_id: "", fabric_id: "", size_id: "",
 };
 
@@ -43,6 +48,7 @@ export default function AdminProducts() {
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const navigate = useNavigate();
 
     // Filters
     const [search, setSearch] = useState("");
@@ -64,7 +70,7 @@ export default function AdminProducts() {
     const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
     // View modal
-    const [viewProduct, setViewProduct] = useState<(Product & { images: { image_path: string; is_primary: number }[] }) | null>(null);
+    const [viewProduct, setViewProduct] = useState<(Product & { gallery: { image_path: string; is_primary: number; image_url?: string }[] }) | null>(null);
     const [viewLoading, setViewLoading] = useState(false);
 
     // Image upload
@@ -73,15 +79,15 @@ export default function AdminProducts() {
 
     // Master data
     const [masters, setMasters] = useState<Record<string, any[]>>({
-        categories: [], colours: [], fabric_types: [], sizes: []
+        categories: [], colours: [], fabric_types: [], sizes: [], saree_types: []
     });
 
     const fetchMasters = async () => {
-        const types = Object.keys(masters);
+        const types = ['categories', 'colours', 'fabric_types', 'sizes', 'saree_types'];
         const results: Record<string, any[]> = {};
         for (const t of types) {
             try {
-                const res = await fetch(`${API}/masters/index.php?type=${t}`, { credentials: "include" });
+                const res = await fetch(`${API}/masters/index.php?type=${t}&per_page=100`, { credentials: "include" });
                 const json = await res.json();
                 if (json.status === "success") results[t] = json.data.filter((i: any) => i.status === 'Active');
             } catch (e) { }
@@ -99,7 +105,7 @@ export default function AdminProducts() {
         setLoading(true); setError(null);
         try {
             const q = new URLSearchParams({
-                page: String(page), per_page: "20",
+                page: String(page), per_page: "10",
                 ...(debouncedSearch ? { search: debouncedSearch } : {}),
                 ...(category !== "All" ? { category } : {}),
                 ...(fabric !== "All" ? { fabric } : {}),
@@ -136,9 +142,11 @@ export default function AdminProducts() {
     const openEdit = (p: Product) => {
         setEditProduct(p);
         setForm({
-            name: p.name, category: p.category, description: p.description,
+            name: p.name, category_id: p.category_id ? String(p.category_id) : "", 
+            saree_type_id: p.saree_type_id ? String(p.saree_type_id) : "",
+            description: p.description,
             price: String(p.price), discount_price: p.discount_price ? String(p.discount_price) : "",
-            fabric: p.fabric, stock_qty: String(p.stock_qty),
+            stock_qty: String(p.stock_qty),
             is_new: p.is_new, is_bestseller: p.is_bestseller,
             colour_id: p.colour_id ? String(p.colour_id) : "",
             fabric_id: p.fabric_id ? String(p.fabric_id) : "",
@@ -170,8 +178,9 @@ export default function AdminProducts() {
                 mrp_price: form.discount_price ? parseFloat(form.discount_price) : (parseFloat(form.price) || 0),
                 discount: 0,
                 stock: parseInt(form.stock_qty) || 0,
-                stock_qty: parseInt(form.stock_qty) || 0,
-                stock_quantity: parseInt(form.stock_qty) || 0,
+                stock_quantity: parseInt(form.stock_qty) || 50,
+                category_id: form.category_id ? parseInt(form.category_id) : null,
+                saree_type_id: form.saree_type_id ? parseInt(form.saree_type_id) : null,
                 colour_id: form.colour_id ? parseInt(form.colour_id) : null,
                 fabric_id: form.fabric_id ? parseInt(form.fabric_id) : null,
                 size_id: form.size_id ? parseInt(form.size_id) : null,
@@ -247,7 +256,7 @@ export default function AdminProducts() {
     );
 
     return (
-        <div className="h-[calc(100vh-130px)] flex flex-col overflow-hidden">
+        <div className="flex flex-col">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6 shrink-0 pt-2">
                 <div className="space-y-1">
@@ -294,8 +303,8 @@ export default function AdminProducts() {
             </div>
 
             {/* Table Area */}
-            <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-[#041E18]/5 shadow-xl shadow-[#041E18]/5 overflow-hidden flex flex-col mb-4">
-                <div className="flex-1 overflow-auto custom-scrollbar relative">
+            <div className="bg-white rounded-[32px] border border-[#041E18]/5 shadow-xl shadow-[#041E18]/5 overflow-hidden mb-4">
+                <div className="overflow-x-auto custom-scrollbar relative">
                     <table className="w-full text-left border-collapse min-w-[1000px]">
                         <thead className="sticky top-0 z-20 bg-[#FBFAF7]/95 backdrop-blur-sm shadow-sm">
                             <tr className="border-b border-[#041E18]/5">
@@ -311,11 +320,11 @@ export default function AdminProducts() {
                             {products.map((p, i) => (
                                 <motion.tr key={p.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }}
                                     className="hover:bg-[#FBFAF7] transition-all duration-300 group cursor-default">
-                                    <td className="px-8 py-5">
+                                    <td className="px-8 py-3">
                                         <div className="flex items-center gap-5">
-                                            <div className="relative w-14 h-18 bg-gray-50 rounded-xl overflow-hidden shrink-0 shadow-sm border border-[#041E18]/5 group-hover:shadow-lg transition-all duration-500">
+                                            <div className="relative w-12 h-14 bg-gray-50 rounded-xl overflow-hidden shrink-0 shadow-sm border border-[#041E18]/5 group-hover:shadow-lg transition-all duration-500">
                                                 {p.primary_image
-                                                    ? <img src={p.primary_image.startsWith('http') ? p.primary_image : `${API}/${p.primary_image}`} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
+                                                    ? <img src={p.primary_image.startsWith('http') ? p.primary_image : `${BASE_URL}/${p.primary_image}`} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
                                                     : <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300"><LucideImage size={20} strokeWidth={1.5} /></div>}
                                             </div>
                                             <div>
@@ -327,29 +336,37 @@ export default function AdminProducts() {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5">
-                                        <span className="px-3 py-1 bg-white border border-[#041E18]/5 rounded-lg text-[9px] font-black text-[#041E18] uppercase tracking-[0.1em] shadow-sm">
-                                            {p.category}
-                                        </span>
+                                    <td className="px-8 py-3">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="px-3 py-1 bg-white border border-[#041E18]/5 rounded-lg text-[9px] font-black text-[#041E18] uppercase tracking-[0.1em] shadow-sm w-fit">
+                                                {p.category_name}
+                                            </span>
+                                            {p.saree_type_name && (
+                                                <span className="px-3 py-1 bg-[#B48C5E]/5 border border-[#B48C5E]/10 rounded-lg text-[8px] font-bold text-[#D4AF37] uppercase tracking-[0.1em] shadow-sm w-fit italic">
+                                                    {p.saree_type_name}
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
-                                    <td className="px-8 py-5"><p className="text-[10px] font-black text-gray-500 italic tracking-wide">{p.fabric}</p></td>
-                                    <td className="px-8 py-5">
+                                    <td className="px-8 py-3"><p className="text-[10px] font-black text-gray-500 italic tracking-wide">{p.fabric_name}</p></td>
+                                    <td className="px-8 py-3">
                                         <div className="space-y-0.5">
                                             <p className="text-sm font-black text-[#041E18] font-['Poppins',sans-serif]">₹{p.price.toLocaleString('en-IN')}</p>
                                             {p.discount_price && <p className="text-[10px] text-rose-500/50 font-black line-through">₹{p.discount_price.toLocaleString('en-IN')}</p>}
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5">
+                                    <td className="px-8 py-3">
                                         <div className="space-y-1.5">
                                             <p className="text-[11px] font-black text-[#041E18] tracking-tight">{p.stock_qty} <span className="text-[9px] font-medium text-gray-400 uppercase tracking-widest ml-1">Pcs</span></p>
                                             <div className={`w-fit px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-[0.1em] border shadow-sm ${statusBadge(p.status)}`}>{p.status}</div>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5">
-                                        <div className="flex items-center justify-end gap-1 opacity-10 md:opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                            <button onClick={() => openView(p)} className="p-2.5 text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-xl transition-all"><Eye size={16} strokeWidth={3} /></button>
-                                            <button onClick={() => openEdit(p)} className="p-2.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all"><Edit2 size={16} strokeWidth={3} /></button>
-                                            <button onClick={() => setDeleteId(p.id)} className="p-2.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"><Trash2 size={16} strokeWidth={3} /></button>
+                                    <td className="px-8 py-3">
+                                        <div className="flex items-center justify-end gap-1 opacity-100 transition-all duration-300">
+                                            {/* Navigate to live product page as requested */}
+                                            <button onClick={() => navigate(`/product/${p.id}`)} title="View Live Page" className="p-2.5 text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-xl transition-all"><Eye size={16} strokeWidth={3} /></button>
+                                            <button onClick={() => openEdit(p)} title="Edit Details" className="p-2.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all"><Edit2 size={16} strokeWidth={3} /></button>
+                                            <button onClick={() => setDeleteId(p.id)} title="Remove Product" className="p-2.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"><Trash2 size={16} strokeWidth={3} /></button>
                                         </div>
                                     </td>
                                 </motion.tr>
@@ -360,7 +377,7 @@ export default function AdminProducts() {
 
                 {/* Pagination */}
                 <div className="px-10 py-5 border-t border-[#041E18]/5 flex items-center justify-between bg-white/80 backdrop-blur-md shrink-0">
-                    <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-[0.25em]">Manifest Result <span className="text-[#041E18] text-xs ml-2">{(page - 1) * 20 + 1}—{(page - 1) * 20 + products.length}</span> / {total}</p>
+                    <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-[0.25em]">Manifest Result <span className="text-[#041E18] text-xs ml-2">{(page - 1) * 10 + 1}—{(page - 1) * 10 + products.length}</span> / {total}</p>
                     <div className="flex items-center gap-3">
                         <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="w-10 h-10 flex items-center justify-center text-[#041E18]/40 hover:text-[#D4AF37] border border-[#041E18]/10 rounded-xl disabled:opacity-30 bg-white shadow-sm transition-all hover:bg-gray-50"><ChevronLeft size={16} strokeWidth={3} /></button>
                         <div className="flex items-center gap-1 bg-white border border-[#041E18]/10 p-1 rounded-xl shadow-sm">
@@ -401,9 +418,10 @@ export default function AdminProducts() {
 
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Primary Class *</label>
-                                        <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                                        <select value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
                                             className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
-                                            {masters.categories?.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                                            <option value="">Select Category</option>
+                                            {masters.categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>
                                     </div>
 
@@ -546,8 +564,8 @@ export default function AdminProducts() {
                             ) : viewProduct && (
                                 <div className="flex flex-col md:flex-row h-full">
                                     <div className="w-full md:w-[45%] h-full min-h-[400px] relative bg-gray-50 group">
-                                        {viewProduct.images?.[0]
-                                            ? <img src={viewProduct.images[0].image_path.startsWith('http') ? viewProduct.images[0].image_path : `${API}/${viewProduct.images[0].image_path}`} alt={viewProduct.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                        {viewProduct.gallery?.[0]
+                                            ? <img src={viewProduct.gallery[0].image_url || (viewProduct.gallery[0].image_path.startsWith('http') ? viewProduct.gallery[0].image_path : `${BASE_URL}/${viewProduct.gallery[0].image_path}`)} alt={viewProduct.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                                             : <div className="w-full h-full flex items-center justify-center text-gray-200"><LucideImage size={64} strokeWidth={1} /></div>}
                                         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#041E18]/60 to-transparent pointer-events-none" />
                                         <div className="absolute bottom-8 left-8 right-8">

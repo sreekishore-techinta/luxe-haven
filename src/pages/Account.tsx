@@ -90,7 +90,23 @@ const Account = () => {
     if (activeTab === "addresses" && customer) {
       fetchAddresses();
     }
+    if (activeTab === "orders" && customer) {
+      fetchOrders();
+    }
   }, [activeTab, customer]);
+
+  const fetchOrders = async () => {
+    setLoadingOrders(true);
+    try {
+      const res = await fetch(`${API}/auth/customer_orders.php`, { credentials: "include" });
+      const json = await res.json();
+      if (json.status === "success") setOrders(json.data);
+    } catch (err) {
+      console.error("Failed to fetch orders", err);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
 
   const fetchAddresses = async () => {
     setLoadingAddresses(true);

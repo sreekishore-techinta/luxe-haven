@@ -8,15 +8,34 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 $conn = getDB();
 $where = ["1=1"];
-$showOutOfStock = !empty($_GET['show_oos']);
-if (!$showOutOfStock) {
-    $where[] = "p.status IN ('In Stock', 'Low Stock')";
-    $where[] = "p.stock_qty > 0";
-}
 $params = [];
 $types = "";
 
-// Filter by category name (from master_categories or products.category field)
+// If a specific ID is requested, we bypass standard visibility/OOS filters to ensure the detail page can load.
+$isSingleProduct = !empty($_GET['id']) || !empty($_GET['sku']);
+
+if (!$isSingleProduct) {
+    $showOutOfStock = !empty($_GET['show_oos']);
+    if (!$showOutOfStock) {
+        // Updated visibility check: include 'Active' and handle stock separately
+        $where[] = "(p.status IN ('In Stock', 'Low Stock', 'Active'))";
+        $where[] = "p.stock_qty > 0";
+    }
+} else {
+    // Single product requested by ID or SKU: only filter by id/sku
+    if (!empty($_GET['id'])) {
+        $where[] = "p.id = ?";
+        $params[] = (int) $_GET['id'];
+        $types .= "i";
+    }
+    if (!empty($_GET['sku'])) {
+        $where[] = "p.sku = ?";
+        $params[] = $_GET['sku'];
+        $types .= "s";
+    }
+}
+
+// Filter by category name (exclude from id-based bypass if you want category pages to be restricted, but handle below)
 if (!empty($_GET['category'])) {
     $where[] = "(p.category = ? OR mc.name = ?)";
     $params[] = $_GET['category'];
@@ -30,19 +49,6 @@ if (!empty($_GET['is_new'])) {
 if (!empty($_GET['is_bestseller'])) {
     $where[] = "p.is_bestseller = 1";
 }
-// Filter by ID
-if (!empty($_GET['id'])) {
-    $where[] = "p.id = ?";
-    $params[] = (int) $_GET['id'];
-    $types .= "i";
-}
-
-// Filter by SKU
-if (!empty($_GET['sku'])) {
-    $where[] = "p.sku = ?";
-    $params[] = $_GET['sku'];
-    $types .= "s";
-}
 
 if (!empty($_GET['search'])) {
     $s = "%" . $conn->real_escape_string($_GET['search']) . "%";
@@ -52,8 +58,6 @@ if (!empty($_GET['search'])) {
     $params[] = $s;
     $types .= "sss";
 }
-
-// Filters handled above
 
 $whereStr = implode(" AND ", $where);
 

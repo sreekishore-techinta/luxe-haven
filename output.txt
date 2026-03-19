@@ -1,0 +1,2 @@
+Table exists check: 1
+Rows count: 10

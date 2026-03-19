@@ -8,6 +8,7 @@ import {
     Mic, Heart, PenTool, Image as LucideImage, ChevronLeft, ChevronRight, LayoutGrid
 } from "lucide-react";
 
+const BASE_URL = "http://localhost/luxe-haven";
 const API = "http://localhost/luxe-haven/api";
 
 type MasterType = {
@@ -171,7 +172,7 @@ export default function AdminGeneralMaster() {
     const getFullUrl = (path: string) => {
         if (!path) return "";
         if (path.startsWith("http")) return path;
-        return `http://localhost/luxe-haven/api/${path}`;
+        return `${BASE_URL}/${path}`;
     };
 
     const ActiveIcon = MASTER_TYPES.find(m => m.id === activeType)?.icon || List;
@@ -293,7 +294,7 @@ export default function AdminGeneralMaster() {
                                             </div>
                                         </td>
                                         <td className="py-6 px-8 text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                            <div className="flex items-center justify-end gap-2 opacity-100 transition-all duration-300">
                                                 <button onClick={() => handleOpenEdit(item)} className="p-2.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all shadow-sm bg-white border border-slate-100"><Edit2 size={14} strokeWidth={3} /></button>
                                                 <button onClick={() => handleDelete(item.id)} className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shadow-sm bg-white border border-slate-100"><Trash2 size={14} strokeWidth={3} /></button>
                                             </div>

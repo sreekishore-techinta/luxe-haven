@@ -69,7 +69,7 @@ const SidebarLink = ({ link, sidebarOpen, onCloseMobile }: { link: any, sidebarO
                 </div>
                 {sidebarOpen && (
                     <>
-                        <span className={`text-sm tracking-tight ${isActive ? "font-black text-slate-950" : "font-black text-slate-700 hover:text-slate-950"}`}>
+                        <span className={`text-sm tracking-tight ${isActive && !hasSubItems ? "font-black text-white" : isActive && hasSubItems ? "font-black text-slate-950" : "font-black text-slate-700 hover:text-slate-950"}`}>
                             {link.name}
                         </span>
                         {hasSubItems && (
@@ -166,7 +166,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     );
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] font-['Inter',sans-serif] flex" style={{ overflowAnchor: 'none' }}>
+        <div className="h-screen bg-[#F8FAFC] font-['Inter',sans-serif] flex overflow-hidden" style={{ overflowAnchor: 'none' }}>
             {/* Mobile Sidebar Overlay */}
             <AnimatePresence>
                 {mobileMenuOpen && (
@@ -181,8 +181,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             </AnimatePresence>
 
             {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 bg-white border-r border-slate-200 z-[70] transition-[width] duration-300 lg:sticky top-0 h-screen ${sidebarOpen ? "w-64" : "w-20"} ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} shrink-0`}>
-                <div className={`h-28 flex flex-col border-b border-slate-100 bg-white p-4 transition-all ${sidebarOpen ? "items-stretch" : "items-center"}`}>
+            <aside className={`fixed inset-y-0 left-0 bg-white border-r border-slate-200 z-[70] transition-[width] duration-300 lg:sticky top-0 h-screen ${sidebarOpen ? "w-64" : "w-20"} ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} shrink-0 flex flex-col`}>
+                <div className={`h-20 flex flex-col shrink-0 border-b border-slate-100 bg-white p-4 transition-all ${sidebarOpen ? "items-stretch" : "items-center"}`}>
                     <div className={`flex items-center gap-3 ${sidebarOpen ? "justify-between" : "justify-center mb-4"}`}>
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-[#0F172A] rounded-xl flex items-center justify-center text-[#D4AF37] font-bold shadow-sm shrink-0">L</div>
@@ -226,7 +226,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                     )}
                 </div>
 
-                <div className={`flex-1 flex flex-col h-[calc(100%-160px)] ${sidebarOpen ? "p-4" : "p-2"}`}>
+                <div className={`flex-1 flex flex-col overflow-y-auto custom-scrollbar-light ${sidebarOpen ? "p-4" : "p-2"}`}>
                     <div className="space-y-1.5 pt-4">
                         {adminLinks.map((link) => (
                             <SidebarLink key={link.path} link={link} sidebarOpen={sidebarOpen} onCloseMobile={() => setMobileMenuOpen(false)} />
@@ -247,7 +247,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 min-h-screen" style={{ contain: 'layout' }}>
+            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden" style={{ contain: 'layout' }}>
                 {/* Navbar */}
                 <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 flex items-center justify-between px-4 lg:px-6">
                     <div className="flex items-center gap-4">
@@ -305,7 +305,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                     </div>
                 </header>
 
-                <main className="flex-1 p-4 lg:p-6">
+                <main className="flex-1 p-4 lg:p-6 overflow-y-auto custom-scrollbar-light">
                     <div className="w-full">
                         {children}
                     </div>

@@ -41,22 +41,17 @@ switch ($method) {
         }
 
         $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
-            . '://' . $_SERVER['HTTP_HOST'] . '/';
-
-        // Gallery images
-        $imgStmt = $conn->prepare(
-            "SELECT id, image_path FROM product_images WHERE product_id = ? ORDER BY is_primary DESC, id ASC"
-        );
-        $imgStmt->bind_param("i", $id);
-        $imgStmt->execute();
-        $gallery = $imgStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-        $imgStmt->close();
+            . '://' . $_SERVER['HTTP_HOST'] . str_replace('api/products/product.php', '', $_SERVER['SCRIPT_NAME']);
 
         foreach ($gallery as &$img) {
             if (!empty($img['image_path'])) {
-                $img['image_url'] = (strpos($img['image_path'], 'http') === 0)
-                    ? $img['image_path']
-                    : $baseUrl . ltrim($img['image_path'], '/');
+                if (strpos($img['image_path'], 'http') !== 0) {
+                    $img['url'] = $baseUrl . ltrim($img['image_path'], '/');
+                    $img['image_url'] = $img['url'];
+                } else {
+                    $img['url'] = $img['image_path'];
+                    $img['image_url'] = $img['image_path'];
+                }
             }
         }
         unset($img);
@@ -254,7 +249,7 @@ switch ($method) {
         $imgRes = $conn->query("SELECT image_path FROM product_images WHERE product_id = $id");
         if ($imgRes) {
             while ($img = $imgRes->fetch_assoc()) {
-                $path = $_SERVER['DOCUMENT_ROOT'] . '/luxe-haven/' . ltrim($img['image_path'] ?? '', '/');
+                $path = dirname(__DIR__, 2) . '/' . ltrim($img['image_path'] ?? '', '/');
                 if (file_exists($path))
                     @unlink($path);
             }

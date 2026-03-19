@@ -8,10 +8,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $sql = "SELECT * FROM saree_types ORDER BY id ASC";
     $result = $conn->query($sql);
     $data = [];
-    $baseUrl = "http://localhost/luxe-haven/api/";
+    $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
+        . '://' . $_SERVER['HTTP_HOST'] . str_replace('api/public/saree_types.php', '', $_SERVER['SCRIPT_NAME']);
+
     while ($row = $result->fetch_assoc()) {
-        if ($row['image'] && !str_starts_with($row['image'], 'http') && !str_starts_with($row['image'], 'src')) {
-            $row['image'] = $baseUrl . $row['image'];
+        if ($row['image'] && strpos($row['image'], 'http') !== 0 && strpos($row['image'], 'src') !== 0) {
+            $row['image'] = $baseUrl . ltrim($row['image'], '/');
         }
         $data[] = $row;
     }
