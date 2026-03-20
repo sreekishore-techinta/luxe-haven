@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Database, Search, Plus, Edit2, Trash2, X, AlertCircle, Loader2,
     CheckCircle, List, Tag, ShoppingBasket, Palette, Scissors, Maximize, Layers,
-    Mic, Heart, PenTool, Image as LucideImage, ChevronLeft, ChevronRight, LayoutGrid
+    Mic, Heart, PenTool, Image as LucideImage, ChevronLeft, ChevronRight, LayoutGrid, Upload
 } from "lucide-react";
 
 const BASE_URL = "http://localhost/luxe-haven";
@@ -44,6 +44,8 @@ export default function AdminGeneralMaster() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [total, setTotal] = useState(0);
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+    const [uploadingId, setUploadingId] = useState<string | null>(null);
 
     const [form, setForm] = useState<any>({
         name: "",
@@ -105,6 +107,7 @@ export default function AdminGeneralMaster() {
     const handleOpenAdd = () => {
         setEditMode(false);
         setSelectedId(null);
+        setError(null);
         setForm({
             name: "", status: "Active", sort_order: 0, slug: "", image: "", hero_image: "",
             description: "", is_featured: 0, show_on_menu: 0, category_id: categories[0]?.id || "",
@@ -118,12 +121,12 @@ export default function AdminGeneralMaster() {
     const handleOpenEdit = (item: any) => {
         setEditMode(true);
         setSelectedId(item.id);
+        setError(null);
         setForm({ ...item, is_featured: parseInt(item.is_featured) || 0, show_on_menu: parseInt(item.show_on_menu) || 0 });
         setShowModal(true);
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to terminate this registry entry?")) return;
         try {
             const res = await fetch(`${API}/masters/index.php?type=${activeType}&id=${id}`, { method: "DELETE", credentials: "include" });
             const json = await res.json();
@@ -162,11 +165,54 @@ export default function AdminGeneralMaster() {
         if (!file) return;
         const formData = new FormData();
         formData.append("image", file);
+        formData.append("type", activeType);
+        formData.append("field", field);
+        if (editMode && selectedId) formData.append("id", selectedId);
         try {
-            const res = await fetch(`${API}/products/upload_images.php`, { method: "POST", body: formData, credentials: "include" });
+            const res = await fetch(`${API}/masters/upload_image.php`, {
+                method: "POST",
+                body: formData,
+                credentials: "include"
+            });
             const json = await res.json();
-            if (json.status === "success") setForm({ ...form, [field]: json.url });
-        } catch (e) {}
+            if (json.status === "success") {
+                setForm((prev: any) => ({ ...prev, [field]: json.url }));
+            } else {
+                setError(json.message || "Image upload failed.");
+            }
+        } catch (e) {
+            setError("Image upload failed. Check server.");
+        }
+    };
+
+    const handleInlineImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, item: any) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const field = (activeType === 'categories' || activeType === 'saree_types') ? 'hero_image' : 'image';
+        setUploadingId(item.id);
+        const formData = new FormData();
+        formData.append("image", file);
+        formData.append("type", activeType);
+        formData.append("field", field);
+        formData.append("id", String(item.id));
+        try {
+            const res = await fetch(`${API}/masters/upload_image.php`, {
+                method: "POST",
+                body: formData,
+                credentials: "include"
+            });
+            const json = await res.json();
+            if (json.status === "success") {
+                fetchData(); // refresh table to show new image
+            } else {
+                alert("Upload failed: " + (json.message || "Unknown error"));
+            }
+        } catch {
+            alert("Upload failed. Check server.");
+        } finally {
+            setUploadingId(null);
+            e.target.value = ""; // reset input
+        }
     };
 
     const getFullUrl = (path: string) => {
@@ -272,11 +318,34 @@ export default function AdminGeneralMaster() {
                                         )}
                                         {(activeType === 'categories' || activeType === 'sub_categories' || activeType === 'saree_types') && (
                                             <td className="py-6 px-8">
-                                                <div className="w-16 h-10 mx-auto rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shadow-inner flex items-center justify-center group-hover:border-[#D4AF37]/30 transition-colors">
-                                                    {(item.image || item.hero_image) ? (
-                                                        <img src={getFullUrl(item.image || item.hero_image)} className="w-full h-full object-cover" />
-                                                    ) : <LucideImage size={14} className="text-slate-300" strokeWidth={1.5} />}
-                                                </div>
+                                                <label
+                                                    htmlFor={`asset-inline-${item.id}`}
+                                                    className="block w-16 h-14 mx-auto rounded-xl bg-slate-100 border-2 border-dashed border-slate-200 overflow-hidden shadow-inner flex items-center justify-center group-hover:border-[#D4AF37]/50 transition-all cursor-pointer relative"
+                                                    title="Click to upload image"
+                                                >
+                                                    {uploadingId === item.id ? (
+                                                        <Loader2 size={14} className="text-[#D4AF37] animate-spin" />
+                                                    ) : (item.image || item.hero_image) ? (
+                                                        <>
+                                                            <img src={getFullUrl(item.image || item.hero_image)} className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                                                                <Upload size={12} className="text-white opacity-0 group-hover:opacity-100 transition-all" />
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <Upload size={12} className="text-slate-300 group-hover:text-[#D4AF37] transition-colors" />
+                                                            <span className="text-[7px] font-black text-slate-300 group-hover:text-[#D4AF37] uppercase tracking-wider transition-colors">Upload</span>
+                                                        </div>
+                                                    )}
+                                                    <input
+                                                        id={`asset-inline-${item.id}`}
+                                                        type="file"
+                                                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                                                        className="hidden"
+                                                        onChange={(e) => handleInlineImageUpload(e, item)}
+                                                    />
+                                                </label>
                                             </td>
                                         )}
                                         {activeType === 'colours' && (
@@ -296,7 +365,7 @@ export default function AdminGeneralMaster() {
                                         <td className="py-6 px-8 text-right">
                                             <div className="flex items-center justify-end gap-2 opacity-100 transition-all duration-300">
                                                 <button onClick={() => handleOpenEdit(item)} className="p-2.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all shadow-sm bg-white border border-slate-100"><Edit2 size={14} strokeWidth={3} /></button>
-                                                <button onClick={() => handleDelete(item.id)} className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shadow-sm bg-white border border-slate-100"><Trash2 size={14} strokeWidth={3} /></button>
+                                                <button onClick={() => setDeleteTargetId(item.id)} className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shadow-sm bg-white border border-slate-100"><Trash2 size={14} strokeWidth={3} /></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -623,6 +692,57 @@ export default function AdminGeneralMaster() {
                                             </button>
                                         </>
                                     )}
+                                </div>
+                            </motion.div>
+                        </div>
+                    </ModalPortal>
+                )}
+            </AnimatePresence>
+
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {deleteTargetId !== null && (
+                    <ModalPortal>
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setDeleteTargetId(null)}
+                                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.92, y: 24 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.92, y: 24 }}
+                                transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                                className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden"
+                            >
+                                {/* Icon */}
+                                <div className="flex flex-col items-center pt-10 pb-6 px-8">
+                                    <div className="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center mb-6">
+                                        <Trash2 size={28} className="text-rose-500" strokeWidth={2} />
+                                    </div>
+                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Delete Entry?</h2>
+                                    <p className="text-sm text-slate-400 font-medium text-center leading-relaxed">
+                                        This will permanently delete this registry entry.<br />This action cannot be undone.
+                                    </p>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="px-8 pb-8 space-y-3">
+                                    <button
+                                        onClick={() => { handleDelete(deleteTargetId!); setDeleteTargetId(null); }}
+                                        className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-rose-200 hover:shadow-rose-300 active:scale-[0.98]"
+                                    >
+                                        <Trash2 size={14} strokeWidth={3} /> DELETE
+                                    </button>
+                                    <button
+                                        onClick={() => setDeleteTargetId(null)}
+                                        className="w-full py-4 text-xs font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-700 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-all"
+                                    >
+                                        CANCEL
+                                    </button>
                                 </div>
                             </motion.div>
                         </div>

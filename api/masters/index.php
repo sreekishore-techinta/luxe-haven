@@ -72,10 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     jsonResponse([
         'status' => 'success',
         'data' => $data,
-        'total' => $totalRows,
-        'total_pages' => $totalPages,
-        'page' => $page,
-        'per_page' => $perPage
+        'pagination' => [
+            'total_items' => (int)$totalRows,
+            'total_pages' => (int)$totalPages,
+            'current_page' => $page,
+            'per_page' => $perPage
+        ]
     ]);
 }
 
@@ -188,6 +190,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             $updates[] = "hero_image = '" . sanitize($conn, $input['hero_image']) . "'";
         if (isset($input['description']))
             $updates[] = "description = '" . sanitize($conn, $input['description']) . "'";
+        if (isset($input['is_featured']))
+            $updates[] = "is_featured = " . (int)$input['is_featured'];
+        if (isset($input['show_on_menu']))
+            $updates[] = "show_on_menu = " . (int)$input['show_on_menu'];
+        if (isset($input['meta_title']))
+            $updates[] = "meta_title = '" . sanitize($conn, $input['meta_title']) . "'";
+        if (isset($input['meta_description']))
+            $updates[] = "meta_description = '" . sanitize($conn, $input['meta_description']) . "'";
     }
     if ($type === 'colours' && isset($input['hex_code'])) {
         $updates[] = "hex_code = '" . sanitize($conn, $input['hex_code']) . "'";

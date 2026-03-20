@@ -624,26 +624,38 @@ export default function AdminProducts() {
             <AnimatePresence>
                 {deleteId && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-[#041E18]/80 backdrop-blur-xl z-[70] flex items-center justify-center p-6"
+                        className="fixed inset-0 bg-[#041E18]/60 backdrop-blur-xl z-[70] flex items-center justify-center p-6"
                         onClick={() => setDeleteId(null)}>
-                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white rounded-[40px] shadow-2xl w-full max-sm p-10 text-center relative overflow-hidden border border-[#041E18]/5"
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.92, y: 24 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.92, y: 24 }}
+                            transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                            className="bg-white rounded-[32px] shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden"
                             onClick={e => e.stopPropagation()}>
-                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-rose-500/5 rounded-full blur-2xl" />
 
-                            <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-rose-100 group">
-                                <Trash2 size={32} className="text-rose-500 group-hover:animate-bounce transition-all" strokeWidth={2.5} />
+                            {/* Icon + Text */}
+                            <div className="flex flex-col items-center pt-10 pb-6 px-8">
+                                <div className="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center mb-6">
+                                    <Trash2 size={28} className="text-rose-500" strokeWidth={2} />
+                                </div>
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Delete Product?</h3>
+                                <p className="text-sm text-slate-400 font-medium text-center leading-relaxed">
+                                    This will permanently delete this product.<br />This action cannot be undone.
+                                </p>
                             </div>
-                            <h3 className="font-['Poppins',sans-serif] text-2xl font-bold text-[#041E18] mb-2 tracking-tight">Delete Product?</h3>
-                            <p className="text-xs text-gray-400 font-medium mb-10 leading-relaxed font-['Inter',sans-serif]">This will permanently delete this product. This action cannot be undone.</p>
 
-                            <div className="flex flex-col gap-3">
+                            {/* Actions */}
+                            <div className="px-8 pb-8 space-y-3">
                                 <button onClick={handleDelete} disabled={deleting}
-                                    className="w-full py-5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] transition-all shadow-xl shadow-rose-600/20 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3">
-                                    {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} strokeWidth={3} />}
-                                    {deleting ? "Deleting..." : "Delete"}
+                                    className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-rose-200 hover:shadow-rose-300 active:scale-[0.98] disabled:opacity-60">
+                                    {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} strokeWidth={3} />}
+                                    {deleting ? "Deleting..." : "DELETE"}
                                 </button>
-                                <button onClick={() => setDeleteId(null)} className="w-full py-5 bg-[#FBFAF7] text-gray-400 hover:text-[#041E18] rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] transition-all border border-[#041E18]/5 active:scale-95">Cancel</button>
+                                <button onClick={() => setDeleteId(null)}
+                                    className="w-full py-4 text-xs font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-700 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-all">
+                                    CANCEL
+                                </button>
                             </div>
                         </motion.div>
                     </motion.div>

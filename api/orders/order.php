@@ -75,6 +75,32 @@ switch ($method) {
         }
         break;
 
+    // ─── DELETE: Purge order and items ──────────────────────────────────
+    case 'DELETE':
+        $conn->begin_transaction();
+        try {
+            // 1. Delete order items first
+            $st1 = $conn->prepare("DELETE FROM order_items WHERE order_id = ?");
+            $st1->bind_param("i", $id);
+            $st1->execute();
+            $st1->close();
+
+            // 2. Delete the order
+            $st2 = $conn->prepare("DELETE FROM orders WHERE id = ?");
+            $st2->bind_param("i", $id);
+            $st2->execute();
+            $st2->close();
+
+            $conn->commit();
+            $conn->close();
+            jsonResponse(['status' => 'success', 'message' => 'Order purged successfully']);
+        } catch (Exception $e) {
+            $conn->rollback();
+            $conn->close();
+            jsonResponse(['status' => 'error', 'message' => 'Purge failed: ' . $e->getMessage()], 500);
+        }
+        break;
+
     default:
         jsonResponse(['status' => 'error', 'message' => 'Method not allowed'], 405);
 }

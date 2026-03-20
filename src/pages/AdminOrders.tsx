@@ -39,12 +39,13 @@ export default function AdminOrders() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState("All");
-
-    // For shipping update form in the table
+    const [selectedOrder, setSelectedOrder] = useState<(Order & { items: any[] }) | null>(null);
+    const [viewLoading, setViewLoading] = useState(false);
     const [updatingId, setUpdatingId] = useState<number | null>(null);
     const [shipStatus, setShipStatus] = useState("");
     const [shipDate, setShipDate] = useState("");
     const [shipDetails, setShipDetails] = useState("");
+    const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
     const fetchOrders = async () => {
         setLoading(true);
@@ -67,6 +68,21 @@ export default function AdminOrders() {
     useEffect(() => {
         fetchOrders();
     }, [statusFilter]);
+
+    const handleViewOrder = async (id: number) => {
+        setViewLoading(true);
+        try {
+            const res = await fetch(`${API}/orders/order.php?id=${id}`);
+            const json = await res.json();
+            if (json.status === "success") {
+                setSelectedOrder(json.data);
+            }
+        } catch (e) {
+            toast.error("Failed to load order details");
+        } finally {
+            setViewLoading(false);
+        }
+    };
 
     const handleConfirmShipping = async (orderId: number) => {
         try {
@@ -243,8 +259,11 @@ export default function AdminOrders() {
                                         )}
                                     </td>
                                     <td className="px-8 py-8 text-right space-x-2">
-                                        <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all"><Eye size={16} /></button>
-                                        <button onClick={() => { if (window.confirm("Purge this record?")) handleDeleteOrder(o.id); }}
+                                        <button onClick={() => handleViewOrder(o.id)}
+                                            className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all">
+                                            {viewLoading && selectedOrder?.id !== o.id ? <Loader2 size={16} className="animate-spin" /> : <Eye size={16} />}
+                                        </button>
+                                        <button onClick={() => setDeleteTargetId(o.id)}
                                             className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-rose-600 hover:border-rose-100 transition-all"><Trash2 size={16} /></button>
                                     </td>
                                 </tr>
@@ -261,6 +280,195 @@ export default function AdminOrders() {
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Records shown: {orders.length}</span>
                 </div>
             </div>
+
+            {/* Order Details Modal */}
+            <AnimatePresence>
+                {selectedOrder && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedOrder(null)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-4xl bg-white rounded-[40px] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border border-slate-200">
+
+                            {/* Modal Header */}
+                            <div className="shrink-0 px-10 py-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-950 tracking-tight">Order #{selectedOrder.order_number}</h2>
+                                    <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.25em] mt-1">Order Registry Analysis</p>
+                                </div>
+                                <button onClick={() => setSelectedOrder(null)} className="p-3 text-slate-400 hover:text-slate-900 hover:bg-white rounded-2xl transition-all border border-transparent hover:border-slate-100"><X size={20} strokeWidth={3} /></button>
+                            </div>
+
+                            {/* Modal Content */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-10">
+                                <div className="grid md:grid-cols-2 gap-10">
+                                    {/* Customer & Payment Info */}
+                                    <div className="space-y-8">
+                                        <section>
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Customer Credentials</h3>
+                                            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-[#D4AF37] border border-slate-200 font-black shadow-sm text-lg">{selectedOrder.customer_name[0]}</div>
+                                                    <div>
+                                                        <p className="text-base font-black text-slate-950">{selectedOrder.customer_name}</p>
+                                                        <p className="text-xs font-bold text-slate-500">{selectedOrder.customer_email}</p>
+                                                        <p className="text-xs font-bold text-slate-500">{selectedOrder.customer_phone}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <section>
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Payment Intelligence</h3>
+                                            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 grid grid-cols-2 gap-6">
+                                                <div>
+                                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Method</p>
+                                                    <p className="text-sm font-black text-slate-950">{selectedOrder.payment_method}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Status</p>
+                                                    <p className="text-sm font-black text-slate-950">{selectedOrder.payment_status}</p>
+                                                </div>
+                                                <div className="col-span-2 pt-4 border-t border-slate-200">
+                                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Payment ID</p>
+                                                    <p className="text-xs font-bold font-mono text-slate-700">{selectedOrder.payment_id || "NOT PROVIDED"}</p>
+                                                </div>
+                                            </div>
+                                        </section>
+                                    </div>
+
+                                    {/* Logistics & Manifest */}
+                                    <div className="space-y-8">
+                                        <section>
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Logistics Manifest</h3>
+                                            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-6">
+                                                <div>
+                                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                                        <Truck size={10} /> Destination
+                                                    </p>
+                                                    <p className="text-sm font-bold text-slate-950 leading-relaxed italic">{selectedOrder.shipping_address}</p>
+                                                    <p className="text-sm font-black text-slate-950 mt-1">{selectedOrder.shipping_city}, {selectedOrder.shipping_state} - {selectedOrder.shipping_pincode}</p>
+                                                </div>
+                                                <div className="pt-4 border-t border-slate-200">
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Pipeline Status</span>
+                                                        {statusBadge(selectedOrder.status)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <section>
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Order Summary</h3>
+                                            <div className="bg-slate-900 text-white p-6 rounded-3xl space-y-3">
+                                                <div className="flex justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                                                    <span>Subtotal</span>
+                                                    <span>₹{(Number(selectedOrder.total) - 0).toLocaleString('en-IN')}</span>
+                                                </div>
+                                                <div className="flex justify-between text-[11px] font-bold text-[#D4AF37] uppercase tracking-widest">
+                                                    <span>Logistics</span>
+                                                    <span>₹0</span>
+                                                </div>
+                                                <div className="pt-3 border-t border-white/10 flex justify-between items-center mt-2">
+                                                    <span className="text-xs font-black uppercase tracking-[0.2em] text-[#D4AF37]">Total Amount</span>
+                                                    <span className="text-2xl font-black">₹{Number(selectedOrder.total).toLocaleString('en-IN')}</span>
+                                                </div>
+                                            </div>
+                                        </section>
+                                    </div>
+                                </div>
+
+                                {/* Items Registry */}
+                                <section className="pt-10 border-t border-slate-100">
+                                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Inventory Manifest</h3>
+                                    <div className="bg-slate-50 rounded-[32px] border border-slate-200 overflow-hidden">
+                                        <table className="w-full text-left">
+                                            <thead>
+                                                <tr className="bg-white border-b border-slate-200">
+                                                    <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Asset</th>
+                                                    <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Item Name</th>
+                                                    <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-center">Qty</th>
+                                                    <th className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-right">Price</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-200">
+                                                {selectedOrder.items?.map((item, idx) => (
+                                                    <tr key={idx} className="hover:bg-white transition-colors">
+                                                        <td className="px-8 py-4">
+                                                            <div className="w-12 h-16 rounded-lg bg-slate-200 overflow-hidden border border-slate-200 shadow-inner">
+                                                                {item.image_path ? (
+                                                                    <img src={`http://localhost/luxe-haven/${item.image_path}`} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center text-slate-400"><Package size={16} /></div>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-8 py-4">
+                                                            <p className="text-sm font-black text-slate-950">{item.product_name}</p>
+                                                            <p className="text-[10px] font-bold text-slate-500 font-mono italic">{item.product_sku}</p>
+                                                        </td>
+                                                        <td className="px-8 py-4 text-center text-sm font-black text-slate-950">x {item.quantity}</td>
+                                                        <td className="px-8 py-4 text-right text-sm font-black text-slate-950">₹{Number(item.unit_price).toLocaleString('en-IN')}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </section>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {deleteTargetId !== null && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setDeleteTargetId(null)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.92, y: 24 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.92, y: 24 }}
+                            transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                            className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden"
+                        >
+                            {/* Icon */}
+                            <div className="flex flex-col items-center pt-10 pb-6 px-8">
+                                <div className="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center mb-6">
+                                    <Trash2 size={28} className="text-rose-500" strokeWidth={2} />
+                                </div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Delete Order?</h2>
+                                <p className="text-sm text-slate-400 font-medium text-center leading-relaxed">
+                                    This will permanently delete this order record.<br />This action cannot be undone.
+                                </p>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="px-8 pb-8 space-y-3">
+                                <button
+                                    onClick={() => { handleDeleteOrder(deleteTargetId!); setDeleteTargetId(null); }}
+                                    className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-rose-200 hover:shadow-rose-300 active:scale-[0.98]"
+                                >
+                                    <Trash2 size={14} strokeWidth={3} /> DELETE
+                                </button>
+                                <button
+                                    onClick={() => setDeleteTargetId(null)}
+                                    className="w-full py-4 text-xs font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-700 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-all"
+                                >
+                                    CANCEL
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
