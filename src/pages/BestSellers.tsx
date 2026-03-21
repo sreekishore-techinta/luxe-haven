@@ -6,7 +6,7 @@ import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import SkeletonCard from "@/components/SkeletonCard";
 import bestSellersHero from "@/assets/new-collections-hero.jpg";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const BestSellers = () => {
   const [apiProducts, setApiProducts] = useState<any[]>([]);
@@ -64,7 +64,7 @@ const BestSellers = () => {
         title="Best Sellers"
         description="Our patrons' favorites — the sarees that have won hearts across the country for their quality, beauty, and timeless appeal."
         backgroundImage={bestSellersHero}
-        imagePosition="center 20%"
+        imagePosition="center"
         align="left"
       />
 

@@ -6,7 +6,7 @@ import { SlidersHorizontal, Grid3X3, LayoutGrid, X, ChevronLeft, ChevronRight } 
 import SkeletonCard from "@/components/SkeletonCard";
 import suitSetsHero from "@/assets/kurtha-suit-hero.png";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const sortOptions = [
     { label: "Featured", value: "featured" },
@@ -90,7 +90,7 @@ const SuitSets = () => {
                 title="Kurtha & Suit Sets"
                 description="Experience luxury with our hand-crafted, beautifully tailored Kurtha and Suit Sets designed for timeless elegance."
                 backgroundImage={suitSetsHero}
-                imagePosition="center 20%"
+                imagePosition="center 60%"
                 align="left"
             />
 

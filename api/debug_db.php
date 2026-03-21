@@ -1,9 +1,11 @@
 <?php
 require_once 'config/db.php';
 $conn = getDB();
-$res = $conn->query("SHOW COLUMNS FROM products");
-$cols = $res->fetch_all(MYSQLI_ASSOC);
-$res2 = $conn->query("SELECT * FROM products LIMIT 5");
-$rows = $res2->fetch_all(MYSQLI_ASSOC);
-echo json_encode(['cols' => $cols, 'data' => $rows], JSON_PRETTY_PRINT);
+$res = $conn->query("SELECT id, name, hero_image FROM saree_types");
+echo "ID | Name | Hero Image\n";
+echo "---|------|-----------\n";
+while ($row = $res->fetch_assoc()) {
+    echo "{$row['id']} | {$row['name']} | {$row['hero_image']}\n";
+}
+$conn->close();
 ?>

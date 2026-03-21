@@ -40,6 +40,17 @@ switch ($method) {
             jsonResponse(['status' => 'error', 'message' => 'Product not found'], 404);
         }
 
+        // Fetch gallery images
+        $gallery = [];
+        $imgStmt = $conn->prepare("SELECT id, image_path, is_primary FROM product_images WHERE product_id = ? ORDER BY is_primary DESC, id ASC");
+        $imgStmt->bind_param("i", $id);
+        $imgStmt->execute();
+        $imgRes = $imgStmt->get_result();
+        while ($img = $imgRes->fetch_assoc()) {
+            $gallery[] = $img;
+        }
+        $imgStmt->close();
+
         $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
             . '://' . $_SERVER['HTTP_HOST'] . str_replace('api/products/product.php', '', $_SERVER['SCRIPT_NAME']);
 

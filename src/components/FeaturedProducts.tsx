@@ -10,7 +10,7 @@ const tabs = [
   { key: "best", label: "Best Sellers", icon: TrendingUp },
 ] as const;
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const FeaturedProducts = () => {
   const [activeTab, setActiveTab] = useState<"new" | "best">("new");

@@ -142,6 +142,7 @@ switch ($method) {
             $fabric_id = !empty($data['fabric_id']) ? (int) $data['fabric_id'] : null;
             $color_id = !empty($data['colour_id']) ? (int) $data['colour_id'] : null;
             $size_id = !empty($data['size_id']) ? (int) $data['size_id'] : null;
+            $saree_type_id = !empty($data['saree_type_id']) ? (int) $data['saree_type_id'] : null;
             $desc = $data['description'] ?? '';
             $price = (float) ($data['price'] ?? 0);
             $mrp = !empty($data['mrp_price']) ? (float) $data['mrp_price'] : $price;
@@ -159,7 +160,7 @@ switch ($method) {
             $meta_d = $data['meta_description'] ?? '';
 
             // Using the columns confirmed by most migration scripts
-            $sql = "INSERT INTO products (name, slug, category_id, description, price, mrp_price, stock_qty, sku, status, fabric_id, colour_id, size_id, work_type, blouse_included, saree_length, is_bestseller, is_new, meta_title, meta_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO products (name, slug, category_id, saree_type_id, description, price, mrp_price, stock_qty, sku, status, fabric_id, colour_id, size_id, work_type, blouse_included, saree_length, is_bestseller, is_new, meta_title, meta_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
@@ -167,8 +168,8 @@ switch ($method) {
             }
 
             $stmt->bind_param(
-                "ssisddissiiiisiiiss",
-                $name, $slug, $cat_id, $desc, $price, $mrp, $stock, $sku, $status, $fabric_id, $color_id, $size_id, $work, $blouse, $length, $is_bestseller, $is_new, $meta_t, $meta_d
+                "ssiisddissiiisisiiss",
+                $name, $slug, $cat_id, $saree_type_id, $desc, $price, $mrp, $stock, $sku, $status, $fabric_id, $color_id, $size_id, $work, $blouse, $length, $is_bestseller, $is_new, $meta_t, $meta_d
             );
 
             if ($stmt->execute()) {

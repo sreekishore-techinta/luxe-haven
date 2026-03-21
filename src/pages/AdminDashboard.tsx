@@ -7,7 +7,7 @@ import {
     ShoppingBasket, Clock
 } from "lucide-react";
 
-const API = "http://localhost/luxe-haven/api";
+import { BASE_URL, API_URL as API } from "@/api_config";
 
 const iconMap: Record<string, any> = { DollarSign, ShoppingBag, Users, TrendingUp };
 

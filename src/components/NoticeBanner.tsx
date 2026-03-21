@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
+import { API_URL } from "@/api_config";
 
 const NoticeBanner = () => {
     const [notice, setNotice] = useState<string | null>(null);
     const [isVisible, setIsVisible] = useState(true);
 
     useEffect(() => {
-        const fetchNotice = async () => {
+        const fetchSettings = async () => {
             try {
-                const response = await fetch("http://localhost/luxe-haven/api/public/get_settings.php");
+                const response = await fetch(`${API_URL}/public/get_settings.php`);
                 if (response.ok) {
                     const json = await response.json();
                     if (json.status === "success" && json.data.public_notice) {
@@ -21,7 +22,7 @@ const NoticeBanner = () => {
             }
         };
 
-        fetchNotice();
+        fetchSettings();
     }, []);
 
     if (!notice || !isVisible) return null;

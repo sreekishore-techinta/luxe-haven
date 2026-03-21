@@ -6,8 +6,7 @@ import {
     ChevronRight, Eye, Loader2, AlertCircle, X, Upload, CheckCircle, Image as LucideImage
 } from "lucide-react";
 
-const BASE_URL = "http://localhost/luxe-haven";
-const API = "http://localhost/luxe-haven/api";
+import { BASE_URL, API_URL as API } from "@/api_config";
 
 const STATUSES = ["All", "In Stock", "Low Stock", "Out of Stock"];
 
@@ -135,12 +134,17 @@ export default function AdminProducts() {
 
     useEffect(() => { fetchProducts(); }, [page, debouncedSearch, category, fabric, statusFilter]);
 
+    const [isViewMode, setIsViewMode] = useState(false);
+
     // Open add modal
-    const openAdd = () => { setEditProduct(null); setForm({ ...emptyForm }); setImageFiles([]); setSaveMsg(null); setShowModal(true); };
+    const openAdd = () => { 
+        setIsViewMode(false); setEditProduct(null); setForm({ ...emptyForm }); 
+        setImageFiles([]); setSaveMsg(null); setShowModal(true); 
+    };
 
     // Open edit modal
     const openEdit = (p: Product) => {
-        setEditProduct(p);
+        setIsViewMode(false); setEditProduct(p);
         setForm({
             name: p.name, category_id: p.category_id ? String(p.category_id) : "", 
             saree_type_id: p.saree_type_id ? String(p.saree_type_id) : "",
@@ -156,13 +160,21 @@ export default function AdminProducts() {
     };
 
     // Open view modal
-    const openView = async (p: Product) => {
-        setViewLoading(true); setViewProduct(null);
-        try {
-            const res = await fetch(`${API}/products/product.php?id=${p.id}`, { credentials: "include" });
-            const json = await res.json();
-            if (json.status === "success") setViewProduct(json.data);
-        } finally { setViewLoading(false); }
+    const openView = (p: Product) => {
+        setIsViewMode(true);
+        setEditProduct(p);
+        setForm({
+            name: p.name, category_id: p.category_id ? String(p.category_id) : "", 
+            saree_type_id: p.saree_type_id ? String(p.saree_type_id) : "",
+            description: p.description,
+            price: String(p.price), discount_price: p.discount_price ? String(p.discount_price) : "",
+            stock_qty: String(p.stock_qty),
+            is_new: p.is_new, is_bestseller: p.is_bestseller,
+            colour_id: p.colour_id ? String(p.colour_id) : "",
+            fabric_id: p.fabric_id ? String(p.fabric_id) : "",
+            size_id: p.size_id ? String(p.size_id) : "",
+        });
+        setImageFiles([]); setSaveMsg(null); setShowModal(true);
     };
 
     // Save (add or edit)
@@ -341,11 +353,6 @@ export default function AdminProducts() {
                                             <span className="px-3 py-1 bg-white border border-[#041E18]/5 rounded-lg text-[9px] font-black text-[#041E18] uppercase tracking-[0.1em] shadow-sm w-fit">
                                                 {p.category_name}
                                             </span>
-                                            {p.saree_type_name && (
-                                                <span className="px-3 py-1 bg-[#B48C5E]/5 border border-[#B48C5E]/10 rounded-lg text-[8px] font-bold text-[#D4AF37] uppercase tracking-[0.1em] shadow-sm w-fit italic">
-                                                    {p.saree_type_name}
-                                                </span>
-                                            )}
                                         </div>
                                     </td>
                                     <td className="px-8 py-3"><p className="text-[10px] font-black text-gray-500 italic tracking-wide">{p.fabric_name}</p></td>
@@ -364,7 +371,7 @@ export default function AdminProducts() {
                                     <td className="px-8 py-3">
                                         <div className="flex items-center justify-end gap-1 opacity-100 transition-all duration-300">
                                             {/* Navigate to live product page as requested */}
-                                            <button onClick={() => navigate(`/product/${p.id}`)} title="View Live Page" className="p-2.5 text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-xl transition-all"><Eye size={16} strokeWidth={3} /></button>
+                                            <button onClick={() => openView(p)} title="Preview Card" className="p-2.5 text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-xl transition-all"><Eye size={16} strokeWidth={3} /></button>
                                             <button onClick={() => openEdit(p)} title="Edit Details" className="p-2.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all"><Edit2 size={16} strokeWidth={3} /></button>
                                             <button onClick={() => setDeleteId(p.id)} title="Remove Product" className="p-2.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"><Trash2 size={16} strokeWidth={3} /></button>
                                         </div>
@@ -402,8 +409,12 @@ export default function AdminProducts() {
 
                             <div className="flex items-center justify-between px-10 py-8 border-b border-[#041E18]/5 bg-[#FBFAF7]">
                                 <div>
-                                    <h2 className="font-['Poppins',sans-serif] text-2xl font-bold text-[#041E18] tracking-tight">{editProduct ? "Edit Product" : "Add New Product"}</h2>
-                                    <p className="text-[10px] font-extrabold text-[#B48C5E] uppercase tracking-[0.2em] mt-1">Update product details</p>
+                                    <h2 className="font-['Poppins',sans-serif] text-2xl font-bold text-[#041E18] tracking-tight">
+                                        {isViewMode ? "View Product Details" : editProduct ? "Edit Product" : "Add New Product"}
+                                    </h2>
+                                    <p className="text-[10px] font-extrabold text-[#B48C5E] uppercase tracking-[0.2em] mt-1">
+                                        {isViewMode ? "Inventory status & specifications" : "Update product details"}
+                                    </p>
                                 </div>
                                 <button onClick={() => setShowModal(false)} className="p-3 text-gray-400 hover:text-rose-500 bg-white border border-[#041E18]/5 rounded-2xl transition-all shadow-sm"><X size={20} strokeWidth={2.5} /></button>
                             </div>
@@ -413,13 +424,15 @@ export default function AdminProducts() {
                                     <div className="md:col-span-2 space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Product Name *</label>
                                         <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all" placeholder="e.g. Royal Kanjivaram Brocade Silk" />
+                                            disabled={isViewMode}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all disabled:opacity-70 disabled:cursor-not-allowed" placeholder="e.g. Royal Kanjivaram Brocade Silk" />
                                     </div>
 
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Primary Class *</label>
                                         <select value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
-                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
+                                            disabled={isViewMode}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                                             <option value="">Select Category</option>
                                             {masters.categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>
@@ -428,7 +441,8 @@ export default function AdminProducts() {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Colour</label>
                                         <select value={form.colour_id} onChange={e => setForm(f => ({ ...f, colour_id: e.target.value }))}
-                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
+                                            disabled={isViewMode}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                                             <option value="">Select Colour</option>
                                             {masters.colours?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>
@@ -437,7 +451,8 @@ export default function AdminProducts() {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Size</label>
                                         <select value={form.size_id} onChange={e => setForm(f => ({ ...f, size_id: e.target.value }))}
-                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
+                                            disabled={isViewMode}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                                             <option value="">Standard Size</option>
                                             {masters.sizes?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>
@@ -446,7 +461,8 @@ export default function AdminProducts() {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Fabric</label>
                                         <select value={form.fabric_id} onChange={e => setForm(f => ({ ...f, fabric_id: e.target.value }))}
-                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer">
+                                            disabled={isViewMode}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                                             <option value="">Select Fabric</option>
                                             {masters.fabric_types?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>
@@ -455,34 +471,37 @@ export default function AdminProducts() {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Regular Price (₹) *</label>
                                         <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-extrabold text-[#041E18] outline-none transition-all font-['Poppins',sans-serif]" placeholder="12500" />
+                                            disabled={isViewMode}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-extrabold text-[#041E18] outline-none transition-all font-['Poppins',sans-serif] disabled:opacity-70 disabled:cursor-not-allowed" placeholder="12500" />
                                     </div>
 
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Discount Price (₹)</label>
                                         <input type="number" value={form.discount_price} onChange={e => setForm(f => ({ ...f, discount_price: e.target.value }))}
-                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-extrabold text-[#041E18] outline-none transition-all font-['Poppins',sans-serif]" placeholder="Institutional Price" />
+                                            disabled={isViewMode}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-extrabold text-[#041E18] outline-none transition-all font-['Poppins',sans-serif] disabled:opacity-70 disabled:cursor-not-allowed" placeholder="Institutional Price" />
                                     </div>
 
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Units in Stock *</label>
                                         <input type="number" value={form.stock_qty} onChange={e => setForm(f => ({ ...f, stock_qty: e.target.value }))}
-                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all" placeholder="50" />
+                                            disabled={isViewMode}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all disabled:opacity-70 disabled:cursor-not-allowed" placeholder="50" />
                                     </div>
 
                                     <div className="flex items-center gap-8 pt-6">
-                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                        <label className={`flex items-center gap-3 ${isViewMode ? 'cursor-default' : 'cursor-pointer'} group`}>
                                             <div className={`w-10 h-6 rounded-full p-1 transition-all ${form.is_new === 1 ? 'bg-[#D4AF37]' : 'bg-gray-200'}`}>
                                                 <motion.div animate={{ x: form.is_new === 1 ? 16 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
                                             </div>
-                                            <input type="checkbox" checked={form.is_new === 1} onChange={e => setForm(f => ({ ...f, is_new: e.target.checked ? 1 : 0 }))} className="hidden" />
+                                            <input type="checkbox" disabled={isViewMode} checked={form.is_new === 1} onChange={e => setForm(f => ({ ...f, is_new: e.target.checked ? 1 : 0 }))} className="hidden" />
                                             <span className="text-[11px] font-black uppercase text-[#041E18] tracking-widest group-hover:text-[#D4AF37] transition-colors">Mark as New</span>
                                         </label>
-                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                        <label className={`flex items-center gap-3 ${isViewMode ? 'cursor-default' : 'cursor-pointer'} group`}>
                                             <div className={`w-10 h-6 rounded-full p-1 transition-all ${form.is_bestseller === 1 ? 'bg-[#041E18]' : 'bg-gray-200'}`}>
                                                 <motion.div animate={{ x: form.is_bestseller === 1 ? 16 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
                                             </div>
-                                            <input type="checkbox" checked={form.is_bestseller === 1} onChange={e => setForm(f => ({ ...f, is_bestseller: e.target.checked ? 1 : 0 }))} className="hidden" />
+                                            <input type="checkbox" disabled={isViewMode} checked={form.is_bestseller === 1} onChange={e => setForm(f => ({ ...f, is_bestseller: e.target.checked ? 1 : 0 }))} className="hidden" />
                                             <span className="text-[11px] font-black uppercase text-[#041E18] tracking-widest group-hover:text-[#D4AF37] transition-colors">Bestseller</span>
                                         </label>
                                     </div>
@@ -490,45 +509,78 @@ export default function AdminProducts() {
                                     <div className="md:col-span-2 space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Description</label>
                                         <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                                            rows={4} className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-medium text-[#041E18] outline-none transition-all resize-none shadow-inner"
+                                            disabled={isViewMode}
+                                            rows={4} className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-medium text-[#041E18] outline-none transition-all resize-none shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                                             placeholder="Narrate the soul of this masterpiece..." />
                                     </div>
 
-                                    <div className="md:col-span-2 space-y-4">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Visual Documentation</label>
-                                        <div onClick={() => fileInputRef.current?.click()}
-                                            className="group/upload border-2 border-dashed border-[#041E18]/10 rounded-[24px] p-10 text-center cursor-pointer hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5 transition-all duration-500 relative overflow-hidden">
-                                            <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 via-transparent to-transparent opacity-0 group-hover/upload:opacity-100 transition-opacity" />
-                                            <div className="relative z-10 space-y-4">
-                                                <div className="w-16 h-16 bg-white border border-[#041E18]/5 rounded-2xl shadow-sm flex items-center justify-center mx-auto group-hover/upload:scale-110 transition-transform text-gray-300 group-hover/upload:text-[#D4AF37]">
-                                                    <Upload size={32} strokeWidth={1.5} />
+                                    {!isViewMode && (
+                                        <div className="md:col-span-2 space-y-4">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Visual Documentation</label>
+                                            <div onClick={() => fileInputRef.current?.click()}
+                                                className="group/upload border-2 border-dashed border-[#041E18]/10 rounded-[24px] p-10 text-center cursor-pointer hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5 transition-all duration-500 relative overflow-hidden">
+                                                <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 via-transparent to-transparent opacity-0 group-hover/upload:opacity-100 transition-opacity" />
+                                                <div className="relative z-10 space-y-4">
+                                                    <div className="w-16 h-16 bg-white border border-[#041E18]/5 rounded-2xl shadow-sm flex items-center justify-center mx-auto group-hover/upload:scale-110 transition-transform text-gray-300 group-hover/upload:text-[#D4AF37]">
+                                                        <Upload size={32} strokeWidth={1.5} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm text-[#041E18] font-bold">Import Visual Assets</p>
+                                                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">High fidelity JPG, PNG, or WebP</p>
+                                                    </div>
+                                                    {imageFiles.length > 0 && (
+                                                        <div className="space-y-4">
+                                                            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="inline-flex items-center gap-2 p-3 bg-white border border-[#D4AF37]/20 rounded-xl shadow-lg">
+                                                                <div className="w-6 h-6 bg-emerald-500 text-white rounded-lg flex items-center justify-center"><CheckCircle size={14} /></div>
+                                                                <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">{imageFiles.length} Archives Staged</span>
+                                                            </motion.div>
+
+                                                            <div className="flex flex-wrap gap-3 justify-center">
+                                                                {imageFiles.map((file, i) => (
+                                                                    <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                                                                        className="w-16 h-16 rounded-xl border border-[#D4AF37]/20 overflow-hidden shadow-sm">
+                                                                        <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" />
+                                                                    </motion.div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm text-[#041E18] font-bold">Import Visual Assets</p>
-                                                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">High fidelity JPG, PNG, or WebP</p>
-                                                </div>
-                                                {imageFiles.length > 0 && (
-                                                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="inline-flex items-center gap-2 p-3 bg-white border border-[#D4AF37]/20 rounded-xl shadow-lg">
-                                                        <div className="w-6 h-6 bg-emerald-500 text-white rounded-lg flex items-center justify-center"><CheckCircle size={14} /></div>
-                                                        <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">{imageFiles.length} Archives Staged</span>
-                                                    </motion.div>
-                                                )}
                                             </div>
+                                            <input ref={fileInputRef} type="file" multiple accept=".jpg,.jpeg,.png,.webp" className="hidden"
+                                                onChange={e => setImageFiles(Array.from(e.target.files ?? []))} />
                                         </div>
-                                        <input ref={fileInputRef} type="file" multiple accept=".jpg,.jpeg,.png,.webp" className="hidden"
-                                            onChange={e => setImageFiles(Array.from(e.target.files ?? []))} />
-                                    </div>
+                                    )}
                                 </div>
+
+                                {editProduct?.primary_image && (
+                                    <div className="space-y-4 pt-10 border-t border-[#041E18]/5">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">
+                                            {isViewMode ? "Inventory Visual" : "Current Primary Image"}
+                                        </label>
+                                        <div className="w-full h-64 rounded-[32px] overflow-hidden border border-[#041E18]/10 bg-gray-50 flex items-center justify-center">
+                                            <img 
+                                                src={editProduct.primary_image.startsWith('http') ? editProduct.primary_image : `${BASE_URL}/${editProduct.primary_image}`} 
+                                                alt={editProduct.name} 
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="px-10 py-8 bg-[#FBFAF7] border-t border-[#041E18]/5 flex gap-4">
-                                <button onClick={() => setShowModal(false)} className="flex-1 px-8 py-4 bg-white border border-[#041E18]/10 text-[#041E18]/40 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-gray-50 transition-all hover:text-rose-500">Abandon</button>
-                                <button onClick={handleSave} disabled={saving}
-                                    className="flex-[2] px-8 py-4 bg-gradient-to-r from-[#D4AF37] to-[#B48C5E] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-gold/20 hover:shadow-gold/40 transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95 group">
-                                    {saving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} className="group-hover:scale-110 transition-transform" />}
-                                    {saving ? "Synchronizing..." : editProduct ? "Authorize Revision" : "Finalize Commission"}
-                                </button>
-                            </div>
+                             <div className="px-10 py-8 bg-[#FBFAF7] border-t border-[#041E18]/5 flex gap-4">
+                                 <button onClick={() => setShowModal(false)} className="flex-1 px-8 py-4 bg-white border border-[#041E18]/10 text-[#041E18]/40 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-gray-50 transition-all hover:text-rose-500">
+                                     {isViewMode ? "Close Panel" : "Abandon"}
+                                 </button>
+                                 {!isViewMode && (
+                                     <button onClick={handleSave} disabled={saving}
+                                         className="flex-[2] px-8 py-4 bg-gradient-to-r from-[#D4AF37] to-[#B48C5E] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-gold/20 hover:shadow-gold/40 transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95 group">
+                                         {saving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} className="group-hover:scale-110 transition-transform" />}
+                                         {saving ? "Synchronizing..." : editProduct ? "Authorize Revision" : "Finalize Commission"}
+                                     </button>
+                                 )}
+                             </div>
                             {saveMsg && (
                                 <AnimatePresence>
                                     <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className={`absolute bottom-32 left-10 right-10 p-4 rounded-2xl flex items-center gap-3 backdrop-blur-xl border ${saveMsg.startsWith("✓") ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 border-rose-500/20"} z-50`}>
@@ -542,85 +594,7 @@ export default function AdminProducts() {
                 )}
             </AnimatePresence>
 
-            {/* ── View Modal ──────────────────────────────────────────────── */}
-            <AnimatePresence>
-                {(viewProduct || viewLoading) && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-[#041E18]/80 backdrop-blur-xl z-[60] flex items-center justify-center p-6"
-                        onClick={() => setViewProduct(null)}>
-                        <motion.div initial={{ scale: 0.9, y: 30, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 30, opacity: 0 }}
-                            className="bg-white rounded-[48px] shadow-2xl w-full max-w-2xl overflow-hidden border border-white/20"
-                            onClick={e => e.stopPropagation()}>
-                            {viewLoading ? (
-                                <div className="p-20 text-center">
-                                    <div className="relative inline-block">
-                                        <Loader2 size={64} className="animate-spin text-[#D4AF37] opacity-20" />
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="w-3 h-3 bg-[#D4AF37] rounded-full animate-ping" />
-                                        </div>
-                                    </div>
-                                    <p className="mt-8 text-[11px] font-black uppercase text-[#D4AF37] tracking-[0.4em]">Loading product...</p>
-                                </div>
-                            ) : viewProduct && (
-                                <div className="flex flex-col md:flex-row h-full">
-                                    <div className="w-full md:w-[45%] h-full min-h-[400px] relative bg-gray-50 group">
-                                        {viewProduct.gallery?.[0]
-                                            ? <img src={viewProduct.gallery[0].image_url || (viewProduct.gallery[0].image_path.startsWith('http') ? viewProduct.gallery[0].image_path : `${BASE_URL}/${viewProduct.gallery[0].image_path}`)} alt={viewProduct.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                                            : <div className="w-full h-full flex items-center justify-center text-gray-200"><LucideImage size={64} strokeWidth={1} /></div>}
-                                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#041E18]/60 to-transparent pointer-events-none" />
-                                        <div className="absolute bottom-8 left-8 right-8">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34D399]" />
-                                                <p className="text-[10px] font-black uppercase text-white tracking-[0.2em]">Live View</p>
-                                            </div>
-                                            <p className="text-white/60 text-[9px] font-mono font-bold tracking-tighter">REF_{viewProduct.sku}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex-1 p-10 flex flex-col justify-between space-y-8 bg-white overflow-y-auto max-h-[90vh] custom-scrollbar">
-                                        <div className="space-y-6">
-                                            <div className="flex justify-between items-start">
-                                                <span className="px-3 py-1 bg-[#041E18]/5 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] text-[#041E18]">{viewProduct.category}</span>
-                                                <button onClick={() => setViewProduct(null)} className="p-2 text-gray-300 hover:text-rose-500 transition-colors"><X size={24} /></button>
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                <h3 className="font-['Poppins',sans-serif] text-[32px] font-black text-[#041E18] leading-[0.95] tracking-tight">{viewProduct.name}</h3>
-                                                <p className="text-[#D4AF37] text-sm font-bold italic tracking-wide">{viewProduct.fabric} Collection</p>
-                                            </div>
-
-                                            <p className="text-xs text-gray-500 font-medium leading-relaxed font-['Inter',sans-serif] border-l-2 border-[#D4AF37]/20 pl-4">{viewProduct.description || "No description available."}</p>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="p-5 rounded-3xl bg-[#FBFAF7] border border-[#041E18]/5 group/item">
-                                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover/item:text-[#D4AF37] transition-colors">Price</p>
-                                                    <p className="font-['Poppins',sans-serif] text-xl font-bold text-[#041E18]">₹{viewProduct.price.toLocaleString('en-IN')}</p>
-                                                </div>
-                                                <div className="p-5 rounded-3xl bg-[#FBFAF7] border border-[#041E18]/5 group/item">
-                                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover/item:text-[#D4AF37] transition-colors">Stock</p>
-                                                    <div className="flex items-end gap-1">
-                                                        <p className="font-['Poppins',sans-serif] text-xl font-bold text-[#041E18]">{viewProduct.stock_qty}</p>
-                                                        <p className="text-[9px] font-black text-gray-400 uppercase mb-1">Pcs</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-4">
-                                            <button onClick={() => { setViewProduct(null); openEdit(viewProduct); }}
-                                                className="flex-1 px-8 py-5 bg-[#041E18] text-white rounded-[24px] font-black text-[11px] uppercase tracking-[0.3em] hover:bg-[#0D3B2E] transition-all shadow-xl shadow-[#041E18]/20 active:scale-95">
-                                                Edit Product
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* ── Delete Confirm ──────────────────────────────────────────── */}
+             {/* ── Delete Confirm ──────────────────────────────────────────── */}
             <AnimatePresence>
                 {deleteId && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

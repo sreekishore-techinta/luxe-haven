@@ -1,0 +1,30 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # If the project is at the root domain, use /
+  # If the project is in a subfolder locally, use /luxe-haven/
+  # For portability, we can use an environment-agnostic setup:
+  
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Redirect all other requests to index.html for React Router to handle
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Security: Disable directory indexing
+Options -Indexes
+
+# Security: Prevent viewing of sensitive files, but ALLOW .php for API execution
+<FilesMatch "^\.|\.(sql|md|json|ts|tsx)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Allow public access to index.html, assets, api and uploads
+<FilesMatch "^(index\.html|robots\.txt|favicon\.ico)$">
+    Allow from all
+</FilesMatch>
+
+AddDefaultCharset UTF-8

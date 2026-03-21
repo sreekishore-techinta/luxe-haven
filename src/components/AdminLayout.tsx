@@ -28,7 +28,7 @@ const adminLinks = [
     { name: "Settings", path: "/admin/settings", icon: Settings },
 ];
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const SidebarLink = ({ link, sidebarOpen, onCloseMobile }: { link: any, sidebarOpen: boolean, onCloseMobile?: () => void }) => {
     const location = useLocation();

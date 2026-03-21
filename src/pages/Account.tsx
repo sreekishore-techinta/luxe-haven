@@ -8,7 +8,7 @@ import {
 import PageHeroBanner from "@/components/PageHeroBanner";
 import accountHero from "@/assets/account-hero.png";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 interface Customer {
   id: number;

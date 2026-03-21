@@ -6,7 +6,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { motion, AnimatePresence } from "framer-motion";
 import logoLishan from "@/assets/logo lishan saree.png";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const Navbar = () => {
   const { totalItems, setIsCartOpen } = useCart();
@@ -206,7 +206,9 @@ const Navbar = () => {
                           { id: 2, name: "Sarees", slug: "sarees" },
                           { id: 3, name: "Suit Sets", slug: "suit-sets" },
                           { id: 4, name: "New Arrivals", slug: "new-arrivals" }
-                        ]).map((cat) => (
+                        ])
+                        .filter(cat => ['blouses', 'suit sets', 'suit-sets'].includes(cat.name.toLowerCase()))
+                        .map((cat) => (
                           <Link
                             key={cat.id}
                             to={`/category/${cat.slug}`}
@@ -222,7 +224,7 @@ const Navbar = () => {
                               textDecoration: "none",
                               transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                               cursor: "pointer",
-                              minHeight: "70px",
+                              minHeight: "75px",
                               justifyContent: "center"
                             }}
                             onMouseEnter={e => {
@@ -240,15 +242,12 @@ const Navbar = () => {
                               el.style.boxShadow = "none";
                             }}
                           >
-                            {/* Gold dot accent */}
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#B48C5E", display: "block", marginBottom: "4px" }} />
-                            {/* Category name */}
                             <span style={{ fontWeight: 700, fontSize: "14px", color: "#ffffff", lineHeight: 1.2, textTransform: "capitalize", letterSpacing: "0.5px" }}>
                               {cat.name}
                             </span>
-                            {/* Tagline */}
                             <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)", fontStyle: "italic", letterSpacing: "0.2px" }}>
-                              {cat.sub_categories?.length ? `${cat.sub_categories.length} Collections` : "New arrivals soon"}
+                              {cat.sub_categories?.length ? `${cat.sub_categories.length} Collections` : "Shop Latest"}
                             </span>
                           </Link>
                         ))}
@@ -372,7 +371,9 @@ const Navbar = () => {
 
                   <div className="space-y-6 pt-6 border-t border-gray-100">
                     <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#B48C5E]">Shop by Categories</p>
-                    {categories.map((cat) => (
+                    {categories
+                      .filter(cat => ['blouses', 'suit sets', 'suit-sets'].includes(cat.name.toLowerCase()))
+                      .map((cat) => (
                       <div key={cat.id} className="space-y-4">
                         <Link
                           to={`/category/${cat.slug}`}

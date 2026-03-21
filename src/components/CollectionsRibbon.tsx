@@ -6,7 +6,7 @@ import ProductCard from "./ProductCard";
 import { fabricTypes } from "@/data/products";
 
 const SHOW_PER_PAGE = 8;
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const CollectionsRibbon = () => {
     const [activeTab, setActiveTab] = useState("All");
@@ -71,33 +71,6 @@ const CollectionsRibbon = () => {
         <section className="py-20 lg:py-28 bg-[#FDFBF7] border-y border-border">
             <div className="container mx-auto px-4 lg:px-8">
 
-                {/* ── Section Header ─────────────────────────────────────── */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10"
-                >
-                    <div>
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-px bg-accent" />
-                            <span className="font-body text-[10px] tracking-[0.5em] uppercase text-accent">
-                                Browse By Fabric
-                            </span>
-                        </div>
-                        <h2 className="font-display text-3xl lg:text-4xl font-semibold leading-tight">
-                            Our{" "}
-                            <span className="italic font-light text-accent">Collections</span>
-                        </h2>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <SlidersHorizontal size={14} />
-                        <span className="font-body text-xs tracking-wide">
-                            {filtered.length} styles available
-                        </span>
-                    </div>
-                </motion.div>
 
                 {/* ── Filter Tabs Row ──────────────────────────────────────── */}
                 <motion.div

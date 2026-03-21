@@ -5,7 +5,7 @@ import CategoryHero from "@/components/CategoryHero";
 import { ArrowRight } from "lucide-react";
 import sareeCollectionRed from "@/assets/saree-collection-red.png";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const Sarees = () => {
     const [subcategories, setSubcategories] = useState<any[]>([]);
@@ -34,7 +34,7 @@ const Sarees = () => {
                 title="Saree Collections"
                 description="Discover our diverse range of handcrafted sarees, from traditional weaves to contemporary designer pieces."
                 backgroundImage={sareeCollectionRed}
-                imagePosition="center 20%"
+                imagePosition="center"
                 align="left"
             />
 
@@ -63,8 +63,10 @@ const Sarees = () => {
                                         <img
                                             src={
                                                 sub.image.startsWith('http')
-                                                    ? (sub.image.includes('localhost/') && !sub.image.includes('localhost/luxe-haven/') ? sub.image.replace('localhost/', 'localhost/luxe-haven/') : sub.image)
-                                                    : (sub.image.startsWith('src') || sub.image.startsWith('uploads') ? `/${sub.image}` : `/${sub.image}`)
+                                                    ? sub.image
+                                                    : (sub.image.startsWith('src') || sub.image.startsWith('uploads') 
+                                                        ? `${API.replace('/api', '')}/${sub.image}` 
+                                                        : `${API.replace('/api', '')}/${sub.image}`)
                                             }
                                             alt={sub.name}
                                             loading="lazy"

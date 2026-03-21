@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
-const API = "http://localhost/luxe-haven/api";
+import { BASE_URL, API_URL as API } from "@/api_config";
 
 type Order = {
     id: number;
@@ -397,7 +397,7 @@ export default function AdminOrders() {
                                                         <td className="px-8 py-4">
                                                             <div className="w-12 h-16 rounded-lg bg-slate-200 overflow-hidden border border-slate-200 shadow-inner">
                                                                 {item.image_path ? (
-                                                                    <img src={`http://localhost/luxe-haven/${item.image_path}`} className="w-full h-full object-cover" />
+                                                                    <img src={`${BASE_URL}/${item.image_path}`} className="w-full h-full object-cover" />
                                                                 ) : (
                                                                     <div className="w-full h-full flex items-center justify-center text-slate-400"><Package size={16} /></div>
                                                                 )}

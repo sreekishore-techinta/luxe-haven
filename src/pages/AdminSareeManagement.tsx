@@ -6,7 +6,7 @@ import {
     Package, Filter, Eye, AlertCircle, Upload, ChevronLeft, ChevronRight, Layers
 } from "lucide-react";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 type Product = {
     id: number; sku: string; name: string; category: string;

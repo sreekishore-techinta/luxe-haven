@@ -8,8 +8,7 @@ import {
     Mic, Heart, PenTool, Image as LucideImage, ChevronLeft, ChevronRight, LayoutGrid, Upload
 } from "lucide-react";
 
-const BASE_URL = "http://localhost/luxe-haven";
-const API = "http://localhost/luxe-haven/api";
+import { BASE_URL, API_URL as API } from "@/api_config";
 
 type MasterType = {
     id: string;

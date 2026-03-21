@@ -6,7 +6,7 @@ import CategoryHero from "@/components/CategoryHero";
 import { ArrowLeft, ChevronLeft, ChevronRight, Grid3X3, LayoutGrid } from "lucide-react";
 import SkeletonCard from "@/components/SkeletonCard";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const SareeSubCategory = () => {
     const { slug } = useParams();
@@ -77,8 +77,26 @@ const SareeSubCategory = () => {
             <CategoryHero
                 title={subcategory?.name ? `${subcategory.name} Collection` : ""}
                 description={subcategory?.description || `Explore our curated selection of ${subcategory?.name || "premium sarees"}, each piece a masterpiece of elegance and tradition.`}
-                backgroundImage={subcategory?.hero_image ? (subcategory.hero_image.startsWith('src') ? `/${subcategory.hero_image}` : (subcategory.hero_image.startsWith('uploads') ? `${API}/../${subcategory.hero_image}` : (subcategory.hero_image.startsWith('http') ? subcategory.hero_image : `/${subcategory.hero_image}`))) : (subcategory?.image ? (subcategory.image.startsWith('src') ? `/${subcategory.image}` : (subcategory.image.startsWith('uploads') ? `${API}/../${subcategory.image}` : (subcategory.image.startsWith('http') ? subcategory.image : `/${subcategory.image}`))) : "")}
-                imagePosition="center 20%"
+                backgroundImage={
+                    subcategory?.hero_image 
+                        ? (subcategory.hero_image.startsWith('src') 
+                            ? `${API.replace('/api', '')}/${subcategory.hero_image}` 
+                            : (subcategory.hero_image.startsWith('uploads') 
+                                ? `${API}/../${subcategory.hero_image}` 
+                                : (subcategory.hero_image.startsWith('http') 
+                                    ? subcategory.hero_image 
+                                    : `${API.replace('/api', '')}/${subcategory.hero_image}`))) 
+                        : (subcategory?.image 
+                            ? (subcategory.image.startsWith('src') 
+                                ? `${API.replace('/api', '')}/${subcategory.image}` 
+                                : (subcategory.image.startsWith('uploads') 
+                                    ? `${API}/../${subcategory.image}` 
+                                    : (subcategory.image.startsWith('http') 
+                                        ? subcategory.image 
+                                        : `${API.replace('/api', '')}/${subcategory.image}`))) 
+                            : "")
+                }
+                imagePosition="center"
                 align="left"
             />
 

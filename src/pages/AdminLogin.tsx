@@ -2,8 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Lock, Mail, Loader2, AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
-
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 export default function AdminLogin() {
     const [email, setEmail] = useState("");
@@ -24,26 +23,29 @@ export default function AdminLogin() {
                 credentials: "include", // Important for sessions
                 body: JSON.stringify({ email, password }),
             });
-            const json = await res.json();
+            const text = await res.text();
+            let json;
+            try {
+                json = JSON.parse(text);
+            } catch (e) {
+                console.error("Server returned non-JSON response:", text);
+                throw new Error("Invalid response from server");
+            }
 
             if (json.status === "success") {
                 setSuccess(true);
-                // Store user info for UI
                 localStorage.setItem("admin_user", JSON.stringify(json.admin));
-
-                // User specifically asked for admin/dashboard.html
-                // If we are in a SPA, we usually use navigate("/admin")
-                // But to fulfill the exact requirement:
                 setTimeout(() => {
-                    // Check if they want the React route or the physical file
-                    // For now, let's navigate to the React admin route which works best with this project
                     navigate("/admin");
                 }, 1000);
             } else {
                 setError(json.message || "Invalid email or password");
             }
-        } catch (err: unknown) {
-            setError("Could not connect to authentication server. Please check if MySQL and Apache are running in XAMPP.");
+        } catch (err: any) {
+            console.error("Login error:", err);
+            setError(err.message === "Invalid response from server" 
+                ? "Server returned an invalid response. Please check the backend configuration."
+                : "Could not connect to the authentication server. Please check your internet connection.");
         } finally {
             setLoading(false);
         }

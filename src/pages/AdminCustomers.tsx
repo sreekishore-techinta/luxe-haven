@@ -5,7 +5,7 @@ import {
     Mail, Phone, MapPin, ShoppingBag, X, TrendingUp
 } from "lucide-react";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 type Customer = {
     id: number; name: string; email: string; phone: string;

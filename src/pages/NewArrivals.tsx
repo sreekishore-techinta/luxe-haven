@@ -5,7 +5,7 @@ import CategoryHero from "@/components/CategoryHero";
 import newArrivalsBanner from "@/assets/new-arrivals-banner.png";
 import SkeletonCard from "@/components/SkeletonCard";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const NewArrivals = () => {
   const [apiProducts, setApiProducts] = useState<any[]>([]);
@@ -53,7 +53,7 @@ const NewArrivals = () => {
         title="New Arrivals"
         description="Fresh from our master artisans' looms. Experience the latest in luxury silk weaving and contemporary heritage designs."
         backgroundImage={newArrivalsBanner}
-        imagePosition="center 20%"
+        imagePosition="center"
         align="left"
       />
 

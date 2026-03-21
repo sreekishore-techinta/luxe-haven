@@ -5,7 +5,7 @@ import { ShoppingBag, Heart, Sparkles } from "lucide-react";
 import { useCart, CartProduct } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
-const API = "http://localhost/luxe-haven";
+import { BASE_URL as API } from "@/api_config";
 
 interface ProductCardProps {
   product: CartProduct | {

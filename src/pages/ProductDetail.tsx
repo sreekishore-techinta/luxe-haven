@@ -5,7 +5,7 @@ import { ShoppingBag, Heart, Truck, RotateCcw, Shield, ChevronRight, Minus, Plus
 import { useCart } from "@/context/CartContext";
 import ProductCard from "@/components/ProductCard";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const ProductDetail = () => {
   const { id } = useParams();

@@ -10,7 +10,7 @@ import PageHeroBanner from "@/components/PageHeroBanner";
 import checkoutHero from "@/assets/checkout-hero.png";
 import { toast } from "sonner";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 interface ShippingForm {
   firstName: string;

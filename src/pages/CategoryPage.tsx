@@ -10,7 +10,7 @@ import blouseHero from "@/assets/blouses-hero-final.png";
 import suitHero from "@/assets/kurtha-suit-hero.png";
 import defaultHero from "@/assets/new-arrivals-hero-2.jpg";
 
-const API = "http://localhost/luxe-haven/api";
+import { API_URL as API } from "@/api_config";
 
 const heroMap: Record<string, string> = {
     "sarees": sareeCollectionRed,
@@ -68,8 +68,19 @@ const CategoryPage = () => {
             <CategoryHero
                 title={categoryInfo?.name || slug.replace("-", " ").toUpperCase()}
                 description={categoryInfo?.description || `Explore our curated selection of premium ${categoryInfo?.name || slug} crafted for elegance.`}
-                backgroundImage={heroMap[slug] || (categoryInfo?.hero_image ? (categoryInfo.hero_image.startsWith('src') ? `/${categoryInfo.hero_image}` : (categoryInfo.hero_image.startsWith('uploads') ? `${API}/../${categoryInfo.hero_image}` : (categoryInfo.hero_image.startsWith('http') ? categoryInfo.hero_image : `/${categoryInfo.hero_image}`))) : defaultHero)}
-                imagePosition="center 20%"
+                backgroundImage={
+                    heroMap[slug] || 
+                    (categoryInfo?.hero_image 
+                        ? (categoryInfo.hero_image.startsWith('src') 
+                            ? `${API.replace('/api', '')}/${categoryInfo.hero_image}` 
+                            : (categoryInfo.hero_image.startsWith('uploads') 
+                                ? `${API}/../${categoryInfo.hero_image}` 
+                                : (categoryInfo.hero_image.startsWith('http') 
+                                    ? categoryInfo.hero_image 
+                                    : `${API.replace('/api', '')}/${categoryInfo.hero_image}`))) 
+                        : defaultHero)
+                }
+                imagePosition="center"
                 align="left"
             />
 

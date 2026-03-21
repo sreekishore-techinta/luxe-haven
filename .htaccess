@@ -1,13 +1,11 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /luxe-haven/
-
-  # If the request is for a real file or directory, serve it directly
+  
+  # For SPA routing
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
-
-  # For any other request, send it to index.html (React Router handles it)
+  
   RewriteRule ^ index.html [L]
 </IfModule>
 

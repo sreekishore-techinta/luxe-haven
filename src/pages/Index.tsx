@@ -38,8 +38,6 @@ const Index = () => {
       {/* 6. Collections Ribbon (scroll pills by fabric) */}
       <CollectionsRibbon />
 
-      {/* 7. Shop by Category */}
-      <CategoryBanner />
 
       {/* 8. Festive Sale Banner */}
       <SaleBanner />

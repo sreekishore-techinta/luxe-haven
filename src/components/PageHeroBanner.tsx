@@ -15,7 +15,7 @@ const PageHeroBanner = ({
   subtitle,
   description,
   backgroundImage,
-  imagePosition = "center 20%",
+  imagePosition = "center",
   imageFit = "cover",
   heightClass = "h-[80vh] md:h-[90vh] lg:h-screen"
 }: PageHeroBannerProps) => {
@@ -23,44 +23,44 @@ const PageHeroBanner = ({
     <section className={`relative w-full ${heightClass} flex items-center overflow-hidden bg-[#0a0a0a]`}>
       {backgroundImage && (
         <div className="absolute inset-0">
-          <img
-            src={backgroundImage}
-            alt={title}
-            className={`w-full h-full object-${imageFit}`}
-            style={{ objectPosition: imagePosition }}
-            loading="eager"
+          <div 
+            className={`absolute inset-0 bg-${imageFit} bg-no-repeat bg-[center_top] md:bg-[center_30%] transition-all duration-1000 ease-out`}
+            style={{ 
+              backgroundImage: `url(${backgroundImage})`,
+              backgroundSize: "cover"
+            }}
           />
           {/* Gradient for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 lg:bg-gradient-to-r lg:from-black/70 lg:via-black/20 lg:to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 lg:bg-gradient-to-r lg:from-black/60 lg:via-black/10 lg:to-transparent" />
         </div>
       )}
 
-      <div className="relative z-10 container mx-auto px-4 lg:px-20 h-full flex items-end lg:items-center justify-center lg:justify-start pb-24 lg:pb-0">
-        <div className="max-w-[520px] text-center lg:text-left">
+      <div className="relative z-10 container mx-auto px-4 lg:px-20 h-full flex items-center justify-center lg:justify-start">
+        <div className="max-w-[620px] text-center lg:text-left">
           {subtitle && (
             <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="font-body text-xs lg:text-[11px] tracking-[0.5em] uppercase text-white/70 mb-6 [text-shadow:_0_2px_10px_rgba(0,0,0,0.35)]"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="font-body text-xs lg:text-[12px] tracking-[0.6em] uppercase text-white/70 mb-8 [text-shadow:_0_2px_10px_rgba(0,0,0,0.35)] font-semibold"
             >
               {subtitle}
             </motion.p>
           )}
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-display text-5xl md:text-6xl lg:text-[68px] font-semibold text-white mb-6 [text-shadow:_0_2px_10px_rgba(0,0,0,0.35)] leading-[1.1]"
+            transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="font-display text-5xl md:text-7xl lg:text-8xl font-semibold text-white mb-8 [text-shadow:_0_6px_20px_rgba(0,0,0,0.45)] leading-[1.05]"
           >
             {title}
           </motion.h1>
           {description && (
             <motion.p
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="font-body text-sm lg:text-[18px] text-white/90 font-medium leading-[1.6] [text-shadow:_0_2px_10px_rgba(0,0,0,0.35)]"
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="font-body text-base lg:text-[20px] text-white/95 font-medium leading-[1.6] max-w-lg [text-shadow:_0_2px_10px_rgba(0,0,0,0.4)]"
             >
               {description}
             </motion.p>
