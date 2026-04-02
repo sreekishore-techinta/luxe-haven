@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Plus, Edit2, Trash2, X, Search, Loader2,
@@ -153,33 +154,11 @@ export default function AdminSareeManagement() {
         else fetchTypes();
     }, [activeTab, page, search, statusFilter]);
 
+    const navigate = useNavigate();
     // ─── Product Actions ────────────────────────────────────────────────
-    const openAddProduct = () => {
-        setEditProduct(null);
-        setProductForm({ ...emptyProductForm });
-        setImageFiles([]);
-        setSaveMsg(null);
-        setShowProductModal(true);
-    };
+    const openAddProduct = () => navigate("/admin/products/new");
 
-    const openEditProduct = (p: Product) => {
-        setEditProduct(p);
-        setProductForm({
-            name: p.name, category: p.category, category_id: String(p.category_id || "1"),
-            description: p.description,
-            price: String(p.price), discount_price: p.discount_price ? String(p.discount_price) : "",
-            fabric: p.fabric, stock_qty: String(p.stock_qty),
-            is_new: p.is_new, is_bestseller: p.is_bestseller,
-            colour_id: p.colour_id ? String(p.colour_id) : "",
-            fabric_id: p.fabric_id ? String(p.fabric_id) : "",
-            size_id: p.size_id ? String(p.size_id) : "",
-            saree_type_id: p.saree_type_id ? String(p.saree_type_id) : "",
-            blouse_style_id: p.blouse_style_id ? String(p.blouse_style_id) : "",
-        });
-        setImageFiles([]);
-        setSaveMsg(null);
-        setShowProductModal(true);
-    };
+    const openEditProduct = (p: Product) => navigate(`/admin/products/edit/${p.id}`);
 
     const handleSaveProduct = async () => {
         if (!productForm.name || !productForm.price || !productForm.stock_qty || !productForm.saree_type_id) {
@@ -623,13 +602,13 @@ export default function AdminSareeManagement() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-1">Editorial Description</label>
+                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-1">Description</label>
                                     <textarea value={typeForm.description} onChange={(e) => setTypeForm({ ...typeForm, description: e.target.value })}
-                                        className="w-full px-6 py-4 bg-slate-50 rounded-2xl text-sm font-black text-slate-950 outline-none border-none focus:ring-2 focus:ring-[#D4AF37]/20 shadow-inner min-h-[100px] resize-none" placeholder="Timeless luxury woven in tradition..." />
+                                        className="w-full px-6 py-4 bg-slate-50 rounded-2xl text-sm font-black text-slate-950 outline-none border-none focus:ring-2 focus:ring-[#D4AF37]/20 shadow-inner min-h-[100px] resize-none" placeholder="Tell us about this category..." />
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-1">Thumbnail Identity</label>
+                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-1">Small Image (Circle)</label>
                                     <div className="flex items-center gap-6">
                                         <div className="w-24 h-32 rounded-3xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center text-slate-300 shadow-inner">
                                             {typeForm.image ? <img src={typeForm.image} className="w-full h-full object-cover" /> : <LucideImage size={32} />}
@@ -638,14 +617,14 @@ export default function AdminSareeManagement() {
                                             <input type="file" id="type-image-upload" className="hidden" accept="image/*" onChange={(e) => handleTypeImageUpload(e, 'image')} />
                                             <label htmlFor="type-image-upload" className="flex items-center justify-center gap-2 w-full py-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-slate-50 transition-all shadow-sm text-slate-950">
                                                 {uploading ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
-                                                {uploading ? 'Negotiating...' : 'Upload Thumbnail'}
+                                                {uploading ? 'Uploading...' : 'Upload Image'}
                                             </label>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-1">Hero Banner Image</label>
+                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-1">Large Banner Image</label>
                                     <div className="flex flex-col gap-4">
                                         <div className="w-full h-40 rounded-3xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center text-slate-300 shadow-inner">
                                             {typeForm.hero_image ? <img src={typeForm.hero_image} className="w-full h-full object-cover" /> : <LucideImage size={32} />}
@@ -654,7 +633,7 @@ export default function AdminSareeManagement() {
                                             <input type="file" id="type-hero-upload" className="hidden" accept="image/*" onChange={(e) => handleTypeImageUpload(e, 'hero_image')} />
                                             <label htmlFor="type-hero-upload" className="flex items-center justify-center gap-2 w-full py-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-slate-50 transition-all shadow-sm text-slate-950">
                                                 {uploading ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
-                                                {uploading ? 'Negotiating...' : 'Upload Hero Banner'}
+                                                {uploading ? 'Uploading...' : 'Upload Banner'}
                                             </label>
                                         </div>
                                     </div>

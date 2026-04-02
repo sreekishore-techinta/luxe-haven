@@ -7,16 +7,16 @@ $conn = getDB();
 // ─── Saree type images (saree_types table) ───────────────────────────────────
 // Using high-quality Unsplash images that match each category
 $sareeTypeImages = [
-    1 => 'src/assets/hero-banners/pure-silk-hero.png', // Pure Silk Saree
-    2 => 'src/assets/hero-banners/banarasi-hero.png', // Banarasi Saree
-    3 => 'src/assets/hero-banners/kanjivaram-hero.png', // Kanjivaram Saree
-    4 => 'src/assets/hero-banners/organza-hero.png', // Organza Saree
-    5 => 'src/assets/hero-banners/linen-hero.png', // Linen Saree
-    6 => 'src/assets/hero-banners/cotton-hero.png', // Cotton Saree
-    7 => 'src/assets/hero-banners/bridal-hero.png', // Bridal Saree
-    8 => 'src/assets/hero-banners/party-wear-hero.png', // Party Wear Saree
-    9 => 'src/assets/hero-banners/soft-silk-hero.png', // Soft Silk Saree
-    10 => 'src/assets/hero-banners/designer-hero.png', // Designer Saree
+    1 => 'assets/hero-banners/pure-silk-hero.png', // Pure Silk Saree
+    2 => 'assets/hero-banners/banarasi-hero.png', // Banarasi Saree
+    3 => 'assets/hero-banners/kanjivaram-hero.png', // Kanjivaram Saree
+    4 => 'assets/hero-banners/organza-hero.png', // Organza Saree
+    5 => 'assets/hero-banners/linen-hero.png', // Linen Saree
+    6 => 'assets/hero-banners/cotton-hero.png', // Cotton Saree
+    7 => 'assets/hero-banners/bridal-hero.png', // Bridal Saree
+    8 => 'assets/hero-banners/party-wear-hero.png', // Party Wear Saree
+    9 => 'assets/hero-banners/soft-silk-hero.png', // Soft Silk Saree
+    10 => 'assets/hero-banners/designer-hero.png', // Designer Saree
 ];
 
 // ─── Category images (master_categories table) ───────────────────────────────
@@ -26,16 +26,16 @@ $categoryImages = [
     3 => 'https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?w=600&q=80', // Suit Sets
     4 => 'https://images.unsplash.com/photo-1609748342101-f9a89113a2ab?w=600&q=80', // lishan sarees
     6 => 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=600&q=80', // New Arrivals
-    7 => 'src/assets/hero-banners/pure-silk-hero.png', // Pure Silk Saree
-    8 => 'src/assets/hero-banners/banarasi-hero.png', // Banarasi Saree
-    9 => 'src/assets/hero-banners/kanjivaram-hero.png', // Kanjivaram Saree
-    10 => 'src/assets/hero-banners/organza-hero.png', // Organza Saree
-    11 => 'src/assets/hero-banners/linen-hero.png', // Linen Saree
-    12 => 'src/assets/hero-banners/cotton-hero.png', // Cotton Saree
-    13 => 'src/assets/hero-banners/bridal-hero.png', // Bridal Saree
-    14 => 'src/assets/hero-banners/party-wear-hero.png', // Party Wear Saree
-    15 => 'src/assets/hero-banners/soft-silk-hero.png', // Soft Silk Saree
-    16 => 'src/assets/hero-banners/designer-hero.png', // Designer Saree
+    7 => 'assets/hero-banners/pure-silk-hero.png', // Pure Silk Saree
+    8 => 'assets/hero-banners/banarasi-hero.png', // Banarasi Saree
+    9 => 'assets/hero-banners/kanjivaram-hero.png', // Kanjivaram Saree
+    10 => 'assets/hero-banners/organza-hero.png', // Organza Saree
+    11 => 'assets/hero-banners/linen-hero.png', // Linen Saree
+    12 => 'assets/hero-banners/cotton-hero.png', // Cotton Saree
+    13 => 'assets/hero-banners/bridal-hero.png', // Bridal Saree
+    14 => 'assets/hero-banners/party-wear-hero.png', // Party Wear Saree
+    15 => 'assets/hero-banners/soft-silk-hero.png', // Soft Silk Saree
+    16 => 'assets/hero-banners/designer-hero.png', // Designer Saree
 ];
 
 // ─── Sub-categories (same mapping as saree_types) ────────────────────────────

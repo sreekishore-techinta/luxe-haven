@@ -10,8 +10,27 @@ if ($id <= 0 && $_SERVER['REQUEST_METHOD'] !== 'POST') {
 $conn = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 
-switch ($method) {
+// ─── Ensure Table Exists ───────────────────────────────────────────────
+$sql_check = "CREATE TABLE IF NOT EXISTS product_combinations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    colour_id INT,
+    size_id INT,
+    stock_qty INT DEFAULT 0,
+    price DECIMAL(10,2) DEFAULT 0.00,
+    image_path VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX (product_id)
+)";
+$conn->query($sql_check);
 
+// Ensure older tables are patched with the new column cleanly without fatal errors
+$checkCols = $conn->query("SHOW COLUMNS FROM product_combinations LIKE 'image_path'");
+if ($checkCols && $checkCols->num_rows === 0) {
+    $conn->query("ALTER TABLE product_combinations ADD COLUMN image_path VARCHAR(255) AFTER price");
+}
+
+switch ($method) {
     // ─── GET ─────────────────────────────────────────────────────────────────
     case 'GET':
         $stmt = $conn->prepare(
@@ -67,6 +86,18 @@ switch ($method) {
         }
         unset($img);
         $product['gallery'] = $gallery;
+
+        // Fetch combinations
+        $combs = [];
+        $combStmt = $conn->prepare("SELECT * FROM product_combinations WHERE product_id = ?");
+        $combStmt->bind_param("i", $id);
+        $combStmt->execute();
+        $combRes = $combStmt->get_result();
+        while($c = $combRes->fetch_assoc()) {
+           $combs[] = $c;
+        }
+        $combStmt->close();
+        $product['combinations'] = $combs;
 
         jsonResponse(['status' => 'success', 'data' => $product]);
         break;
@@ -237,6 +268,26 @@ switch ($method) {
             if ($stmt->execute()) {
                 $affected = $stmt->affected_rows;
                 $stmt->close();
+
+                // ── Handle Combinations ──────────────────────────────────────
+                if (isset($data['combinations']) && is_array($data['combinations'])) {
+                    // Delete removed combinations if necessary, or just clear and re-insert for simplicity in this setup
+                    // For safety, let's keep it simple: wipe existing and insert new
+                    $conn->query("DELETE FROM product_combinations WHERE product_id = $id");
+                    
+                    $cStmt = $conn->prepare("INSERT INTO product_combinations (product_id, colour_id, size_id, stock_qty, price, image_path) VALUES (?, ?, ?, ?, ?, ?)");
+                    foreach ($data['combinations'] as $c) {
+                        $c_cid = !empty($c['colour_id']) ? (int)$c['colour_id'] : null;
+                        $c_sid = !empty($c['size_id']) ? (int)$c['size_id'] : null;
+                        $c_qty = (int)($c['stock_qty'] ?? 0);
+                        $c_price = (float)($c['price'] ?? 0);
+                        $c_img = !empty($c['image_path']) ? $c['image_path'] : null;
+                        $cStmt->bind_param("iiiids", $id, $c_cid, $c_sid, $c_qty, $c_price, $c_img);
+                        $cStmt->execute();
+                    }
+                    $cStmt->close();
+                }
+
                 jsonResponse([
                     'status' => 'success',
                     'message' => 'Product updated successfully',

@@ -37,19 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $productsResult = $stmt->get_result();
 
     $products = [];
-    $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
-        . '://' . $_SERVER['HTTP_HOST'] . '/';
-
     while ($row = $productsResult->fetch_assoc()) {
         if (!empty($row['image'])) {
-            if (strpos($row['image'], 'http') !== 0) {
-                $row['image'] = $baseUrl . ltrim($row['image'], '/');
-            }
+            $row['image'] = ltrim($row['image'], '/');
         } else {
             $row['image'] = null;
         }
         $products[] = $row;
     }
+
 
     jsonResponse([
         'status' => 'success',

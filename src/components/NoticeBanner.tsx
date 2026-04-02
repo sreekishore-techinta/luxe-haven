@@ -33,7 +33,7 @@ const NoticeBanner = () => {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="bg-[#0D3B2E] text-white relative overflow-hidden"
+                className="bg-[#FDF5E6] text-[#1A1A1A] relative overflow-hidden"
             >
                 <div className="container mx-auto px-4 py-2.5 flex items-center justify-center text-center">
                     <div className="flex items-center gap-2 text-[11px] md:text-xs font-bold uppercase tracking-widest">
@@ -43,7 +43,7 @@ const NoticeBanner = () => {
                     </div>
                     <button
                         onClick={() => setIsVisible(false)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1A1A1A]/60 hover:text-[#1A1A1A] transition-colors"
                     >
                         <X size={14} />
                     </button>

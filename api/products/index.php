@@ -66,7 +66,10 @@ switch ($method) {
 
         $whereStr = implode(" AND ", $where);
 
-        $countSql = "SELECT COUNT(*) as total FROM products p LEFT JOIN master_categories mc ON mc.id = p.category_id WHERE $whereStr";
+        $countSql = "SELECT COUNT(*) as total FROM products p 
+                     LEFT JOIN product_combinations pc ON pc.product_id = p.id 
+                     LEFT JOIN master_categories mc ON mc.id = p.category_id 
+                     WHERE $whereStr";
         $countStmt = $conn->prepare($countSql);
         if ($types && $params)
             $countStmt->bind_param($types, ...$params);
@@ -74,18 +77,23 @@ switch ($method) {
         $total = $countStmt->get_result()->fetch_assoc()['total'];
         $countStmt->close();
 
-        $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
-            . '://' . $_SERVER['HTTP_HOST'] . '/luxe-haven/';
+        $baseUrl = getBaseUrl();
+
 
         $sql = "SELECT p.*, mc.name as category_name, st.name as saree_type_name,
-                       mcl.name as colour_name, mft.name as fabric_name,
-                       msz.name as size_name,
+                       mcl_v.name as variant_colour_name, msz_v.name as variant_size_name,
+                       pc.id as combination_id, pc.stock_qty as variant_stock, pc.price as variant_price, pc.image_path as variant_image,
+                       mft.name as fabric_name,
+                       mcl.name as colour_name, msz.name as size_name,
                        (SELECT image_path FROM product_images WHERE product_id = p.id AND is_primary = 1 LIMIT 1) as primary_image
                 FROM products p
+                LEFT JOIN product_combinations pc ON pc.product_id = p.id
                 LEFT JOIN master_categories mc ON mc.id = p.category_id
                 LEFT JOIN master_colours mcl ON mcl.id = p.colour_id
                 LEFT JOIN master_fabric_types mft ON mft.id = p.fabric_id
                 LEFT JOIN master_sizes msz ON msz.id = p.size_id
+                LEFT JOIN master_colours mcl_v ON mcl_v.id = pc.colour_id
+                LEFT JOIN master_sizes msz_v ON msz_v.id = pc.size_id
                 LEFT JOIN saree_types st ON st.id = p.saree_type_id
                 WHERE $whereStr
                 ORDER BY p.$sortBy $order
@@ -99,18 +107,23 @@ switch ($method) {
         $products = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
 
-        // Normalize images to full URLs
+        // Normalize images to full URLs and fallback to main product data if variant is current
         foreach ($products as &$p) {
-            if (!empty($p['primary_image'])) {
-                if (strpos($p['primary_image'], 'http') !== 0) {
-                    $p['primary_image'] = $baseUrl . ltrim($p['primary_image'], '/');
-                }
-            } else {
-                $p['primary_image'] = null;
-            }
-            // Compatibility alias
+            $p['primary_image'] = !empty($p['primary_image']) ? ltrim($p['primary_image'], '/') : null;
             $p['image'] = $p['primary_image'];
+
+            // If variant exists, override main product display data
+            if ($p['combination_id']) {
+                $p['name'] = $p['name'] . " (" . ($p['variant_size_name'] ?: 'N/A') . " - " . ($p['variant_colour_name'] ?: 'N/A') . ")";
+                $p['stock_qty'] = $p['variant_stock'];
+                $p['price'] = $p['variant_price'] ?: $p['price'];
+                if ($p['variant_image']) {
+                    $p['primary_image'] = ltrim($p['variant_image'], '/');
+                    $p['image'] = $p['primary_image'];
+                }
+            }
         }
+
         unset($p);
 
         jsonResponse([
@@ -173,7 +186,43 @@ switch ($method) {
             );
 
             if ($stmt->execute()) {
-                jsonResponse(['status' => 'success', 'message' => 'Product created', 'id' => $stmt->insert_id], 201);
+                $id = $stmt->insert_id;
+                
+                // ── Handle Combinations ──────────────────────────────────────
+                if (isset($data['combinations']) && is_array($data['combinations'])) {
+                    // Ensure Table
+                    $conn->query("CREATE TABLE IF NOT EXISTS product_combinations (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        product_id INT NOT NULL,
+                        colour_id INT,
+                        size_id INT,
+                        stock_qty INT DEFAULT 0,
+                        price DECIMAL(10,2) DEFAULT 0.00,
+                        image_path VARCHAR(255),
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        INDEX (product_id)
+                    )");
+                    
+                    // Ensure older tables are patched correctly without crashing JSON outputs
+                    $checkCols = $conn->query("SHOW COLUMNS FROM product_combinations LIKE 'image_path'");
+                    if ($checkCols && $checkCols->num_rows === 0) {
+                        $conn->query("ALTER TABLE product_combinations ADD COLUMN image_path VARCHAR(255) AFTER price");
+                    }
+
+                    $cStmt = $conn->prepare("INSERT INTO product_combinations (product_id, colour_id, size_id, stock_qty, price, image_path) VALUES (?, ?, ?, ?, ?, ?)");
+                    foreach ($data['combinations'] as $c) {
+                        $c_cid = !empty($c['colour_id']) ? (int)$c['colour_id'] : null;
+                        $c_sid = !empty($c['size_id']) ? (int)$c['size_id'] : null;
+                        $c_qty = (int)($c['stock_qty'] ?? 0);
+                        $c_price = (float)($c['price'] ?? 0);
+                        $c_img = !empty($c['image_path']) ? $c['image_path'] : null;
+                        $cStmt->bind_param("iiiids", $id, $c_cid, $c_sid, $c_qty, $c_price, $c_img);
+                        $cStmt->execute();
+                    }
+                    $cStmt->close();
+                }
+
+                jsonResponse(['status' => 'success', 'message' => 'Product created', 'id' => $id], 201);
             } else {
                 jsonResponse(['status' => 'error', 'message' => 'Execute failed: ' . $stmt->error], 500);
             }

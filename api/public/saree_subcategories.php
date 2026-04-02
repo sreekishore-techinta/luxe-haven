@@ -13,8 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $data = [];
     while ($row = $result->fetch_assoc()) {
+        if (!empty($row['image'])) {
+            $row['image'] = ltrim($row['image'], '/');
+        }
         $data[] = $row;
     }
+
 
     jsonResponse(['status' => 'success', 'data' => $data]);
 } else {

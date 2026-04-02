@@ -39,12 +39,16 @@ export const categories = [
 
 export const fabricTypes = [
   "All",
-  "Pure Silk",
-  "Banarasi Silk",
-  "Kanjivaram Silk",
-  "Mysore Silk",
-  "Patola Silk",
-  "Chanderi Silk",
-  "Pochampally Ikat",
-  "Tussar Silk",
+  "Pure Silk Saree",
+  "Banarasi Saree",
+  "Kanjivaram Saree",
+  "Bridal Saree",
+  "Cotton Saree",
+  "Designer Saree",
+  "Linen Saree",
+  "Organza Saree",
+  "Party Wear Saree",
+  "Soft Silk Saree"
 ];
+
+

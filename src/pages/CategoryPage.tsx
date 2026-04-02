@@ -10,7 +10,7 @@ import blouseHero from "@/assets/blouses-hero-final.png";
 import suitHero from "@/assets/kurtha-suit-hero.png";
 import defaultHero from "@/assets/new-arrivals-hero-2.jpg";
 
-import { API_URL as API } from "@/api_config";
+import { API_URL as API, BASE_PATH } from "@/api_config";
 
 const heroMap: Record<string, string> = {
     "sarees": sareeCollectionRed,
@@ -19,7 +19,6 @@ const heroMap: Record<string, string> = {
     "kurthas": suitHero,
     "new-arrivals": defaultHero
 };
-
 const CategoryPage = () => {
     const { slug } = useParams<{ slug: string }>();
     const [products, setProducts] = useState<any[]>([]);
@@ -70,18 +69,17 @@ const CategoryPage = () => {
                 description={categoryInfo?.description || `Explore our curated selection of premium ${categoryInfo?.name || slug} crafted for elegance.`}
                 backgroundImage={
                     heroMap[slug] || 
-                    (categoryInfo?.hero_image 
-                        ? (categoryInfo.hero_image.startsWith('src') 
-                            ? `${API.replace('/api', '')}/${categoryInfo.hero_image}` 
-                            : (categoryInfo.hero_image.startsWith('uploads') 
-                                ? `${API}/../${categoryInfo.hero_image}` 
-                                : (categoryInfo.hero_image.startsWith('http') 
-                                    ? categoryInfo.hero_image 
-                                    : `${API.replace('/api', '')}/${categoryInfo.hero_image}`))) 
-                        : defaultHero)
+                    (() => {
+                        if (!categoryInfo?.hero_image) return defaultHero;
+                        let path = categoryInfo.hero_image;
+                        if (path.startsWith('http')) return path;
+                        path = path.replace(/^src\//, '').replace(/^\/+/, '');
+                        return `${BASE_PATH}/${path}`;
+                    })()
                 }
-                imagePosition="center"
+                imagePosition="center 25%"
                 align="left"
+                pageKey={slug}
             />
 
             <div id="collection-grid" className="container mx-auto px-4 lg:px-8 py-10 lg:py-16">

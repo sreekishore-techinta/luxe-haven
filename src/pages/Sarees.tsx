@@ -5,7 +5,8 @@ import CategoryHero from "@/components/CategoryHero";
 import { ArrowRight } from "lucide-react";
 import sareeCollectionRed from "@/assets/saree-collection-red.png";
 
-import { API_URL as API } from "@/api_config";
+import { API_URL as API, BASE_PATH } from "@/api_config";
+
 
 const Sarees = () => {
     const [subcategories, setSubcategories] = useState<any[]>([]);
@@ -31,11 +32,10 @@ const Sarees = () => {
     return (
         <div>
             <CategoryHero
-                title="Saree Collections"
-                description="Discover our diverse range of handcrafted sarees, from traditional weaves to contemporary designer pieces."
+                title="Saree Collection"
+                description="Explore our curated selection of premium Kanjivaram, Banarasi, and more."
                 backgroundImage={sareeCollectionRed}
-                imagePosition="center"
-                align="left"
+                pageKey="sarees"
             />
 
             <div id="collection-grid" className="container mx-auto px-4 lg:px-8 py-16 lg:py-24">
@@ -62,12 +62,15 @@ const Sarees = () => {
                                     <div className="aspect-[3/4] overflow-hidden bg-slate-50">
                                         <img
                                             src={
-                                                sub.image.startsWith('http')
-                                                    ? sub.image
-                                                    : (sub.image.startsWith('src') || sub.image.startsWith('uploads') 
-                                                        ? `${API.replace('/api', '')}/${sub.image}` 
-                                                        : `${API.replace('/api', '')}/${sub.image}`)
+                                                (() => {
+                                                    const path = sub.image;
+                                                    if (!path) return 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800';
+                                                    if (path.startsWith('http')) return path;
+                                                    const cleanPath = path.replace(/^src\//, '').replace(/^\/+/, '');
+                                                    return `${BASE_PATH}/${cleanPath}`;
+                                                })()
                                             }
+
                                             alt={sub.name}
                                             loading="lazy"
                                             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"

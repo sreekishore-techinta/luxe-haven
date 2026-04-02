@@ -30,7 +30,10 @@ const CollectionsRibbon = () => {
                         image: p.image || "",
                         category: p.category_name || p.category,
                         description: p.description,
-                        fabric: p.fabric,
+                        fabric: p.saree_type_name || p.fabric_name || p.fabric || "Premium",
+                        sareeType: p.saree_type_name || "",
+
+
                         isNew: p.is_new === 1,
                         isBestSeller: p.is_bestseller === 1,
                         stock_qty: parseInt(p.stock_qty),
@@ -49,10 +52,21 @@ const CollectionsRibbon = () => {
     }, []);
 
     const filtered = useMemo(() => {
-        return activeTab === "All"
-            ? apiProducts
-            : apiProducts.filter((p) => p.fabric === activeTab);
+        if (activeTab === "All") return apiProducts;
+        
+        const searchTab = activeTab.toLowerCase().replace(/ silk| saree/gi, "").trim();
+        return apiProducts.filter((p) => {
+            const searchSource = [
+                p.name,
+                p.fabric,
+                p.category,
+                p.sareeType || ""
+            ].join(" ").toLowerCase();
+            return searchSource.includes(searchTab);
+        });
+
     }, [activeTab, apiProducts]);
+
 
     const displayed = showAll ? filtered : filtered.slice(0, SHOW_PER_PAGE);
 

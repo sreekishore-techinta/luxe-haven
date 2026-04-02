@@ -3,8 +3,10 @@ import { motion } from "framer-motion";
 import CategoryHero from "@/components/CategoryHero";
 import { Loader2, Camera } from "lucide-react";
 
-const API_NODE = "http://localhost:5000/api/blouse";
-const UPLOADS_NODE = "http://localhost:5000";
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_NODE = isLocal ? "http://localhost:5000/api/blouse" : "/api/blouse";
+const UPLOADS_NODE = isLocal ? "http://localhost:5000" : "";
+
 
 interface BlouseStyle {
     id: number;

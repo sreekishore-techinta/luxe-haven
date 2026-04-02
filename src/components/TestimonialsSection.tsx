@@ -1,14 +1,25 @@
-import { motion } from "framer-motion";
-import { Star, Quote } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Star, Quote, Plus, Loader2, MessageSquare } from "lucide-react";
+import { API_URL as API } from "@/api_config";
+import ReviewForm from "./ReviewForm";
 
-const testimonials = [
+interface Review {
+  id: number;
+  name: string;
+  rating: number;
+  message: string;
+  created_at: string;
+}
+
+const fallbackReviews = [
   {
     name: "Priya Sharma",
     location: "Mumbai",
     initial: "P",
     text: "The quality of the silk is absolutely extraordinary. I wore the Banarasi saree to my sister's wedding and received so many compliments. Truly a masterpiece.",
     rating: 5,
-    accentColor: "bg-amber-500",
+    accentColor: "bg-[#D4AF37]/10 text-[#D4AF37]",
   },
   {
     name: "Ananya Reddy",
@@ -16,7 +27,7 @@ const testimonials = [
     initial: "A",
     text: "Lishan Sarees' attention to detail is unmatched. The packaging felt like unwrapping a luxury gift. The Kanjivaram saree exceeded all my expectations.",
     rating: 5,
-    accentColor: "bg-rose-500",
+    accentColor: "bg-rose-50 text-rose-600",
   },
   {
     name: "Meera Iyer",
@@ -24,20 +35,55 @@ const testimonials = [
     initial: "M",
     text: "I've been shopping for silk sarees for years, and nothing compares to the craftsmanship here. The colors are vibrant, the weave is flawless. A true heirloom piece.",
     rating: 5,
-    accentColor: "bg-emerald-600",
+    accentColor: "bg-emerald-50 text-emerald-600",
   },
 ];
 
 const TestimonialsSection = () => {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch(`${API}/reviews/get_approved.php`);
+      const json = await res.json();
+      if (json.status === "success") {
+        setReviews(json.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch reviews", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  // Use dynamic reviews, or fall back to pre-defined ones if empty
+  const displayReviews = reviews.length > 0 
+    ? reviews.slice(0, 6).map(r => ({
+        name: r.name,
+        location: "Verified Patron",
+        initial: r.name[0].toUpperCase(),
+        text: r.message,
+        rating: r.rating,
+        accentColor: "bg-slate-100 text-slate-700",
+        id: r.id
+      }))
+    : fallbackReviews;
+
   return (
-    <section className="py-16 luxury-gradient relative overflow-hidden">
+    <section className="py-24 bg-white relative overflow-hidden">
       {/* Decorative elements */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-b from-transparent to-gold/20" />
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-t from-transparent to-gold/20" />
-      <div className="absolute inset-0 opacity-[0.03]"
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-b from-transparent to-[#D4AF37]/20" />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-t from-transparent to-[#D4AF37]/20" />
+      <div className="absolute inset-0 opacity-[0.4]"
         style={{
-          backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.1) 40px, rgba(255,255,255,0.1) 41px),
-            repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.1) 40px, rgba(255,255,255,0.1) 41px)`
+          backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(212,175,55,0.03) 40px, rgba(212,175,55,0.03) 41px),
+            repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(212,175,55,0.03) 40px, rgba(212,175,55,0.03) 41px)`
         }}
       />
 
@@ -46,64 +92,84 @@ const TestimonialsSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-16"
         >
           <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="w-8 h-px bg-gold/40" />
-            <span className="font-body text-[10px] tracking-[0.5em] uppercase text-gold-light/70">
-              Testimonials
+            <div className="w-8 h-px bg-[#D4AF37]/30" />
+            <span className="font-body text-[10px] tracking-[0.5em] uppercase text-[#D4AF37]/80 font-black">
+              Patron Reviews
             </span>
-            <div className="w-8 h-px bg-gold/40" />
+            <div className="w-8 h-px bg-[#D4AF37]/30" />
           </div>
-          <h2 className="font-display text-3xl lg:text-4xl font-semibold text-champagne">
-            What Our{" "}
-            <span className="italic font-light text-gold-light">Patrons Say</span>
+          <h2 className="font-display text-4xl lg:text-5xl font-black text-slate-950 mb-8 tracking-tight">
+            Voices of{" "}
+            <span className="italic text-[#D4AF37]">Authentic Luxury</span>
           </h2>
+          
+          <button 
+            onClick={() => setIsFormOpen(true)}
+            className="inline-flex items-center gap-3 px-10 py-4 bg-[#0F172A] text-white rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-[#D4AF37] transition-all shadow-xl shadow-slate-200"
+          >
+            <Plus size={14} /> Share Your Experience
+          </button>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-          {testimonials.map((t, i) => (
-            <motion.div
-              key={t.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.15 }}
-              className="relative bg-charcoal-light/40 backdrop-blur p-8 lg:p-10 border border-gold/10 hover:border-gold/25 transition-colors duration-500 group"
-            >
-              {/* Large quote mark */}
-              <Quote
-                size={40}
-                className="text-gold/10 absolute top-6 right-6 group-hover:text-gold/20 transition-colors duration-500"
-              />
-
-              {/* Stars */}
-              <div className="flex items-center gap-1 mb-5">
-                {Array.from({ length: t.rating }).map((_, j) => (
-                  <Star key={j} size={13} className="fill-gold text-gold" />
-                ))}
-              </div>
-
-              {/* Text */}
-              <p className="font-body text-sm text-champagne/80 leading-relaxed mb-8 italic">
-                "{t.text}"
-              </p>
-
-              {/* Author */}
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-9 h-9 rounded-full ${t.accentColor} flex items-center justify-center text-white font-display text-sm font-semibold shrink-0`}
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin text-[#D4AF37]" size={40} />
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <AnimatePresence>
+              {displayReviews.map((t, i) => (
+                <motion.div
+                  key={t.name + i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="relative bg-[#FBFAF7] p-10 border border-slate-100 hover:border-[#D4AF37]/30 hover:shadow-2xl hover:shadow-slate-200 transition-all duration-500 group rounded-[32px]"
                 >
-                  {t.initial}
-                </div>
-                <div>
-                  <p className="font-display text-sm text-champagne">{t.name}</p>
-                  <p className="font-body text-[11px] text-gold-light/50">{t.location}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                  {/* Large quote mark */}
+                  <Quote
+                    size={48}
+                    className="text-[#D4AF37]/10 absolute bottom-10 right-10 group-hover:text-[#D4AF37]/20 transition-colors duration-500"
+                  />
+
+                  {/* Stars */}
+                  <div className="flex items-center gap-1.5 mb-8">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <Star key={j} size={14} className={`transition-colors ${j < t.rating ? "fill-[#D4AF37] text-[#D4AF37]" : "text-slate-200"}`} />
+                    ))}
+                  </div>
+
+                  {/* Text */}
+                  <div className="min-h-[120px] mb-10">
+                    <p className="font-body text-base text-slate-700 leading-relaxed italic line-clamp-5 group-hover:line-clamp-none transition-all duration-500 font-medium">
+                      "{t.text}"
+                    </p>
+                  </div>
+
+                  {/* Author */}
+                  <div className="flex items-center gap-4 pt-8 border-t border-slate-100 group-hover:border-[#D4AF37]/10 transition-colors">
+                    <div
+                      className={`w-14 h-14 rounded-2xl ${t.accentColor || "bg-slate-900 text-[#D4AF37]"} flex items-center justify-center font-display text-xl font-black shadow-inner`}
+                    >
+                      {t.initial}
+                    </div>
+                    <div>
+                      <p className="font-display text-base text-slate-950 font-black tracking-tight">{t.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                        <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] font-black">{t.location}</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* Overall rating bar */}
         <motion.div
@@ -111,19 +177,30 @@ const TestimonialsSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.5 }}
-          className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 text-center"
+          className="mt-20 bg-slate-50 border border-slate-100 p-10 rounded-[40px] max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-around gap-10 text-center shadow-inner"
         >
-          <div className="flex items-center gap-1">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} size={16} className="fill-gold text-gold" />
-            ))}
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} size={22} className="fill-[#D4AF37] text-[#D4AF37] drop-shadow-sm" />
+              ))}
+            </div>
+            <p className="font-display text-slate-950 font-black text-3xl tracking-tighter">4.9/5 Average</p>
           </div>
-          <p className="font-body text-xs text-gold-light/60 tracking-wide">
-            <span className="text-champagne font-semibold text-sm">4.9/5</span>{" "}
-            based on 2,400+ verified reviews
-          </p>
+          
+          <div className="hidden sm:block w-px h-16 bg-slate-200" />
+          
+          <div className="space-y-2">
+            <p className="text-[#D4AF37] font-black text-[12px] uppercase tracking-[0.3em] mb-1">Global Community</p>
+            <p className="font-body text-slate-600 font-bold text-sm tracking-tight leading-relaxed">
+              Serving <span className="text-slate-950 font-black">2,400+ Verified Patrons</span><br />
+              Across 15+ Countries
+            </p>
+          </div>
         </motion.div>
       </div>
+
+      <ReviewForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />
     </section>
   );
 };

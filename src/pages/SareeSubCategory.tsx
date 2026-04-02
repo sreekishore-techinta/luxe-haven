@@ -5,8 +5,9 @@ import ProductCard from "@/components/ProductCard";
 import CategoryHero from "@/components/CategoryHero";
 import { ArrowLeft, ChevronLeft, ChevronRight, Grid3X3, LayoutGrid } from "lucide-react";
 import SkeletonCard from "@/components/SkeletonCard";
+import defaultHero from "@/assets/new-arrivals-hero-2.jpg";
 
-import { API_URL as API } from "@/api_config";
+import { API_URL as API, BASE_PATH } from "@/api_config";
 
 const SareeSubCategory = () => {
     const { slug } = useParams();
@@ -75,29 +76,20 @@ const SareeSubCategory = () => {
     return (
         <div>
             <CategoryHero
-                title={subcategory?.name ? `${subcategory.name} Collection` : ""}
-                description={subcategory?.description || `Explore our curated selection of ${subcategory?.name || "premium sarees"}, each piece a masterpiece of elegance and tradition.`}
+                title={subcategory?.name || slug?.replace("-", " ").toUpperCase() || "Saree Collection"}
+                description={`Explore our curated selection of premium ${subcategory?.name || "Silk"} sarees crafted for elegance.`}
                 backgroundImage={
-                    subcategory?.hero_image 
-                        ? (subcategory.hero_image.startsWith('src') 
-                            ? `${API.replace('/api', '')}/${subcategory.hero_image}` 
-                            : (subcategory.hero_image.startsWith('uploads') 
-                                ? `${API}/../${subcategory.hero_image}` 
-                                : (subcategory.hero_image.startsWith('http') 
-                                    ? subcategory.hero_image 
-                                    : `${API.replace('/api', '')}/${subcategory.hero_image}`))) 
-                        : (subcategory?.image 
-                            ? (subcategory.image.startsWith('src') 
-                                ? `${API.replace('/api', '')}/${subcategory.image}` 
-                                : (subcategory.image.startsWith('uploads') 
-                                    ? `${API}/../${subcategory.image}` 
-                                    : (subcategory.image.startsWith('http') 
-                                        ? subcategory.image 
-                                        : `${API.replace('/api', '')}/${subcategory.image}`))) 
-                            : "")
+                    (() => {
+                        const path = subcategory?.image;
+                        if (!path) return defaultHero;
+                        if (path.startsWith('http')) return path;
+                        const cleanPath = path.replace(/^src\//, '').replace(/^\/+/, '');
+                        return `${BASE_PATH}/${cleanPath}`;
+                    })()
                 }
-                imagePosition="center"
+                imagePosition="center 30%"
                 align="left"
+                pageKey={slug}
             />
 
             <div id="collection-grid" className="container mx-auto px-4 lg:px-8 py-10 lg:py-16">

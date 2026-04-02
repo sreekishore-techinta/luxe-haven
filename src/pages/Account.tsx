@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import {
   User, Package, Heart, MapPin, LogOut, ChevronRight,
   ShoppingBag, Eye, EyeOff, Loader2, Plus, Trash2
 } from "lucide-react";
-import PageHeroBanner from "@/components/PageHeroBanner";
-import accountHero from "@/assets/account-hero.png";
 
 import { API_URL as API } from "@/api_config";
 
@@ -48,12 +47,17 @@ const statusColors: Record<string, string> = {
 };
 
 const Account = () => {
-  const [customer, setCustomer] = useState<Customer | null>(null);
+  const { customer, login, logout } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
+  const initialTab = searchParams.get("tab") || "profile";
+
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -75,15 +79,11 @@ const Account = () => {
     is_default: false
   });
 
-  // Check session on mount
+  // Update active tab if URL changes
   useEffect(() => {
-    fetch(`${API}/auth/customer_check.php`, { credentials: "include" })
-      .then(r => r.json())
-      .then(json => {
-        if (json.loggedIn) setCustomer(json.customer);
-      })
-      .finally(() => setAuthLoading(false));
-  }, []);
+    const tab = searchParams.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
 
   // Fetch addresses when on addresses tab
   useEffect(() => {
@@ -178,7 +178,10 @@ const Account = () => {
       });
       const json = await res.json();
       if (json.status === "success") {
-        setCustomer(json.customer);
+        login(json.customer);
+        if (returnTo) {
+          navigate(decodeURIComponent(returnTo));
+        }
       } else {
         setError(json.message);
       }
@@ -202,8 +205,11 @@ const Account = () => {
       });
       const json = await res.json();
       if (json.status === "success") {
-        setCustomer(json.customer);
-        setSuccess("Account created! Welcome to Lishan Sarees.");
+        login(json.customer);
+        setSuccess("Account created! Welcome to Luxe Haven.");
+        if (returnTo) {
+          navigate(decodeURIComponent(returnTo));
+        }
       } else {
         setError(json.message);
       }
@@ -215,8 +221,7 @@ const Account = () => {
   };
 
   const handleLogout = async () => {
-    await fetch(`${API}/auth/customer_check.php`, { method: "POST", credentials: "include" });
-    setCustomer(null);
+    logout();
     setActiveTab("profile");
     setOrders([]);
   };
@@ -227,13 +232,8 @@ const Account = () => {
   // ── AUTH SCREEN ──────────────────────────────────────────────────────────
   if (!customer) {
     return (
-      <div>
-        <PageHeroBanner
-          title="My Account"
-          subtitle="Sign In or Register"
-          backgroundImage={accountHero}
-        />
-        <div className="container mx-auto px-4 lg:px-8 py-16">
+      <div className="min-h-screen pt-24 pb-16">
+        <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-md mx-auto">
             {/* Toggle */}
             <div className="flex border border-border rounded overflow-hidden mb-8">
@@ -343,14 +343,8 @@ const Account = () => {
   ];
 
   return (
-    <div>
-      <PageHeroBanner
-        title="My Account"
-        subtitle={`Welcome, ${customer.name.split(" ")[0]}`}
-        backgroundImage={accountHero}
-      />
-
-      <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20">
+    <div className="min-h-screen pt-24 pb-16">
+      <div className="container mx-auto px-4 lg:px-8">
         {success && (
           <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm font-body">
             {success}

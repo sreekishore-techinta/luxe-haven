@@ -6,8 +6,7 @@ import {
   Truck, Shield, RotateCcw, CheckCircle, Package, Loader2
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import PageHeroBanner from "@/components/PageHeroBanner";
-import checkoutHero from "@/assets/checkout-hero.png";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
 import { API_URL as API } from "@/api_config";
@@ -26,13 +25,13 @@ interface ShippingForm {
 
 const Checkout = () => {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
+  const { customer, requireAuth } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState<"cart" | "shipping" | "confirm">("cart");
   const [placing, setPlacing] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [orderResult, setOrderResult] = useState<{ orderNumber: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [customer, setCustomer] = useState<any>(null);
 
   const [form, setForm] = useState<ShippingForm>({
     firstName: "", lastName: "", email: "",
@@ -46,28 +45,21 @@ const Checkout = () => {
   });
 
   useEffect(() => {
-    // Check if user is logged in to pre-fill
-    fetch(`${API}/auth/customer_check.php`, { credentials: "include" })
-      .then(res => res.json())
-      .then(json => {
-        if (json.loggedIn && json.customer) {
-          setCustomer(json.customer);
-          const names = json.customer.name.split(" ");
-          setForm(prev => ({
-            ...prev,
-            firstName: names[0] || "",
-            lastName: names.slice(1).join(" ") || "",
-            email: json.customer.email || "",
-            phone: json.customer.phone || "",
-            address: json.customer.address || "",
-            city: json.customer.city || "",
-            state: json.customer.state || "",
-            pincode: json.customer.pincode || "",
-          }));
-        }
-      })
-      .catch(err => console.error("Session check failed", err));
-  }, []);
+    if (customer) {
+      const names = customer.name.split(" ");
+      setForm(prev => ({
+        ...prev,
+        firstName: names[0] || "",
+        lastName: names.slice(1).join(" ") || "",
+        email: customer.email || "",
+        phone: (customer as any).phone || "",
+        address: (customer as any).address || "",
+        city: (customer as any).city || "",
+        state: (customer as any).state || "",
+        pincode: (customer as any).pincode || "",
+      }));
+    }
+  }, [customer]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
@@ -173,14 +165,8 @@ const Checkout = () => {
   // ─── EMPTY CART ────────────────────────────────────────────────────────────
   if (items.length === 0 && step !== "confirm") {
     return (
-      <div>
-        <PageHeroBanner
-          title="Shopping Bag"
-          subtitle="Checkout"
-          backgroundImage={checkoutHero}
-          heightClass="h-[90vh] lg:h-screen"
-        />
-        <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20">
+      <div className="pt-20 lg:pt-28">
+        <div className="container mx-auto px-4 lg:px-8 pb-12 lg:pb-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -203,21 +189,15 @@ const Checkout = () => {
   // ─── ORDER SUCCESS ──────────────────────────────────────────────────────────
   if (step === "confirm" && orderResult) {
     return (
-      <div>
-        <PageHeroBanner
-          title="Order Confirmed"
-          subtitle="Thank You!"
-          backgroundImage={checkoutHero}
-          heightClass="h-[90vh] lg:h-screen"
-        />
-        <div className="container mx-auto px-4 lg:px-8 py-20">
+      <div className="pt-20 lg:pt-28">
+        <div className="container mx-auto px-4 lg:px-8 pb-20">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="max-w-lg mx-auto text-center"
           >
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-green-50 flex items-center justify-center">
-              <CheckCircle size={48} className="text-green-500" strokeWidth={1.5} />
+            <div className="mx-auto mb-6 flex items-center justify-center">
+              <CheckCircle size={56} className="text-green-500" strokeWidth={1.5} />
             </div>
             <h2 className="font-display text-3xl font-semibold mb-3">Order Placed!</h2>
             <p className="font-body text-muted-foreground mb-2">
@@ -226,7 +206,7 @@ const Checkout = () => {
             <p className="font-body text-sm text-muted-foreground mb-8">
               A confirmation will be sent to <strong>{form.email}</strong>. We'll process your order shortly.
             </p>
-            <div className="bg-card rounded-lg p-6 mb-8 text-left space-y-3">
+            <div className="mb-10 text-left space-y-4 max-w-sm mx-auto">
               <div className="flex items-center gap-3 text-sm font-body">
                 <Package size={16} className="text-accent shrink-0" />
                 <span><strong>Order:</strong> {orderResult.orderNumber}</span>
@@ -250,17 +230,9 @@ const Checkout = () => {
     );
   }
 
-  // ─── MAIN CHECKOUT ─────────────────────────────────────────────────────────
   return (
-    <div>
-      <PageHeroBanner
-        title="Checkout"
-        subtitle="Shopping Bag"
-        backgroundImage={checkoutHero}
-        heightClass="h-[90vh] lg:h-screen"
-      />
-
-      <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20">
+    <div className="pt-20 lg:pt-28">
+      <div className="container mx-auto px-4 lg:px-8 pb-12 lg:pb-20">
         {/* Progress Steps */}
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-12">
           {[
@@ -325,7 +297,10 @@ const Checkout = () => {
                   ))}
                 </div>
                 <div className="mt-6 flex justify-end">
-                  <button onClick={() => setStep("shipping")} className="btn-primary group">
+                  <button 
+                    onClick={() => requireAuth(() => setStep("shipping"), "Please login to proceed to shipping")} 
+                    className="btn-primary group"
+                  >
                     Continue to Shipping
                     <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </button>
@@ -515,29 +490,13 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between font-body text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className={shipping === 0 ? "text-accent" : ""}>{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
+                  <span>{formatPrice(shipping)}</span>
                 </div>
-                {shipping > 0 && (
-                  <p className="font-body text-[11px] text-accent">Add {formatPrice(5000 - totalPrice)} more for free shipping</p>
-                )}
               </div>
               <div className="flex justify-between font-body pt-4 border-t border-border">
                 <span className="uppercase tracking-wider text-sm font-semibold">Total</span>
                 <span className="text-lg font-bold">{formatPrice(grandTotal)}</span>
               </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              {[
-                { icon: Truck, label: "Free Shipping" },
-                { icon: RotateCcw, label: "Easy Returns" },
-                { icon: Shield, label: "Secure" },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex flex-col items-center gap-1.5 py-3 bg-card rounded">
-                  <Icon size={16} strokeWidth={1.5} className="text-accent" />
-                  <span className="font-body text-[9px] uppercase tracking-wider text-muted-foreground">{label}</span>
-                </div>
-              ))}
             </div>
           </div>
         </div>

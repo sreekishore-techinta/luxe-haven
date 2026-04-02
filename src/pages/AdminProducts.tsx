@@ -135,36 +135,15 @@ export default function AdminProducts() {
     useEffect(() => { fetchProducts(); }, [page, debouncedSearch, category, fabric, statusFilter]);
 
     const [isViewMode, setIsViewMode] = useState(false);
-
-    // Open add modal
-    const openAdd = () => { 
-        setIsViewMode(false); setEditProduct(null); setForm({ ...emptyForm }); 
-        setImageFiles([]); setSaveMsg(null); setShowModal(true); 
-    };
-
-    // Open edit modal
-    const openEdit = (p: Product) => {
-        setIsViewMode(false); setEditProduct(p);
-        setForm({
-            name: p.name, category_id: p.category_id ? String(p.category_id) : "", 
-            saree_type_id: p.saree_type_id ? String(p.saree_type_id) : "",
-            description: p.description,
-            price: String(p.price), discount_price: p.discount_price ? String(p.discount_price) : "",
-            stock_qty: String(p.stock_qty),
-            is_new: p.is_new, is_bestseller: p.is_bestseller,
-            colour_id: p.colour_id ? String(p.colour_id) : "",
-            fabric_id: p.fabric_id ? String(p.fabric_id) : "",
-            size_id: p.size_id ? String(p.size_id) : "",
-        });
-        setImageFiles([]); setSaveMsg(null); setShowModal(true);
-    };
+    const openAdd = () => navigate("/admin/products/new");
+    const openEdit = (p: Product) => navigate(`/admin/products/edit/${p.id}`);
 
     // Open view modal
     const openView = (p: Product) => {
         setIsViewMode(true);
         setEditProduct(p);
         setForm({
-            name: p.name, category_id: p.category_id ? String(p.category_id) : "", 
+            name: p.name, category_id: p.category_id ? String(p.category_id) : "",
             saree_type_id: p.saree_type_id ? String(p.saree_type_id) : "",
             description: p.description,
             price: String(p.price), discount_price: p.discount_price ? String(p.discount_price) : "",
@@ -254,18 +233,19 @@ export default function AdminProducts() {
     if (loading && products.length === 0) return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-400 gap-4">
             <Loader2 size={48} className="animate-spin" strokeWidth={1} />
-            <p className="font-display text-2xl italic">Loading inventory...</p>
+            <p className="font-display text-2xl italic">Loading products...</p>
         </div>
     );
 
     if (error) return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-rose-500 gap-4 bg-rose-50 rounded-2xl border border-rose-100 p-8 text-center max-w-2xl mx-auto mt-10">
             <AlertCircle size={48} strokeWidth={1} />
-            <p className="font-display text-2xl font-semibold mb-2 italic">Backend Connection Failed</p>
+            <p className="font-display text-2xl font-semibold mb-2 italic">Error Loading Data</p>
             <p className="text-sm opacity-80 mb-4">Ensure PHP server is running at {API} using:<code className="block mt-2 bg-rose-200/50 p-2 rounded text-xs">php -S localhost:8000 -t api/</code></p>
             <button onClick={fetchProducts} className="px-6 py-3 bg-rose-600 text-white rounded-xl font-bold uppercase tracking-widest text-[11px]">Retry Connection</button>
         </div>
     );
+
 
     return (
         <div className="flex flex-col">
@@ -273,9 +253,9 @@ export default function AdminProducts() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6 shrink-0 pt-2">
                 <div className="space-y-1">
                     <h1 className="font-['Poppins',sans-serif] text-[32px] font-bold text-[#041E18] tracking-[-0.03em] leading-tight flex items-center gap-3">
-                        Products <span className="text-[#D4AF37] italic">Inventory</span>
+                        All <span className="text-[#D4AF37] italic">Products</span>
                     </h1>
-                    <p className="font-['Inter',sans-serif] text-sm text-gray-500 font-medium">Managing <span className="text-[#041E18] font-black">{total}</span> total entries</p>
+                    <p className="font-['Inter',sans-serif] text-sm text-gray-500 font-medium">Total products: <span className="text-[#041E18] font-black">{total}</span></p>
                 </div>
                 <button onClick={openAdd} className="group relative flex items-center justify-center gap-4 px-10 py-5 bg-gradient-to-br from-[#D4AF37] via-[#B48C5E] to-[#8C6B3E] text-white rounded-[24px] font-bold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-gold/20 hover:shadow-gold/40 transition-all duration-500 hover:-translate-y-1 active:scale-95 overflow-hidden">
                     <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -290,7 +270,7 @@ export default function AdminProducts() {
                     <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D4AF37] transition-all duration-300">
                         <Search size={18} strokeWidth={2.5} />
                     </div>
-                    <input type="text" placeholder="Search by name, SKU or fabric..."
+                    <input type="text" placeholder="Search products..."
                         className="w-full pl-16 pr-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-black text-[#041E18] outline-none transition-all placeholder:text-gray-400"
                         value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
                 </div>
@@ -320,17 +300,17 @@ export default function AdminProducts() {
                     <table className="w-full text-left border-collapse min-w-[1000px]">
                         <thead className="sticky top-0 z-20 bg-[#FBFAF7]/95 backdrop-blur-sm shadow-sm">
                             <tr className="border-b border-[#041E18]/5">
-                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Product Details</th>
-                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Classification</th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Product Info</th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Category</th>
                                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Fabric</th>
-                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Price Points</th>
-                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Inventory</th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Price</th>
+                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Stock</th>
                                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#041E18]/5 font-['Inter',sans-serif]">
-                            {products.map((p, i) => (
-                                <motion.tr key={p.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }}
+                            {products.map((p: any, i) => (
+                                <motion.tr key={p.combination_id ? `${p.id}-${p.combination_id}` : p.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }}
                                     className="hover:bg-[#FBFAF7] transition-all duration-300 group cursor-default">
                                     <td className="px-8 py-3">
                                         <div className="flex items-center gap-5">
@@ -559,9 +539,9 @@ export default function AdminProducts() {
                                             {isViewMode ? "Inventory Visual" : "Current Primary Image"}
                                         </label>
                                         <div className="w-full h-64 rounded-[32px] overflow-hidden border border-[#041E18]/10 bg-gray-50 flex items-center justify-center">
-                                            <img 
-                                                src={editProduct.primary_image.startsWith('http') ? editProduct.primary_image : `${BASE_URL}/${editProduct.primary_image}`} 
-                                                alt={editProduct.name} 
+                                            <img
+                                                src={editProduct.primary_image.startsWith('http') ? editProduct.primary_image : `${BASE_URL}/${editProduct.primary_image}`}
+                                                alt={editProduct.name}
                                                 className="w-full h-full object-cover"
                                             />
                                         </div>
@@ -569,18 +549,18 @@ export default function AdminProducts() {
                                 )}
                             </div>
 
-                             <div className="px-10 py-8 bg-[#FBFAF7] border-t border-[#041E18]/5 flex gap-4">
-                                 <button onClick={() => setShowModal(false)} className="flex-1 px-8 py-4 bg-white border border-[#041E18]/10 text-[#041E18]/40 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-gray-50 transition-all hover:text-rose-500">
-                                     {isViewMode ? "Close Panel" : "Abandon"}
-                                 </button>
-                                 {!isViewMode && (
-                                     <button onClick={handleSave} disabled={saving}
-                                         className="flex-[2] px-8 py-4 bg-gradient-to-r from-[#D4AF37] to-[#B48C5E] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-gold/20 hover:shadow-gold/40 transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95 group">
-                                         {saving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} className="group-hover:scale-110 transition-transform" />}
-                                         {saving ? "Synchronizing..." : editProduct ? "Authorize Revision" : "Finalize Commission"}
-                                     </button>
-                                 )}
-                             </div>
+                            <div className="px-10 py-8 bg-[#FBFAF7] border-t border-[#041E18]/5 flex gap-4">
+                                <button onClick={() => setShowModal(false)} className="flex-1 px-8 py-4 bg-white border border-[#041E18]/10 text-[#041E18]/40 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-gray-50 transition-all hover:text-rose-500">
+                                    {isViewMode ? "Close Panel" : "Abandon"}
+                                </button>
+                                {!isViewMode && (
+                                    <button onClick={handleSave} disabled={saving}
+                                        className="flex-[2] px-8 py-4 bg-gradient-to-r from-[#D4AF37] to-[#B48C5E] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-gold/20 hover:shadow-gold/40 transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95 group">
+                                        {saving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} className="group-hover:scale-110 transition-transform" />}
+                                        {saving ? "Synchronizing..." : editProduct ? "Authorize Revision" : "Finalize Commission"}
+                                    </button>
+                                )}
+                            </div>
                             {saveMsg && (
                                 <AnimatePresence>
                                     <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className={`absolute bottom-32 left-10 right-10 p-4 rounded-2xl flex items-center gap-3 backdrop-blur-xl border ${saveMsg.startsWith("✓") ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 border-rose-500/20"} z-50`}>
@@ -594,7 +574,7 @@ export default function AdminProducts() {
                 )}
             </AnimatePresence>
 
-             {/* ── Delete Confirm ──────────────────────────────────────────── */}
+            {/* ── Delete Confirm ──────────────────────────────────────────── */}
             <AnimatePresence>
                 {deleteId && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

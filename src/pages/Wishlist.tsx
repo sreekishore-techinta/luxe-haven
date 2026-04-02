@@ -1,11 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Heart, ShoppingBag, Trash2, ArrowRight, Loader2 } from "lucide-react";
-import PageHeroBanner from "@/components/PageHeroBanner";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
-
-import wishlistHero from "@/assets/wishlist-hero.png";
 
 const Wishlist = () => {
   const { wishlist, toggleWishlist, isLoading } = useWishlist();
@@ -24,20 +21,13 @@ const Wishlist = () => {
   }
 
   return (
-    <div className="bg-[#FDFBF7] min-h-screen">
-      <PageHeroBanner
-        title="My Wishlist"
-        subtitle="Saved Treasures"
-        backgroundImage={wishlistHero}
-        heightClass="h-[90vh] lg:h-screen"
-      />
-
-      <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20">
+    <div className="bg-[#FDFBF7] min-h-screen pt-24 pb-16">
+      <div className="container mx-auto px-4 lg:px-8">
         {wishlist.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-20 text-center"
+            className="flex flex-col items-center justify-center min-h-[45vh] text-center"
           >
             <div className="w-20 h-20 mb-6 flex items-center justify-center border border-border rounded-full bg-white shadow-sm">
               <Heart size={32} strokeWidth={1} className="text-muted-foreground/30" />

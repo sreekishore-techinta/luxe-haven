@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0); // Prevent HTML error traces from corrupting JSON output
 
 define('IS_LOCAL', (($_SERVER['HTTP_HOST'] ?? '') === 'localhost' || ($_SERVER['REMOTE_ADDR'] ?? '') === '127.0.0.1'));
 
@@ -8,6 +8,9 @@ define('DB_HOST', IS_LOCAL ? 'localhost' : 'localhost');
 define('DB_USER', IS_LOCAL ? 'root' : 'u891495087_lishan');
 define('DB_PASS', IS_LOCAL ? '' : '8!NCzGuU');
 define('DB_NAME', IS_LOCAL ? 'luxe_haven' : 'u891495087_lishan');
+
+// Disable mysqli exceptions to return clean JSON errors via handle checks
+mysqli_report(MYSQLI_REPORT_OFF);
 
 function getDB(): mysqli
 {
@@ -23,9 +26,14 @@ function getDB(): mysqli
 
 function setCORSHeaders(): void
 {
-    $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
-    header("Access-Control-Allow-Origin: $origin");
-    header("Access-Control-Allow-Credentials: true");
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if ($origin) {
+        header("Access-Control-Allow-Origin: $origin");
+        header("Access-Control-Allow-Credentials: true");
+    } else {
+        header("Access-Control-Allow-Origin: *");
+    }
+
     header("Content-Type: application/json; charset=UTF-8");
     header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
@@ -46,3 +54,13 @@ function sanitize(mysqli $conn, $value): string
 {
     return $conn->real_escape_string(trim($value));
 }
+
+function getBaseUrl(): string
+{
+    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http');
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    // If local, project is in /luxe-haven/, else root /
+    $root = IS_LOCAL ? '/luxe-haven/' : '/';
+    return "{$protocol}://{$host}{$root}";
+}
+

@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard, Package, ShoppingBag, Users, Settings,
     Bell, Search, Menu, X, LogOut, Loader2, Database, Camera, Layers,
-    ChevronsLeft, ChevronsRight, PanelLeftClose, ChevronDown, ChevronRight, List, Tag, Palette, Scissors, Maximize
+    ChevronsLeft, ChevronsRight, PanelLeftClose, ChevronDown, ChevronRight, List, Tag, Palette, Scissors, Maximize, Target, Image as ImageIcon,
+    MessageSquare, Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -23,10 +24,23 @@ const adminLinks = [
     },
     { name: "Product Master", path: "/admin/products", icon: Package },
     { name: "Blouse Styles", path: "/admin/blouse-styles", icon: Camera },
+    { name: "Slide Cards", path: "/admin/slide-cards", icon: Target },
+    { name: "Web Sliders", path: "/admin/web-sliders", icon: ImageIcon },
+    {
+        name: "Services",
+        path: "/admin/services",
+        icon: Sparkles,
+        subItems: [
+            { name: "Add Service Category", path: "/admin/services/add", icon: List },
+            { name: "Manage Service Categories", path: "/admin/services/list", icon: Tag },
+        ]
+    },
     { name: "Orders", path: "/admin/orders", icon: ShoppingBag },
+    { name: "Feedback", path: "/admin/feedback", icon: MessageSquare },
     { name: "Customers", path: "/admin/customers", icon: Users },
     { name: "Settings", path: "/admin/settings", icon: Settings },
 ];
+
 
 import { API_URL as API } from "@/api_config";
 

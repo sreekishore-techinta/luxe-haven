@@ -1,22 +1,25 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, User, Menu, X, Heart, ChevronDown, ArrowRight } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Heart, ChevronDown, ArrowRight, Package, LogOut, Search } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import logoLishan from "@/assets/logo lishan saree.png";
-
+import SearchModal from "./SearchModal";
+import logoLishan from "@/assets/logo-lishan-saree.png";
 import { API_URL as API } from "@/api_config";
 
 const Navbar = () => {
   const { totalItems, setIsCartOpen } = useCart();
   const { totalWishlisted } = useWishlist();
+  const { customer, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [sareeTypes, setSareeTypes] = useState<any[]>([]);
   const [isSareesOpen, setIsSareesOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
-  const [customer, setCustomer] = useState<{ name: string } | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const staticLinks = [
     { name: "Home", path: "/" },
@@ -42,20 +45,11 @@ const Navbar = () => {
         }
       })
       .catch(err => console.error("Failed to fetch saree types", err));
-
-    // Check session
-    fetch(`${API}/auth/customer_check.php`, { credentials: "include" })
-      .then(r => r.json())
-      .then(json => {
-        if (json.loggedIn) setCustomer(json.customer);
-      });
   }, []);
-
-  const sareeCategory = categories.find(c => c.id == 1 || c.name.toLowerCase() === 'sarees');
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-[#0D3B2E] shadow-sm border-b border-white/10">
+      <header className="sticky top-0 z-50 bg-[#FDF5E6] shadow-sm border-b border-[#B48C5E]/20">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-20 lg:h-24 py-4 gap-6 lg:gap-12">
 
@@ -63,7 +57,7 @@ const Navbar = () => {
               <img
                 src={logoLishan}
                 alt="Lishan Sarees"
-                className="h-14 md:h-16 lg:h-20 w-auto object-contain brightness-[1.2] contrast-[1.1] drop-shadow-sm invert-[0.1]"
+                className="h-14 md:h-16 lg:h-20 w-auto object-contain"
               />
             </Link>
 
@@ -72,7 +66,7 @@ const Navbar = () => {
                 <Link
                   key={link.name}
                   to={link.path}
-                  className="text-[11px] xl:text-[12px] font-medium uppercase tracking-[0.12em] text-white/90 hover:text-[#B48C5E] transition-all duration-300"
+                  className="text-[11px] xl:text-[12px] font-medium uppercase tracking-[0.12em] text-[#1A1A1A]/90 hover:text-[#B48C5E] transition-all duration-300"
                 >
                   {link.name}
                 </Link>
@@ -86,7 +80,7 @@ const Navbar = () => {
               >
                 <Link
                   to="/sarees"
-                  className={`flex items-center gap-1.5 text-[11px] xl:text-[12px] font-bold uppercase tracking-[0.12em] transition-all duration-300 ${isSareesOpen ? "text-[#B48C5E]" : "text-white"
+                  className={`flex items-center gap-1.5 text-[11px] xl:text-[12px] font-bold uppercase tracking-[0.12em] transition-all duration-300 ${isSareesOpen ? "text-[#B48C5E]" : "text-[#1A1A1A]"
                     }`}
                 >
                   Sarees
@@ -105,7 +99,7 @@ const Navbar = () => {
                         top: "calc(100% + 15px)",
                         left: "0",
                         zIndex: 999,
-                        background: "#0D3B2E",
+                        background: "#FDF5E6",
                         borderRadius: "12px",
                         boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
                         padding: "12px",
@@ -151,7 +145,7 @@ const Navbar = () => {
                             }}
                           >
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#B48C5E", display: "block", marginBottom: "4px" }} />
-                            <span style={{ fontWeight: 700, fontSize: "14px", color: "#ffffff", lineHeight: 1.2, textTransform: "capitalize", letterSpacing: "0.5px" }}>
+                            <span style={{ fontWeight: 700, fontSize: "14px", color: "#1A1A1A", lineHeight: 1.2, textTransform: "capitalize", letterSpacing: "0.5px" }}>
                               {sub.name}
                             </span>
                           </Link>
@@ -169,7 +163,7 @@ const Navbar = () => {
                 onMouseLeave={() => setIsCategoriesOpen(false)}
               >
                 <button
-                  className={`flex items-center gap-1.5 text-[11px] xl:text-[12px] font-bold uppercase tracking-[0.12em] transition-all duration-300 ${isCategoriesOpen ? "text-[#B48C5E]" : "text-white"
+                  className={`flex items-center gap-1.5 text-[11px] xl:text-[12px] font-bold uppercase tracking-[0.12em] transition-all duration-300 ${isCategoriesOpen ? "text-[#B48C5E]" : "text-[#1A1A1A]"
                     }`}
                 >
                   Categories
@@ -189,7 +183,7 @@ const Navbar = () => {
                         top: "calc(100% + 15px)",
                         left: "0",
                         zIndex: 999,
-                        background: "#0D3B2E",
+                        background: "#FDF5E6",
                         borderRadius: "12px",
                         boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
                         padding: "12px",
@@ -243,10 +237,10 @@ const Navbar = () => {
                             }}
                           >
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#B48C5E", display: "block", marginBottom: "4px" }} />
-                            <span style={{ fontWeight: 700, fontSize: "14px", color: "#ffffff", lineHeight: 1.2, textTransform: "capitalize", letterSpacing: "0.5px" }}>
+                            <span style={{ fontWeight: 700, fontSize: "14px", color: "#1A1A1A", lineHeight: 1.2, textTransform: "capitalize", letterSpacing: "0.5px" }}>
                               {cat.name}
                             </span>
-                            <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)", fontStyle: "italic", letterSpacing: "0.2px" }}>
+                            <span style={{ fontSize: "10px", color: "rgba(26,26,26,0.6)", fontStyle: "italic", letterSpacing: "0.2px" }}>
                               {cat.sub_categories?.length ? `${cat.sub_categories.length} Collections` : "Shop Latest"}
                             </span>
                           </Link>
@@ -260,10 +254,18 @@ const Navbar = () => {
             </nav>
 
             <div className="flex items-center gap-4 lg:gap-8">
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className="group p-1 relative hover:text-[#B48C5E] transition-colors"
+                aria-label="Search"
+              >
+                <Search size={22} className="text-[#1A1A1A]/90 group-hover:text-[#B48C5E] transition-colors" />
+              </button>
+
               <Link to="/wishlist" className="relative group p-1 hidden sm:block">
-                <Heart size={24} className="text-white/90 group-hover:text-[#B48C5E] transition-colors" />
+                <Heart size={24} className="text-[#1A1A1A]/90 group-hover:text-[#B48C5E] transition-colors" />
                 {totalWishlisted > 0 && (
-                  <span className="absolute -top-1 -right-1.5 w-4 h-4 bg-[#B48C5E] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-[#0D3B2E]">
+                  <span className="absolute -top-1 -right-1.5 w-4 h-4 bg-[#B48C5E] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-[#FDF5E6]">
                     {totalWishlisted}
                   </span>
                 )}
@@ -272,30 +274,74 @@ const Navbar = () => {
               <button
                 onClick={() => setIsCartOpen(true)}
                 aria-label="Open Shopping Bag"
-                className="relative bg-white/10 p-3 rounded-full hover:bg-[#B48C5E]/20 group transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="relative bg-[#1A1A1A]/5 p-3 rounded-full hover:bg-[#B48C5E]/10 group transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
-                <ShoppingBag size={22} className="text-white/90 group-hover:text-[#B48C5E] transition-colors" />
+                <ShoppingBag size={22} className="text-[#1A1A1A]/90 group-hover:text-[#B48C5E] transition-colors" />
                 {totalItems > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#B48C5E] text-white text-[10px] font-bold rounded-full flex items-center justify-center">{totalItems}</span>
                 )}
               </button>
 
-              <Link to="/account" className="flex items-center gap-2 group p-1">
-                <User size={24} className="text-white/90 group-hover:text-[#B48C5E] transition-colors" />
-                <div className="hidden lg:flex flex-col text-left">
-                  <span className="text-[10px] font-light text-white/50 leading-tight">
-                    {customer ? "Welcome back," : "Welcome"}
-                  </span>
-                  <span className="text-[11px] font-medium text-white group-hover:text-[#B48C5E] transition-colors whitespace-nowrap">
-                    {customer ? customer.name.split(" ")[0] : "Sign in / Register"}
-                  </span>
-                </div>
-              </Link>
+              <div 
+                className="relative"
+                onMouseEnter={() => setIsProfileOpen(true)}
+                onMouseLeave={() => setIsProfileOpen(false)}
+              >
+                <Link to="/account" className="flex items-center gap-2 group p-1">
+                  <User size={24} className="text-[#1A1A1A]/90 group-hover:text-[#B48C5E] transition-colors" />
+                  <div className="hidden lg:flex flex-col text-left">
+                    <span className="text-[10px] font-light text-[#1A1A1A]/50 leading-tight">
+                      {customer ? "Welcome back," : "Welcome"}
+                    </span>
+                    <span className="text-[11px] font-medium text-[#1A1A1A] group-hover:text-[#B48C5E] transition-colors whitespace-nowrap">
+                      {customer ? customer.name.split(" ")[0] : "Sign in / Register"}
+                    </span>
+                  </div>
+                </Link>
+
+                <AnimatePresence>
+                  {isProfileOpen && customer && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 top-full pt-2 w-48 z-50"
+                    >
+                      <div className="bg-[#FDF5E6] border border-[#B48C5E]/20 rounded-xl shadow-xl overflow-hidden py-2">
+                        <Link 
+                          to="/account" 
+                          className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-[#1A1A1A] hover:bg-[#B48C5E]/10 hover:text-[#B48C5E] transition-colors"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <User size={14} /> My Profile
+                        </Link>
+                        <Link 
+                          to="/account?tab=orders" 
+                          className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-[#1A1A1A] hover:bg-[#B48C5E]/10 hover:text-[#B48C5E] transition-colors"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <Package size={14} /> My Orders
+                        </Link>
+                        <div className="h-px bg-[#B48C5E]/10 my-1 mx-2" />
+                        <button 
+                          onClick={() => {
+                            logout();
+                            setIsProfileOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+                        >
+                          <LogOut size={14} /> Logout
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label="Toggle Mobile Menu"
-                className="lg:hidden p-2 text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="lg:hidden p-2 text-[#1A1A1A] min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
               </button>
@@ -418,16 +464,27 @@ const Navbar = () => {
                   <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 py-2 text-sm text-gray-700 font-medium min-h-[44px]">
                     <User size={20} /> {customer ? "My Profile" : "Login / Register"}
                   </Link>
+                  {customer && (
+                    <button 
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-4 py-2 text-sm text-rose-600 font-medium min-h-[44px]"
+                    >
+                      <LogOut size={20} /> Logout
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
+
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 };
 
 export default Navbar;
-
-

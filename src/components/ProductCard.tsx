@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { ShoppingBag, Heart, Sparkles } from "lucide-react";
 import { useCart, CartProduct } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { useAuth } from "@/context/AuthContext";
 
-import { BASE_URL as API } from "@/api_config";
+import { API_URL as API, BASE_PATH } from "@/api_config";
 
 interface ProductCardProps {
   product: CartProduct | {
@@ -32,6 +33,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   console.log("ProductCard Data:", product);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { requireAuth } = useAuth();
 
   const isLiked = isInWishlist(String(product.id));
 
@@ -75,9 +77,15 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       return rawImage;
     }
 
-    // fallback for relative paths
-    return `${API}/${rawImage.replace(/^\/+/, '')}`;
+    // fallback for relative paths - strip src/ if exists
+    const cleanPath = rawImage.replace(/^src\//, '').replace(/^\/+/, '');
+    
+    // Use BASE_PATH to ensure subdirectory support in local env
+    return `${BASE_PATH}/${cleanPath}`;
   }, [(product as any).image]);
+
+
+
 
   const cartProduct: CartProduct = {
     id: String(product.id),
@@ -137,7 +145,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         <button
           onClick={(e) => {
             e.preventDefault(); e.stopPropagation();
-            toggleWishlist(wishProduct);
+            requireAuth(() => toggleWishlist(wishProduct), "Please login to add to wishlist");
           }}
           className="absolute top-4 right-4 z-20 p-3 bg-white/80 backdrop-blur-xl rounded-full text-foreground hover:bg-white hover:scale-110 active:scale-90 transition-all shadow-lg border border-white/40 group/heart"
         >
@@ -162,7 +170,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             </span>
           )}
           {!inStock && (
-            <span className="px-3 py-1.5 bg-slate-900/80 backdrop-blur-md text-white font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-lg border border-white/10">Sold Out</span>
+            <span className="px-3 py-1.5 bg-rose-600/90 backdrop-blur-md text-white font-body text-[9px] font-black uppercase tracking-[0.2em] rounded-lg border border-rose-500/20 shadow-lg shadow-rose-900/20">Sold Out</span>
           )}
         </div>
 
@@ -174,12 +182,12 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             disabled={!inStock}
             onClick={(e) => {
               e.preventDefault(); e.stopPropagation();
-              if (inStock) addToCart(cartProduct);
+              if (inStock) requireAuth(() => addToCart(cartProduct), "Please login to add to bag");
             }}
             className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-body text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 group/btn ${
               inStock 
                 ? "bg-[#0D3B2E] text-white hover:bg-[#0D3B2E]/90 shadow-black/20" 
-                : "bg-white/40 backdrop-blur-xl text-slate-500 border border-white/20 cursor-not-allowed grayscale"
+                : "bg-rose-600 text-white border border-rose-500 shadow-rose-600/20 cursor-not-allowed shadow-xl capitalize tracking-tighter"
             }`}
           >
             {inStock ? (
@@ -188,9 +196,10 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
                 Add to Bag
               </>
             ) : (
-              "Sold Out"
+              "Currently Sold Out"
             )}
           </button>
+
         </div>
       </div>
 

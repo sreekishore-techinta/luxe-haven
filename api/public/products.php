@@ -15,13 +15,17 @@ $types = "";
 $isSingleProduct = !empty($_GET['id']) || !empty($_GET['sku']);
 
 if (!$isSingleProduct) {
-    $showOutOfStock = !empty($_GET['show_oos']);
+    $showOutOfStock = !empty($_GET['show_oos']) || !empty($_GET['search']);
     if (!$showOutOfStock) {
-        // Updated visibility check: include 'Active' and handle stock separately
         $where[] = "(p.status IN ('In Stock', 'Low Stock', 'Active'))";
         $where[] = "p.stock_qty > 0";
+    } else {
+        // Broaden visibility for collections: Show everything that's not Draft
+        $where[] = "(p.status NOT IN ('Draft', 'Hidden'))";
     }
-} else {
+}
+
+ else {
     // Single product requested by ID or SKU: only filter by id/sku
     if (!empty($_GET['id'])) {
         $where[] = "p.id = ?";
@@ -35,13 +39,58 @@ if (!$isSingleProduct) {
     }
 }
 
-// Filter by category name (exclude from id-based bypass if you want category pages to be restricted, but handle below)
+// Filter by category name (partial match for better discovery)
 if (!empty($_GET['category'])) {
-    $where[] = "(p.category = ? OR mc.name = ?)";
-    $params[] = $_GET['category'];
-    $params[] = $_GET['category'];
-    $types .= "ss";
+    $searchTerm = $_GET['category'];
+    $cat = "%" . $conn->real_escape_string($searchTerm) . "%";
+    
+    // First attempt: exact phrase match in name, description, category, or fabric
+    $whereQuery = "(mc.name LIKE ? OR p.name LIKE ? OR p.description LIKE ? OR mft.name LIKE ? OR st.name LIKE ?)";
+    
+    // Temporarily check if matches exist
+    $checkSql = "SELECT COUNT(*) as count FROM products p 
+                LEFT JOIN master_categories mc ON mc.id = p.category_id 
+                LEFT JOIN master_fabric_types mft ON mft.id = p.fabric_id 
+                LEFT JOIN saree_types st ON st.id = p.saree_type_id 
+                WHERE $whereQuery";
+    $stmtCheck = $conn->prepare($checkSql);
+    $stmtCheck->bind_param("sssss", $cat, $cat, $cat, $cat, $cat);
+    $stmtCheck->execute();
+    $countRes = $stmtCheck->get_result()->fetch_assoc();
+    $stmtCheck->close();
+
+    if ($countRes['count'] > 0) {
+        $where[] = $whereQuery;
+        $params[] = $cat;
+        $params[] = $cat;
+        $params[] = $cat;
+        $params[] = $cat;
+        $params[] = $cat;
+        $types .= "sssss";
+    } else {
+        // Fallback: Split by space and search for any word (at least 3 chars)
+        $words = explode(" ", $searchTerm);
+        $wordConditions = [];
+        foreach ($words as $w) {
+            $w = trim($w);
+            if (strlen($w) >= 3) {
+                $wordConditions[] = "(p.name LIKE ? OR p.description LIKE ? OR mc.name LIKE ?)";
+                $wParam = "%" . $conn->real_escape_string($w) . "%";
+                $params[] = $wParam;
+                $params[] = $wParam;
+                $params[] = $wParam;
+                $types .= "sss";
+            }
+        }
+        if (!empty($wordConditions)) {
+            $where[] = "(" . implode(" OR ", $wordConditions) . ")";
+        } else {
+             // Absolute fallback if words are too short: everything in that main category if one exists
+             $where[] = "1=1"; 
+        }
+    }
 }
+
 
 if (!empty($_GET['is_new'])) {
     $where[] = "p.is_new = 1";
@@ -52,12 +101,15 @@ if (!empty($_GET['is_bestseller'])) {
 
 if (!empty($_GET['search'])) {
     $s = "%" . $conn->real_escape_string($_GET['search']) . "%";
-    $where[] = "(p.name LIKE ? OR p.description LIKE ? OR p.category LIKE ?)";
+    // Check product name, description, category, and SKU (product code)
+    $where[] = "(p.name LIKE ? OR p.description LIKE ? OR mc.name LIKE ? OR p.sku LIKE ?)";
     $params[] = $s;
     $params[] = $s;
     $params[] = $s;
-    $types .= "sss";
+    $params[] = $s;
+    $types .= "ssss";
 }
+
 
 $whereStr = implode(" AND ", $where);
 
@@ -96,21 +148,20 @@ $products = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 $conn->close();
 
-$baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
-    . '://' . $_SERVER['HTTP_HOST'] . str_replace('api/public/products.php', '', $_SERVER['SCRIPT_NAME']);
+$baseUrl = getBaseUrl();
+
 
 // Normalize image paths and fetch gallery if single product
 foreach ($products as &$p) {
     if (!empty($p['image'])) {
-        if (strpos($p['image'], 'http') !== 0) {
-            $p['image'] = $baseUrl . ltrim($p['image'], '/');
-        }
+        $p['image'] = ltrim($p['image'], '/');
     } else {
         $p['image'] = null;
     }
     $p['in_stock'] = $p['status'] !== 'Out of Stock' && (int) $p['stock_qty'] > 0;
 
-    // If fetching a single product, get gallery
+
+    // If fetching a single product, get gallery and combinations
     if (!empty($_GET['id']) && count($products) === 1) {
         $imgConn = getDB();
         $imgStmt = $imgConn->prepare("SELECT id, image_path FROM product_images WHERE product_id = ? ORDER BY sort_order ASC, id ASC");
@@ -118,18 +169,87 @@ foreach ($products as &$p) {
         $imgStmt->execute();
         $gallery = $imgStmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $imgStmt->close();
-        $imgConn->close();
 
+        // Main primary images handling
         foreach ($gallery as &$img) {
             if (!empty($img['image_path'])) {
-                if (strpos($img['image_path'], 'http') !== 0) {
-                    $img['url'] = $baseUrl . ltrim($img['image_path'], '/');
-                } else {
-                    $img['url'] = $img['image_path'];
-                }
+                $img['url'] = ltrim($img['image_path'], '/');
             }
         }
         $p['images'] = $gallery;
+        
+        // Fetch Color Variants / Combinations
+        $colorGroups = [];
+        $combStmt = $imgConn->prepare("
+            SELECT pc.*, mcl.name as color_name, mcl.hex_code 
+            FROM product_combinations pc 
+            LEFT JOIN master_colours mcl ON pc.colour_id = mcl.id 
+            WHERE pc.product_id = ? 
+            ORDER BY pc.id ASC
+        ");
+        $combStmt->bind_param("i", $p['id']);
+        $combStmt->execute();
+        $combinations = $combStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $combStmt->close();
+
+        foreach ($combinations as $comb) {
+            $colorName = !empty($comb['color_name']) ? $comb['color_name'] : 'Default Options';
+            
+            if (!isset($colorGroups[$colorName])) {
+                $colorGroups[$colorName] = [
+                    'color' => $colorName,
+                    'hex' => $comb['hex_code'] ?? null,
+                    'images' => [],
+                    'variants' => []
+                ];
+                
+                // Add the main product image if we can, to ensure the gallery isn't empty
+                if (!empty($p['image'])) {
+                    $colorGroups[$colorName]['images'][] = ltrim($p['image'], '/');
+                }
+            }
+            
+            if (!empty($comb['image_path'])) {
+                $variantImg = ltrim($comb['image_path'], '/');
+                if (!in_array($variantImg, $colorGroups[$colorName]['images'])) {
+                    $colorGroups[$colorName]['images'][] = $variantImg;
+                }
+            }
+
+            $colorGroups[$colorName]['variants'][] = [
+                'id' => $comb['id'],
+                'size_id' => $comb['size_id'],
+                'stock' => (int)$comb['stock_qty'],
+                'price' => (float)$comb['price']
+            ];
+        }
+
+        $p['colors'] = array_values($colorGroups);
+
+        // Fetch Related Products natively locally
+        $relatedProducts = [];
+        if (!empty($p['category_id'])) {
+            $relStmt = $imgConn->prepare("
+                SELECT p.*, pi.image_path as image, mc.name as category_name, mft.name as fabric_name
+                FROM products p 
+                LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_primary = 1
+                LEFT JOIN master_categories mc ON mc.id = p.category_id
+                LEFT JOIN master_fabric_types mft ON mft.id = p.fabric_id
+                WHERE p.category_id = ? AND p.id != ? 
+                ORDER BY p.created_at DESC LIMIT 4
+            ");
+            $relStmt->bind_param("ii", $p['category_id'], $p['id']);
+            $relStmt->execute();
+            $relatedProducts = $relStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $relStmt->close();
+
+            foreach ($relatedProducts as &$rp) {
+                if (!empty($rp['image'])) $rp['image'] = ltrim($rp['image'], '/');
+            }
+            unset($rp);
+        }
+        $p['related_products'] = $relatedProducts;
+        $imgConn->close();
     }
 }
 unset($p);

@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import CategoryHero from "@/components/CategoryHero";
-import newArrivalsBanner from "@/assets/new-arrivals-banner.png";
 import SkeletonCard from "@/components/SkeletonCard";
+import newArrivalsHero from "@/assets/new-arrivals-hero-2.jpg";
 
 import { API_URL as API } from "@/api_config";
 
@@ -51,10 +51,11 @@ const NewArrivals = () => {
     <div>
       <CategoryHero
         title="New Arrivals"
-        description="Fresh from our master artisans' looms. Experience the latest in luxury silk weaving and contemporary heritage designs."
-        backgroundImage={newArrivalsBanner}
-        imagePosition="center"
+        description="Explore our latest collection of premium sarees crafted with elegance."
+        backgroundImage={newArrivalsHero}
+        imagePosition="center 30%"
         align="left"
+        pageKey="new-arrivals"
       />
 
       <div id="collection-grid" className="container mx-auto px-4 lg:px-8 py-12 lg:py-20">

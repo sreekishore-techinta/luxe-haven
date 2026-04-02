@@ -6,7 +6,6 @@ const offers = [
     "✨ Use Code LUXE200 for ₹200 Off on Orders Above ₹3,999",
     "🎁 Free Blouse Piece on Every Saree Above ₹6,000",
     "💛 New Kanjivaram Collections Just Landed",
-    "🚚 Free Shipping Pan India Above ₹5,000",
 ];
 
 const FlashSaleStrip = () => {

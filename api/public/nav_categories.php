@@ -19,8 +19,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $subCategories = [];
         while ($sub = $subRes->fetch_assoc()) {
+            if (!empty($sub['image'])) {
+                $sub['image'] = ltrim($sub['image'], '/');
+            }
             $subCategories[] = $sub;
         }
+
 
         $cat['sub_categories'] = $subCategories;
         $categories[] = $cat;

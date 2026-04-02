@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
+import { useAuth } from "./AuthContext";
+import { API_URL as API } from "@/api_config";
 
 interface WishlistProduct {
     id: string;
@@ -22,33 +24,19 @@ interface WishlistContextType {
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
-import { API_URL as API } from "@/api_config";
-
 export const WishlistProvider = ({ children }: { children: ReactNode }) => {
     const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const { isLoggedIn } = useAuth();
 
-    // Initial check and fetch
+    // Fetch when login state changes
     useEffect(() => {
-        checkAuthAndFetch();
-    }, []);
-
-    const checkAuthAndFetch = async () => {
-        try {
-            const res = await fetch(`${API}/auth/customer_check.php`, { credentials: "include" });
-            const json = await res.json();
-            if (json.loggedIn) {
-                setIsLoggedIn(true);
-                fetchWishlist();
-            } else {
-                setIsLoggedIn(false);
-                setWishlist([]);
-            }
-        } catch (err) {
-            console.error("Auth check failed", err);
+        if (isLoggedIn) {
+            fetchWishlist();
+        } else {
+            setWishlist([]);
         }
-    };
+    }, [isLoggedIn]);
 
     const fetchWishlist = async () => {
         setIsLoading(true);
@@ -75,22 +63,7 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const toggleWishlist = async (product: WishlistProduct) => {
-        // Redundancy check for auth
-        if (!isLoggedIn) {
-            // Check again in case session expired or we haven't checked yet
-            const res = await fetch(`${API}/auth/customer_check.php`, { credentials: "include" });
-            const json = await res.json();
-            if (!json.loggedIn) {
-                toast.error("Please login to manage your wishlist", {
-                    action: {
-                        label: "Login",
-                        onClick: () => window.location.href = "/account"
-                    }
-                });
-                return;
-            }
-            setIsLoggedIn(true);
-        }
+        if (!isLoggedIn) return; // UI handles the redirect
 
         try {
             const res = await fetch(`${API}/public/wishlist.php`, {
@@ -109,9 +82,6 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
                     setWishlist(prev => prev.filter(p => String(p.id) !== String(product.id)));
                     toast.info(`${product.name} removed from wishlist`);
                 }
-            } else if (json.unauthorized) {
-                setIsLoggedIn(false);
-                window.location.href = "/account";
             }
         } catch (err) {
             toast.error("Failed to update wishlist");

@@ -146,15 +146,15 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 luxury-gradient text-champagne font-body text-sm uppercase tracking-[0.2em] hover:opacity-90 transition-all duration-300;
+    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full luxury-gradient text-champagne font-body text-sm uppercase tracking-[0.2em] shadow-md hover:shadow-xl hover:-translate-y-1 hover:opacity-90 active:scale-95 transition-all duration-500 ease-out;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-foreground text-foreground font-body text-sm uppercase tracking-[0.2em] hover:bg-foreground hover:text-background transition-all duration-300;
+    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full border border-foreground text-foreground font-body text-sm uppercase tracking-[0.2em] hover:bg-foreground hover:text-background hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all duration-500 ease-out;
   }
 
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 gold-gradient text-accent-foreground font-body text-sm uppercase tracking-[0.2em] hover:opacity-90 transition-all duration-300;
+    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full gold-gradient text-accent-foreground font-body text-sm uppercase tracking-[0.2em] shadow-md hover:shadow-xl hover:-translate-y-1 hover:opacity-90 active:scale-95 transition-all duration-500 ease-out;
   }
 
   .input-luxury {
@@ -431,4 +431,28 @@ body.modal-open {
 
 .custom-scrollbar-none::-webkit-scrollbar {
   display: none;
-}
+}
+
+/* Marquee Slider Animations */
+@keyframes scrollText {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marquee-content {
+  display: flex;
+  width: max-content;
+  animation: scrollText 40s linear infinite;
+}
+
+/* Hover will pause the animation thanks to the tailwind in the class, 
+   but hover support for touch devices can be tricky so we leave CSS as fallback if needed */
