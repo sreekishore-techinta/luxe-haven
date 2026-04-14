@@ -11,11 +11,11 @@ export default defineConfig(({ mode }) => ({
     cors: true,
     proxy: {
       "/api": {
-        target: "http://localhost/luxe-haven",
+        target: "http://127.0.0.1/luxe-haven",
         changeOrigin: true,
       },
       "/uploads": {
-        target: "http://localhost/luxe-haven",
+        target: "http://127.0.0.1/luxe-haven",
         changeOrigin: true,
       }
     },

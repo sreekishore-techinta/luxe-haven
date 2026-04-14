@@ -98,7 +98,7 @@ const LookbookGrid = () => {
                             <img
                                 src={panels[0].image}
                                 alt={panels[0].title}
-                                className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+                                className="w-full h-full object-cover transition-transform [transition-duration:1500ms] group-hover:scale-110"
                                 loading="lazy"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/10 to-transparent" />
@@ -138,7 +138,7 @@ const LookbookGrid = () => {
                                 <img
                                     src={panels[1].image}
                                     alt={panels[1].title}
-                                    className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+                                    className="w-full h-full object-cover transition-transform [transition-duration:1500ms] group-hover:scale-110"
                                     loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
@@ -173,7 +173,7 @@ const LookbookGrid = () => {
                                 <img
                                     src={panels[2].image}
                                     alt={panels[2].title}
-                                    className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+                                    className="w-full h-full object-cover transition-transform [transition-duration:1500ms] group-hover:scale-110"
                                     loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
@@ -208,7 +208,7 @@ const LookbookGrid = () => {
                                 <img
                                     src={panels[3].image}
                                     alt={panels[3].title}
-                                    className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+                                    className="w-full h-full object-cover transition-transform [transition-duration:1500ms] group-hover:scale-110"
                                     loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
@@ -243,7 +243,7 @@ const LookbookGrid = () => {
                                 <img
                                     src={panels[4].image}
                                     alt={panels[4].title}
-                                    className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+                                    className="w-full h-full object-cover transition-transform [transition-duration:1500ms] group-hover:scale-110"
                                     loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />

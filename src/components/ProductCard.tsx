@@ -128,7 +128,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           <motion.img
             src={imageSrc}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-[2.5s] ease-out group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform [transition-duration:2.5s] ease-out group-hover:scale-110"
             loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
@@ -175,7 +175,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         </div>
 
         {/* Quick Add Button - Premium Animation */}
-        <div className={`absolute bottom-5 left-5 right-5 transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] z-20 ${
+        <div className={`absolute bottom-5 left-5 right-5 transition-all duration-700 [transition-timing-function:cubic-bezier(0.19,1,0.22,1)] z-20 ${
           inStock ? "lg:translate-y-4 lg:opacity-0 group-hover:translate-y-0 group-hover:opacity-100" : "opacity-100 translate-y-0"
         }`}>
           <button

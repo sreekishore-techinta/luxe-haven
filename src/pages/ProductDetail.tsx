@@ -7,6 +7,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
+import ShareProduct from "@/components/ShareProduct";
 
 import { API_URL as API, BASE_PATH } from "@/api_config";
 
@@ -372,7 +373,7 @@ const ProductDetail = () => {
             </p>
 
             {/* Details Grid */}
-            <div className="grid grid-cols-2 gap-x-8 gap-y-4 mb-8 py-6 border-y border-border">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-4 mb-2 py-6 border-y border-border">
               {[
                 { label: "Fabric", value: product.fabric },
                 { label: "Color", value: selectedColorName || product.color },
@@ -386,19 +387,37 @@ const ProductDetail = () => {
                 {
                   label: "Availability",
                   value: currentStock > 0
-                    ? "In Stock"
+                    ? `In Stock (${currentStock})`
                     : "Out of Stock",
                   accent: currentStock > 0
+                },
+                {
+                  label: "Product Code",
+                  value: product.id ? `LH-${String(product.id).padStart(6, '0')}` : 'N/A',
                 },
               ].map((detail) => (
                 detail.value && (
                   <div key={detail.label}>
                     <p className="font-body text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">{detail.label}</p>
-                    <p className={`font-body text-sm ${detail.accent ? "text-accent font-medium leading-relaxed" : ""}`}>{detail.value}</p>
+                    <p className={`font-body text-sm ${detail.accent ? (currentStock <= 5 ? "text-orange-600 font-bold" : "text-emerald-700 font-medium") : detail.label === "Availability" ? "text-rose-600 font-bold" : ""}`}>{detail.value}</p>
                   </div>
                 )
               ))}
             </div>
+
+            {/* Low Stock Warning - Subtle Luxury Urgency */}
+            {currentStock > 0 && currentStock <= 5 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 mb-2 flex items-center gap-2 py-2 px-3 bg-amber-50 border border-amber-100 rounded-lg"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <p className="font-body text-xs text-amber-800 font-semibold tracking-wide">
+                   Hurry up! Only {currentStock} item{currentStock > 1 ? 's' : ''} left in stock
+                </p>
+              </motion.div>
+            )}
 
             {/* Quantity + Add to cart */}
             <div className="flex flex-col gap-4 mb-8">
@@ -452,12 +471,27 @@ const ProductDetail = () => {
                   Buy It Now
                 </button>
               )}
-            </div>
+
+              {/* Service Metadata Highlights */}
+              <div className="mt-8 pt-6 border-t border-[#F5F5F5] flex flex-col gap-3">
+                 <div className="flex items-center gap-3">
+                    <Truck size={14} className="text-muted-foreground" />
+                    <p className="font-body text-[11px] text-muted-foreground leading-relaxed">Estimated Delivery: 5 - 7 Business Days</p>
+                 </div>
+                 <div className="flex items-center gap-3">
+                    <RotateCcw size={14} className="text-muted-foreground" />
+                    <p className="font-body text-[11px] text-muted-foreground leading-relaxed">Easy 7 Day Return Policy</p>
+                 </div>
+              </div>
+           </div>
 
             {/* Share */}
-            <button className="inline-flex items-center gap-2 font-body text-xs text-muted-foreground hover:text-foreground transition-colors mb-8">
-              <Share2 size={14} /> Share this product
-            </button>
+            <ShareProduct 
+               productId={product.id}
+               productName={product.name} 
+               productImage={imageSrc} 
+               className="mb-8"
+            />
 
 
           </motion.div>

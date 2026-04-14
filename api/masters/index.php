@@ -14,7 +14,9 @@ $allowedMasters = [
     'colours' => 'master_colours',
     'fabric_types' => 'master_fabric_types',
     'sizes' => 'master_sizes',
-    'saree_types' => 'saree_types'
+    'saree_types' => 'saree_types',
+    'blouse_styles' => 'blouse_styles',
+    'add_ons' => 'add_ons'
 ];
 
 if (!isset($allowedMasters[$type])) {
@@ -31,46 +33,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $perPage = isset($_GET['per_page']) ? intval($_GET['per_page']) : 10;
     $offset = ($page - 1) * $perPage;
 
-    $whereClauses = [];
-    if (!empty($search)) {
-        $whereClauses[] = "name LIKE '%" . sanitize($conn, $search) . "%'";
-    }
-    if (!empty($status)) {
-        $whereClauses[] = "status = '" . sanitize($conn, $status) . "'";
-    }
-
-    if ($type === 'sub_categories' && isset($_GET['category_id'])) {
-        $whereClauses[] = "category_id = " . intval($_GET['category_id']);
-    }
-
-    $where = count($whereClauses) > 0 ? "WHERE " . implode(' AND ', $whereClauses) : '';
-
-    // Get total count
-    $countSql = "SELECT COUNT(*) as total FROM $table $where";
-    $countRes = $conn->query($countSql);
-    $totalRows = $countRes->fetch_assoc()['total'];
-    $totalPages = ceil($totalRows / $perPage);
-
-    $sql = "SELECT * FROM $table $where ORDER BY sort_order ASC, name ASC LIMIT $offset, $perPage";
-    $result = $conn->query($sql);
-
-    $data = [];
-    while ($row = $result->fetch_assoc()) {
-        if ($type === 'sub_categories' || $type === 'sizes') {
-            $catId = $row['category_id'] ?? null;
-            if ($catId) {
-                $catRes = $conn->query("SELECT name FROM master_categories WHERE id = $catId");
-                $catRow = $catRes->fetch_assoc();
-                $row['category_name'] = $catRow['name'] ?? 'Unknown';
-            } else {
-                $row['category_name'] = 'General';
-            }
+    try {
+        $whereClauses = [];
+        if (!empty($search)) {
+            $whereClauses[] = "name LIKE '%" . sanitize($conn, $search) . "%'";
         }
-        $data[] = $row;
-    }
+        
+        // saree_types and blouse_styles do not have status column
+        if (!empty($status) && !in_array($type, ['saree_types', 'blouse_styles'])) {
+            $whereClauses[] = "status = '" . sanitize($conn, $status) . "'";
+        }
 
-    jsonResponse([
-        'status' => 'success',
+        if ($type === 'sub_categories' && isset($_GET['category_id'])) {
+            $whereClauses[] = "category_id = " . intval($_GET['category_id']);
+        }
+
+        $where = count($whereClauses) > 0 ? "WHERE " . implode(' AND ', $whereClauses) : '';
+
+        // Get total count
+        $countSql = "SELECT COUNT(*) as total FROM $table $where";
+        $countRes = $conn->query($countSql);
+        if (!$countRes) throw new Exception("Count Query Error: " . $conn->error);
+        $totalRows = $countRes->fetch_assoc()['total'];
+        $totalPages = ceil($totalRows / $perPage);
+
+        // saree_types and blouse_styles do not have sort_order column
+        if (in_array($type, ['saree_types', 'blouse_styles'])) {
+            $sql = "SELECT * FROM $table $where ORDER BY name ASC LIMIT $offset, $perPage";
+        } else {
+            $sql = "SELECT * FROM $table $where ORDER BY sort_order ASC, name ASC LIMIT $offset, $perPage";
+        }
+        
+        $result = $conn->query($sql);
+        if (!$result) throw new Exception("Select Query Error: " . $conn->error);
+
+        $data = [];
+        while ($row = $result->fetch_assoc()) {
+            if ($type === 'sub_categories' || $type === 'sizes') {
+                $catId = $row['category_id'] ?? null;
+                if ($catId) {
+                    $catRes = $conn->query("SELECT name FROM master_categories WHERE id = $catId");
+                    $catRow = $catRes ? $catRes->fetch_assoc() : null;
+                    $row['category_name'] = $catRow ? ($catRow['name'] ?? 'Unknown') : 'Unknown';
+                } else {
+                    $row['category_name'] = 'General';
+                }
+            }
+            $data[] = $row;
+        }
+
+        jsonResponse([
+            'status' => 'success',
         'data' => $data,
         'pagination' => [
             'total_items' => (int)$totalRows,
@@ -79,6 +92,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'per_page' => $perPage
         ]
     ]);
+    } catch (Exception $e) {
+        file_put_contents(__DIR__ . '/../../scratch/api_debug.log', date('Y-m-d H:i:s') . ' - Error: ' . $e->getMessage() . "\n", FILE_APPEND);
+        jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -138,6 +155,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fields[] = $f;
                 $values[] = "'" . sanitize($conn, $input[$f]) . "'";
             }
+        }
+    }
+    if ($type === 'add_ons') {
+        if (isset($input['price'])) {
+            $fields[] = 'price';
+            $values[] = floatval($input['price']);
+        }
+        if (isset($input['input_type'])) {
+            $fields[] = 'input_type';
+            $values[] = "'" . sanitize($conn, $input['input_type']) . "'";
+        }
+        if (isset($input['group_name'])) {
+            $fields[] = 'group_name';
+            $values[] = "'" . sanitize($conn, $input['group_name']) . "'";
         }
     }
     if (isset($input['sort_order'])) {
@@ -201,6 +232,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     }
     if ($type === 'colours' && isset($input['hex_code'])) {
         $updates[] = "hex_code = '" . sanitize($conn, $input['hex_code']) . "'";
+    }
+    if ($type === 'add_ons') {
+        if (isset($input['price'])) $updates[] = "price = " . floatval($input['price']);
+        if (isset($input['input_type'])) $updates[] = "input_type = '" . sanitize($conn, $input['input_type']) . "'";
+        if (isset($input['group_name'])) $updates[] = "group_name = '" . sanitize($conn, $input['group_name']) . "'";
     }
 
     if (empty($updates))

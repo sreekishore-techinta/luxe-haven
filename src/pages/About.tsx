@@ -23,7 +23,7 @@ const About = () => {
       />
 
       {/* Mission */}
-      <section className="py-20 lg:py-28">
+      <section className="py-12 lg:py-16">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-0 items-stretch overflow-hidden">
             <div className="aspect-[4/3] lg:aspect-auto overflow-hidden">
@@ -54,7 +54,7 @@ const About = () => {
                 <span className="italic font-light">One Thread at a Time</span>
               </h2>
               <p className="font-body text-sm text-muted-foreground leading-relaxed mb-4">
-                Founded in 2020, Lishan Sarees was born from a simple yet profound idea: to make India's finest handloom textiles accessible to the modern woman. We believe that a saree is more than fabric — it's a canvas of cultural expression, a testament to centuries of artistic mastery.
+                Founded in 2020, Luxe Haven was born from a simple yet profound idea: to make India's finest handloom textiles accessible to the modern woman. We believe that a saree is more than fabric — it's a canvas of cultural expression, a testament to centuries of artistic mastery.
               </p>
               <p className="font-body text-sm text-muted-foreground leading-relaxed mb-8">
                 We travel across India — from the silk-weaving clusters of Varanasi and Kanchipuram to the Patola looms of Gujarat — to handpick pieces that exemplify the highest standards of craftsmanship.
@@ -69,7 +69,7 @@ const About = () => {
       </section>
 
       {/* Values */}
-      <section className="py-20 lg:py-28 bg-card">
+      <section className="py-12 lg:py-16 bg-card">
         <div className="container mx-auto px-4 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -107,7 +107,7 @@ const About = () => {
       </section>
 
       {/* Stats */}
-      <section className="py-20 lg:py-28 luxury-gradient">
+      <section className="py-12 lg:py-16 luxury-gradient">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {[
@@ -132,7 +132,7 @@ const About = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-20 lg:py-28">
+      <section className="py-12 lg:py-16">
         <div className="container mx-auto px-4 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

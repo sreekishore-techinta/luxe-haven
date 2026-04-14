@@ -111,7 +111,7 @@ const App = () => {
                     <Route path="/wishlist" element={<Layout><Wishlist /></Layout>} />
                     <Route path="/checkout" element={<Layout><Checkout /></Layout>} />
                     <Route path="/category/:slug" element={<Layout><CategoryPage /></Layout>} />
-                    <Route path="/product/:id" element={<Layout><ProductDetail /></Layout>} />
+                    <Route path="/product/:id/:slug?" element={<Layout><ProductDetail /></Layout>} />
                     <Route path="*" element={<Layout><NotFound /></Layout>} />
                   </Routes>
                 </Suspense>
