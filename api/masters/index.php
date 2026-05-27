@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $search = $_GET['search'] ?? '';
     $status = $_GET['status'] ?? '';
     $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-    $perPage = isset($_GET['per_page']) ? intval($_GET['per_page']) : 10;
+    $perPage = isset($_GET['per_page']) ? intval($_GET['per_page']) : 100;
     $offset = ($page - 1) * $perPage;
 
     try {
@@ -39,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $whereClauses[] = "name LIKE '%" . sanitize($conn, $search) . "%'";
         }
         
-        // saree_types and blouse_styles do not have status column
-        if (!empty($status) && !in_array($type, ['saree_types', 'blouse_styles'])) {
+        // Only sub_categories and sizes have status column in older versions, but now all do
+        if (!empty($status)) {
             $whereClauses[] = "status = '" . sanitize($conn, $status) . "'";
         }
 
@@ -57,12 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $totalRows = $countRes->fetch_assoc()['total'];
         $totalPages = ceil($totalRows / $perPage);
 
-        // saree_types and blouse_styles do not have sort_order column
-        if (in_array($type, ['saree_types', 'blouse_styles'])) {
-            $sql = "SELECT * FROM $table $where ORDER BY name ASC LIMIT $offset, $perPage";
-        } else {
-            $sql = "SELECT * FROM $table $where ORDER BY sort_order ASC, name ASC LIMIT $offset, $perPage";
-        }
+        // Sorting
+        $sql = "SELECT * FROM $table $where ORDER BY sort_order ASC, name ASC LIMIT $offset, $perPage";
         
         $result = $conn->query($sql);
         if (!$result) throw new Exception("Select Query Error: " . $conn->error);
@@ -81,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             }
             $data[] = $row;
         }
+
 
         jsonResponse([
             'status' => 'success',

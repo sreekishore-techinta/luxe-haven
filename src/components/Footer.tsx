@@ -12,8 +12,9 @@ const footerLinks = {
     { name: "Contact", path: "/about" },
   ],
   help: [
-    { name: "Shipping & Returns", path: "/" },
-    { name: "Size Guide", path: "/" },
+    { name: "Track Your Order", path: "/track-order" },
+    { name: "Open Video Compulsory", path: "/" },
+    { name: "Only Damage Item", path: "/" },
     { name: "Care Instructions", path: "/" },
   ],
 };
@@ -26,7 +27,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-2">
             <h3 className="font-display text-2xl lg:text-3xl font-medium mb-4 italic">
-              Lishan <span className="text-gold not-italic font-semibold">Sarees</span>
+              Luxe <span className="text-gold not-italic font-semibold">Haven</span>
             </h3>
             <p className="font-body text-xs text-gold-light/60 leading-relaxed mb-6 max-w-sm">
               Curating the finest handcrafted silk sarees and ethnic wear since 2020.

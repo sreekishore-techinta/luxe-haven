@@ -36,7 +36,7 @@ const Checkout = () => {
   const [form, setForm] = useState<ShippingForm>({
     firstName: "", lastName: "", email: "",
     phone: "", address: "", city: "",
-    state: "", pincode: "", paymentMethod: "COD",
+    state: "", pincode: "", paymentMethod: "UPI",
   });
 
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
@@ -93,12 +93,10 @@ const Checkout = () => {
 
     setError(null);
 
-    // Simulate Payment Process if not COD
-    if (form.paymentMethod !== "COD") {
-      setProcessingPayment(true);
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate gateway delay
-      setProcessingPayment(false);
-    }
+    // Simulate Payment Process (All online methods)
+    setProcessingPayment(true);
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate gateway delay
+    setProcessingPayment(false);
 
     setPlacing(true);
     try {
@@ -120,11 +118,14 @@ const Checkout = () => {
         shipping_charge: shipping,
         total: grandTotal,
         items: items.map(item => ({
-          product_id: item.product.id,
+          product_id: item.product.baseId || item.product.id,
           product_name: item.product.name,
           sku: item.product.sku || "",
           quantity: item.quantity,
           unit_price: item.product.price,
+          stitching_service: item.product.selectedStitching || null,
+          has_gift_wrapping: item.product.hasGiftWrapping ? 1 : 0,
+          selected_add_ons: JSON.stringify(item.product.selectedAddOnDetails || []),
         })),
       };
 
@@ -273,7 +274,18 @@ const Checkout = () => {
                         <Link to={`/product/${item.product.id}`}>
                           <h3 className="font-display text-sm font-medium mb-1 hover:text-accent transition-colors truncate">{item.product.name}</h3>
                         </Link>
-                        <p className="font-body text-[10px] sm:text-xs text-muted-foreground mb-1">{item.product.fabric} · {item.product.color}</p>
+                        <p className="font-body text-[10px] sm:text-xs text-muted-foreground mb-1">
+                          {item.product.fabric} · {item.product.color}
+                        </p>
+                        {item.product.selectedAddOnDetails && item.product.selectedAddOnDetails.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            {item.product.selectedAddOnDetails.map((ao: any, idx: number) => (
+                              <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-full bg-accent/[0.08] border border-accent/20 font-body text-[8px] text-accent uppercase tracking-widest font-black">
+                                {ao.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         <p className="font-body text-sm font-semibold text-accent mb-3">{formatPrice(item.product.price)}</p>
                         <div className="flex items-center gap-3">
                           <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
@@ -397,7 +409,6 @@ const Checkout = () => {
                     <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[#0D3B2E] font-bold mb-4">Payment Selection</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {[
-                        { id: "COD", label: "Cash on Delivery", desc: "Pay at your doorstep" },
                         { id: "UPI", label: "UPI (GPay/PhonePe)", desc: "Instant mobile payment" },
                         { id: "Card", label: "Credit / Debit Card", desc: "Visa, Mastercard, RuPay" },
                         { id: "Net Banking", label: "Net Banking", desc: "All major Indian banks" }
@@ -479,9 +490,20 @@ const Checkout = () => {
               <h3 className="font-display text-lg font-semibold mb-6 pb-4 border-b border-border">Order Summary</h3>
               <div className="space-y-3 mb-6">
                 {items.map(item => (
-                  <div key={item.product.id} className="flex justify-between font-body text-xs text-muted-foreground">
-                    <span className="pr-2 truncate">{item.product.name} × {item.quantity}</span>
-                    <span className="shrink-0">{formatPrice(item.product.price * item.quantity)}</span>
+                  <div key={item.product.id} className="pb-3 border-b border-border/50 last:border-0 last:pb-0">
+                    <div className="flex justify-between font-body text-xs text-muted-foreground mb-1">
+                      <span className="pr-2 truncate">{item.product.name} × {item.quantity}</span>
+                      <span className="shrink-0">{formatPrice(item.product.price * item.quantity)}</span>
+                    </div>
+                    {item.product.selectedAddOnDetails && item.product.selectedAddOnDetails.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {item.product.selectedAddOnDetails.map((ao: any, idx: number) => (
+                          <span key={idx} className="inline-flex px-1.5 py-0.5 rounded-md bg-accent/[0.05] border border-accent/10 font-body text-[8px] text-accent/80 uppercase tracking-tighter font-black">
+                            {ao.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
                 <div className="pt-2 border-t border-border flex justify-between font-body text-sm">

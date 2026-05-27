@@ -148,8 +148,20 @@ if (sliders.length > 0) {
 
             {sliders.length > 1 && (
                 <>
-                    <button onClick={prevSlide} className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/10 bg-black/10 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"><ChevronLeft size={24}/></button>
-                    <button onClick={nextSlide} className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/10 bg-black/10 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"><ChevronRight size={24}/></button>
+                    <button 
+                        onClick={prevSlide} 
+                        className="absolute left-4 lg:left-8 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full border border-white/10 bg-black/10 text-white flex items-center justify-center transition-all backdrop-blur-md z-30 group/btn"
+                        aria-label="Previous slide"
+                    >
+                        <ChevronLeft size={28} className="transition-transform group-hover/btn:-translate-x-1" />
+                    </button>
+                    <button 
+                        onClick={nextSlide} 
+                        className="absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full border border-white/10 bg-black/10 text-white flex items-center justify-center transition-all backdrop-blur-md z-30 group/btn"
+                        aria-label="Next slide"
+                    >
+                        <ChevronRight size={28} className="transition-transform group-hover/btn:translate-x-1" />
+                    </button>
                 </>
             )}
         </section>

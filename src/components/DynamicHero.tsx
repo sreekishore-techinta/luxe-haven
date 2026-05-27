@@ -194,11 +194,19 @@ const DynamicHero = ({ pageName }: { pageName?: string }) => {
 
             {sliders.length > 1 && (
                 <>
-                    <button onClick={prevSlide} className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md border border-white/10 z-20">
-                        <ChevronLeft size={24} />
+                    <button 
+                        onClick={prevSlide} 
+                        className="absolute left-4 lg:left-8 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 bg-black/10 hover:bg-black/30 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/10 z-30 group/btn"
+                        aria-label="Previous slide"
+                    >
+                        <ChevronLeft size={28} className="transition-transform group-hover/btn:-translate-x-1" />
                     </button>
-                    <button onClick={nextSlide} className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md border border-white/10 z-20">
-                        <ChevronRight size={24} />
+                    <button 
+                        onClick={nextSlide} 
+                        className="absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 bg-black/10 hover:bg-black/30 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/10 z-30 group/btn"
+                        aria-label="Next slide"
+                    >
+                        <ChevronRight size={28} className="transition-transform group-hover/btn:translate-x-1" />
                     </button>
                     <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
                         {sliders.map((_, idx) => (

@@ -43,7 +43,8 @@ if (!$isSingleProduct) {
 
 // Filter by category name (partial match for better discovery)
 if (!empty($_GET['category'])) {
-    $searchTerm = $_GET['category'];
+    // Replace hyphens with spaces to match DB names from URL slugs, but also allow URL decoding
+    $searchTerm = str_replace('-', ' ', urldecode($_GET['category']));
     $cat = "%" . $conn->real_escape_string($searchTerm) . "%";
     
     // First attempt: exact phrase match in name, description, category, or fabric
@@ -139,6 +140,7 @@ $sql = "SELECT p.*,
         LEFT JOIN saree_types st ON st.id = p.saree_type_id
         LEFT JOIN blouse_styles bs ON bs.id = p.blouse_style_id
         WHERE $whereStr
+        GROUP BY p.id
         ORDER BY p.is_new DESC, p.is_bestseller DESC, p.created_at DESC
         LIMIT ? OFFSET ?";
 

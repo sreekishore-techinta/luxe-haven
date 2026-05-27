@@ -220,6 +220,29 @@ export default function AdminAddService() {
                             </div>
                         </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="font-body text-[10px] uppercase tracking-widest text-slate-400 ml-1 font-black">Badge / Tag</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. New Arrival"
+                                    className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-6 text-sm font-black focus:ring-4 focus:ring-slate-100 outline-none transition-all"
+                                    value={tag}
+                                    onChange={(e) => setTag(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="font-body text-[10px] uppercase tracking-widest text-slate-400 ml-1 font-black">Display Order</label>
+                                <input 
+                                    type="number" 
+                                    className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-6 text-sm font-black focus:ring-4 focus:ring-slate-100 outline-none transition-all"
+                                    value={displayOrder}
+                                    onChange={(e) => setDisplayOrder(parseInt(e.target.value) || 0)}
+                                />
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 gap-6">
 
                             <div className="space-y-2">

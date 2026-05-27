@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
 
 export interface CartProduct {
@@ -37,9 +37,45 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const CART_STORAGE_KEY = "luxe_haven_cart";
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => {
+    // Initialize from localStorage
+    try {
+      const saved = localStorage.getItem(CART_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Failed to load cart from storage", e);
+      return [];
+    }
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Sync to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch (e) {
+      console.error("Failed to save cart to storage", e);
+    }
+  }, [items]);
+
+  // Sync across tabs
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === CART_STORAGE_KEY) {
+        try {
+          const newItems = e.newValue ? JSON.parse(e.newValue) : [];
+          setItems(newItems);
+        } catch (err) {
+          console.error("Failed to parse storage update", err);
+        }
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const addToCart = (product: CartProduct) => {
     const id = String(product.id);
@@ -66,6 +102,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return [...prev, { product: { ...product, id }, quantity: 1 }];
     });
     setIsCartOpen(true);
+    toast.success(`${product.name} added to your collection`);
   };
 
   const removeFromCart = (productId: string) => {
@@ -94,7 +131,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    setItems([]);
+    localStorage.removeItem(CART_STORAGE_KEY);
+  };
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce(

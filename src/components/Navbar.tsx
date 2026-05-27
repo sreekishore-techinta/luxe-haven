@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, User, Menu, X, Heart, ChevronDown, ArrowRight, Package, LogOut, Search } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Heart, ChevronDown, ArrowRight, Package, LogOut, Search, Truck } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchModal from "./SearchModal";
-import logoLishan from "@/assets/logo-lishan-saree.png";
+import logoLishan from "@/assets/ChatGPT_Image_Apr_17__2026__10_32_57_AM-removebg-preview copy 2.png";
 import { API_URL as API } from "@/api_config";
 
 const Navbar = () => {
@@ -17,7 +17,7 @@ const Navbar = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [sareeTypes, setSareeTypes] = useState<any[]>([]);
   const [isSareesOpen, setIsSareesOpen] = useState(false);
-  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isSuitsOpen, setIsSuitsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -33,6 +33,32 @@ const Navbar = () => {
       .then(json => {
         if (json.status === 'success') {
           setCategories(json.data);
+          
+          // Fallback: If sareeTypes is still empty or to supplement it, 
+          // find saree-related categories from master_categories
+          const sareeCats = json.data
+            .filter((cat: any) => 
+              cat.name.toLowerCase().includes('saree') && 
+              cat.name.toLowerCase() !== 'sarees' &&
+              cat.show_on_menu == 1
+            )
+            .map((cat: any) => ({
+              id: `cat-${cat.id}`,
+              name: cat.name,
+              slug: cat.slug,
+              isFromMaster: true
+            }));
+            
+          setSareeTypes(prev => {
+            const merged = [...prev, ...sareeCats];
+            const seen = new Set();
+            return merged.filter(item => {
+              const key = item.name.toLowerCase().trim();
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+          });
         }
       })
       .catch(err => console.error("Failed to fetch nav categories", err));
@@ -41,7 +67,21 @@ const Navbar = () => {
       .then(res => res.json())
       .then(json => {
         if (json.status === 'success') {
-          setSareeTypes(json.data);
+          const fetchedTypes = json.data.map((item: any) => ({
+            ...item,
+            isFromSareeTypes: true
+          }));
+          
+          setSareeTypes(prev => {
+            const merged = [...fetchedTypes, ...prev];
+            const seen = new Set();
+            return merged.filter(item => {
+              const key = item.name.toLowerCase().trim();
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+          });
         }
       })
       .catch(err => console.error("Failed to fetch saree types", err));
@@ -49,16 +89,47 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-[#FDF5E6] shadow-sm border-b border-[#B48C5E]/20">
+      <header className="sticky top-0 z-50 bg-[#FDFBF7] shadow-sm border-b border-[#B48C5E]/10">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="flex items-center justify-between h-20 lg:h-24 py-4 gap-6 lg:gap-12">
+          <div className="flex items-center justify-between h-24 lg:h-28 py-4 gap-6 lg:gap-12">
 
-            <Link to="/" className="flex-shrink-0 min-w-max">
-              <img
-                src={logoLishan}
-                alt="Lishan Sarees"
-                className="h-14 md:h-16 lg:h-20 w-auto object-contain"
-              />
+            <Link 
+              to="/" 
+              className="flex-shrink-0 flex items-center gap-5 transition-transform hover:scale-[1.02] duration-300"
+            >
+              {/* Logo Icon (Cropped Square) */}
+              <div className="w-[65px] h-[65px] md:w-[75px] md:h-[75px] flex-shrink-0 overflow-hidden relative rounded-xl border border-[#B48C5E]/20 shadow-lg bg-[#2C1810]">
+                <img
+                  src={logoLishan}
+                  alt="Lishan"
+                  className="absolute top-0 left-0 w-full h-auto object-cover scale-[1.05]"
+                  style={{ objectPosition: 'center 0px' }}
+                />
+              </div>
+
+              {/* Enhanced Brand Text based on Reference */}
+              <div className="flex flex-col items-center">
+                <span 
+                  className="font-display text-[28px] md:text-[36px] lg:text-[42px] font-bold text-[#2C1810] tracking-tight leading-none"
+                  style={{ textShadow: '1px 1.5px 0.5px rgba(0,0,0,0.2)' }}
+                >
+                  Lishan
+                </span>
+                
+                <div className="flex items-center gap-3 w-full mt-1.5 md:mt-2">
+                  <div className="h-[1px] flex-grow bg-gradient-to-r from-transparent via-[#B48C5E] to-[#B48C5E] relative flex items-center justify-end">
+                    <span className="text-[#B48C5E] text-[6px] md:text-[8px] absolute -right-[2px]">✦</span>
+                  </div>
+                  
+                  <span className="font-body text-[8px] md:text-[11px] font-bold text-[#B48C5E] uppercase tracking-[0.5em] whitespace-nowrap px-1">
+                    Sarees
+                  </span>
+                  
+                  <div className="h-[1px] flex-grow bg-gradient-to-l from-transparent via-[#B48C5E] to-[#B48C5E] relative flex items-center justify-start">
+                    <span className="text-[#B48C5E] text-[6px] md:text-[8px] absolute -left-[2px]">✦</span>
+                  </div>
+                </div>
+              </div>
             </Link>
 
             <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
@@ -113,7 +184,7 @@ const Navbar = () => {
                         {sareeTypes.map((sub: any) => (
                           <Link
                             key={sub.id}
-                            to={`/sarees/${sub.slug}`}
+                            to={sub.isFromMaster ? `/category/${sub.slug}` : `/sarees/${sub.slug}`}
                             style={{
                               display: "flex",
                               flexDirection: "column",
@@ -156,23 +227,23 @@ const Navbar = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Categories Mega Menu Toggle */}
+              {/* Suits and Sets Mega Menu Toggle */}
               <div
                 style={{ position: "relative" }}
-                onMouseEnter={() => setIsCategoriesOpen(true)}
-                onMouseLeave={() => setIsCategoriesOpen(false)}
+                onMouseEnter={() => setIsSuitsOpen(true)}
+                onMouseLeave={() => setIsSuitsOpen(false)}
               >
-                <button
-                  className={`flex items-center gap-1.5 text-[11px] xl:text-[12px] font-bold uppercase tracking-[0.12em] transition-all duration-300 ${isCategoriesOpen ? "text-[#B48C5E]" : "text-[#1A1A1A]"
+                <Link
+                  to="/suit-sets"
+                  className={`flex items-center gap-1.5 text-[11px] xl:text-[12px] font-bold uppercase tracking-[0.12em] transition-all duration-300 ${isSuitsOpen ? "text-[#B48C5E]" : "text-[#1A1A1A]"
                     }`}
                 >
-                  Categories
-                  <ChevronDown size={14} className={`transition-transform duration-300 ${isCategoriesOpen ? "rotate-180" : ""}`} />
-                </button>
+                  Suits & Sets
+                  <ChevronDown size={14} className={`transition-transform duration-300 ${isSuitsOpen ? "rotate-180" : ""}`} />
+                </Link>
 
-                {/* Mega Menu Dropdown */}
                 <AnimatePresence>
-                  {isCategoriesOpen && (
+                  {isSuitsOpen && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -187,69 +258,63 @@ const Navbar = () => {
                         borderRadius: "12px",
                         boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
                         padding: "12px",
-                        width: "320px",
+                        width: "240px",
                         border: "1px solid rgba(180,140,94,0.2)",
-                        maxHeight: "400px",
-                        overflowY: "auto",
                       }}
                     >
-                      {/* Category cards grid */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
-                        {(categories && categories.length > 0 ? categories : [
-                          { id: 1, name: "Blouses", slug: "blouses" },
-                          { id: 2, name: "Sarees", slug: "sarees" },
-                          { id: 3, name: "Suit Sets", slug: "suit-sets" },
-                          { id: 4, name: "New Arrivals", slug: "new-arrivals" }
-                        ])
-                        .filter(cat => ['blouses', 'suit sets', 'suit-sets'].includes(cat.name.toLowerCase()))
-                        .map((cat) => (
-                          <Link
-                            key={cat.id}
-                            to={`/category/${cat.slug}`}
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "flex-start",
-                              gap: "4px",
-                              padding: "14px 16px",
-                              background: "rgba(255,255,255,0.06)",
-                              border: "1px solid rgba(180,140,94,0.15)",
-                              borderRadius: "10px",
-                              textDecoration: "none",
-                              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                              cursor: "pointer",
-                              minHeight: "75px",
-                              justifyContent: "center"
-                            }}
-                            onMouseEnter={e => {
-                              const el = e.currentTarget;
-                              el.style.background = "rgba(180,140,94,0.15)";
-                              el.style.borderColor = "#B48C5E";
-                              el.style.transform = "translateY(-2px)";
-                              el.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
-                            }}
-                            onMouseLeave={e => {
-                              const el = e.currentTarget;
-                              el.style.background = "rgba(255,255,255,0.06)";
-                              el.style.borderColor = "rgba(180,140,94,0.15)";
-                              el.style.transform = "translateY(0)";
-                              el.style.boxShadow = "none";
-                            }}
-                          >
-                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#B48C5E", display: "block", marginBottom: "4px" }} />
-                            <span style={{ fontWeight: 700, fontSize: "14px", color: "#1A1A1A", lineHeight: 1.2, textTransform: "capitalize", letterSpacing: "0.5px" }}>
-                              {cat.name}
-                            </span>
-                            <span style={{ fontSize: "10px", color: "rgba(26,26,26,0.6)", fontStyle: "italic", letterSpacing: "0.2px" }}>
-                              {cat.sub_categories?.length ? `${cat.sub_categories.length} Collections` : "Shop Latest"}
-                            </span>
-                          </Link>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                        {[
+                          { name: "All Suits & Sets", slug: "suit-sets", path: "/suit-sets" },
+                          { name: "Ready Made", slug: "ready-made", path: "/category/ready-made" },
+                          { name: "Materials", slug: "materials", path: "/category/materials" }
+                        ].map((sub) => (
+                           <Link
+                             key={sub.slug}
+                             to={sub.path}
+                             style={{
+                               display: "flex",
+                               alignItems: "center",
+                               gap: "10px",
+                               padding: "12px 16px",
+                               background: "rgba(255,255,255,0.06)",
+                               border: "1px solid rgba(180,140,94,0.1)",
+                               borderRadius: "8px",
+                               textDecoration: "none",
+                               transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                               cursor: "pointer",
+                             }}
+                             onMouseEnter={e => {
+                               const el = e.currentTarget;
+                               el.style.background = "rgba(180,140,94,0.15)";
+                               el.style.borderColor = "#B48C5E";
+                             }}
+                             onMouseLeave={e => {
+                               const el = e.currentTarget;
+                               el.style.background = "rgba(255,255,255,0.06)";
+                               el.style.borderColor = "rgba(180,140,94,0.1)";
+                             }}
+                           >
+                             <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#B48C5E", display: "block" }} />
+                             <span style={{ fontWeight: 700, fontSize: "12px", color: "#1A1A1A", textTransform: "uppercase", letterSpacing: "1px" }}>
+                               {sub.name}
+                             </span>
+                           </Link>
                         ))}
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
+
+              {categories.filter((c: any) => c.show_on_menu == 1 && !['sarees', 'new arrivals', 'lishan sarees', 'suits and sets', 'ready made', 'materials'].includes(c.name.toLowerCase()) && !c.name.toLowerCase().includes('saree')).map((cat: any) => (
+                <Link
+                  key={cat.id}
+                  to={`/category/${cat.slug}`}
+                  className="text-[11px] xl:text-[12px] font-bold uppercase tracking-[0.12em] text-[#1A1A1A]/90 hover:text-[#B48C5E] transition-all duration-300"
+                >
+                  {cat.name}
+                </Link>
+              ))}
 
             </nav>
 
@@ -322,6 +387,13 @@ const Navbar = () => {
                         >
                           <Package size={14} /> My Orders
                         </Link>
+                        <Link 
+                          to="/track-order" 
+                          className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-[#1A1A1A] hover:bg-[#B48C5E]/10 hover:text-[#B48C5E] transition-colors"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <Truck size={14} /> Track Order
+                        </Link>
                         <div className="h-px bg-[#B48C5E]/10 my-1 mx-2" />
                         <button 
                           onClick={() => {
@@ -368,8 +440,27 @@ const Navbar = () => {
               className="lg:hidden fixed top-0 left-0 bottom-0 z-[70] w-80 bg-white shadow-2xl overflow-y-auto"
             >
               <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100">
-                <Link to="/" onClick={() => setMobileMenuOpen(false)}>
-                  <img src={logoLishan} alt="Lishan Sarees" className="h-14 w-auto object-contain" />
+                <Link 
+                  to="/" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-4"
+                >
+                  <div className="w-[50px] h-[50px] overflow-hidden relative rounded-lg border border-[#B48C5E]/10 bg-[#2C1810]">
+                    <img 
+                      src={logoLishan} 
+                      alt="Lishan" 
+                      className="absolute top-0 left-0 w-full h-auto object-cover scale-[1.05]" 
+                      style={{ objectPosition: 'center 0px' }}
+                    />
+                  </div>
+                  <div className="flex flex-col items-center leading-none">
+                    <span className="font-display text-[24px] font-bold text-[#2C1810]">Lishan</span>
+                    <div className="flex items-center gap-2 w-full mt-1">
+                      <div className="h-[0.5px] flex-grow bg-[#B48C5E]/50" />
+                      <span className="font-body text-[8px] font-bold text-[#B48C5E] uppercase tracking-[0.3em]">Sarees</span>
+                      <div className="h-[0.5px] flex-grow bg-[#B48C5E]/50" />
+                    </div>
+                  </div>
                 </Link>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
@@ -405,7 +496,7 @@ const Navbar = () => {
                       {sareeTypes.map((sub: any) => (
                         <Link
                           key={sub.id}
-                          to={`/sarees/${sub.slug}`}
+                          to={sub.isFromMaster ? `/category/${sub.slug}` : `/sarees/${sub.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
                           className="text-[11px] font-medium text-gray-500 uppercase tracking-widest hover:text-[#B48C5E] transition-colors"
                         >
@@ -416,10 +507,35 @@ const Navbar = () => {
                   </div>
 
                   <div className="space-y-6 pt-6 border-t border-gray-100">
-                    <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#B48C5E]">Shop by Categories</p>
-                    {categories
-                      .filter(cat => ['blouses', 'suit sets', 'suit-sets'].includes(cat.name.toLowerCase()))
-                      .map((cat) => (
+                    <div className="space-y-4">
+                      <Link
+                        to="/suit-sets"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="text-[12px] font-bold uppercase tracking-[0.15em] text-gray-900 flex items-center justify-between"
+                      >
+                        Suits & Sets
+                        <ArrowRight size={14} className="text-[#B48C5E]" />
+                      </Link>
+                      <div className="pl-4 grid grid-cols-1 gap-4 border-l-2 border-[#B48C5E]/20 ml-2">
+                        {[
+                          { name: "Ready Made", slug: "ready-made", path: "/category/ready-made" },
+                          { name: "Materials", slug: "materials", path: "/category/materials" }
+                        ].map((sub: any) => (
+                          <Link
+                            key={sub.slug}
+                            to={sub.path}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="text-[11px] font-medium text-gray-500 uppercase tracking-widest hover:text-[#B48C5E] transition-colors"
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6 pt-6 border-t border-gray-100">
+                    {categories.filter((c: any) => c.show_on_menu == 1 && !['sarees', 'new arrivals', 'lishan sarees', 'suits and sets', 'ready made', 'materials'].includes(c.name.toLowerCase()) && !c.name.toLowerCase().includes('saree')).map((cat: any) => (
                       <div key={cat.id} className="space-y-4">
                         <Link
                           to={`/category/${cat.slug}`}
@@ -427,22 +543,8 @@ const Navbar = () => {
                           className="text-[12px] font-bold uppercase tracking-[0.15em] text-gray-900 flex items-center justify-between"
                         >
                           {cat.name}
-                          <ArrowRight size={14} className="text-gray-300" />
+                          <ArrowRight size={14} className="text-[#B48C5E]" />
                         </Link>
-                        {cat.sub_categories?.length > 0 && (
-                          <div className="pl-4 grid grid-cols-1 gap-3">
-                            {cat.sub_categories.map((sub: any) => (
-                              <Link
-                                key={sub.id}
-                                to={`/collections?category=${encodeURIComponent(cat.name)}&sub=${encodeURIComponent(sub.name)}`}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="text-[11px] font-medium text-gray-500 uppercase tracking-widest"
-                              >
-                                {sub.name}
-                              </Link>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -461,8 +563,11 @@ const Navbar = () => {
                       </span>
                     )}
                   </Link>
+                  <Link to="/track-order" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 py-2 text-sm text-gray-700 font-medium min-h-[44px]">
+                    <Truck size={20} className="text-gray-400 group-hover:text-[#B48C5E]" /> Track Order
+                  </Link>
                   <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 py-2 text-sm text-gray-700 font-medium min-h-[44px]">
-                    <User size={20} /> {customer ? "My Profile" : "Login / Register"}
+                    <User size={20} className="text-gray-400" /> {customer ? "My Profile" : "Login / Register"}
                   </Link>
                   {customer && (
                     <button 

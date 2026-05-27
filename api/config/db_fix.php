@@ -2,12 +2,18 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-define('IS_LOCAL', (($_SERVER['HTTP_HOST'] ?? '') === 'localhost' || ($_SERVER['REMOTE_ADDR'] ?? '') === '127.0.0.1'));
+define('IS_LOCAL', (
+    ($_SERVER['HTTP_HOST'] ?? '') === 'localhost' ||
+    ($_SERVER['REMOTE_ADDR'] ?? '') === '127.0.0.1' ||
+    ($_SERVER['REMOTE_ADDR'] ?? '') === '::1' ||
+    strpos($_SERVER['HTTP_HOST'] ?? '', '192.168.') === 0 ||
+    strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') === 0
+));
 
 define('DB_HOST', IS_LOCAL ? 'localhost' : 'localhost');
-define('DB_USER', IS_LOCAL ? 'root' : 'u891495087_lishan');
-define('DB_PASS', IS_LOCAL ? '' : '8!NCzGuU');
-define('DB_NAME', IS_LOCAL ? 'luxe_haven' : 'u891495087_lishan');
+define('DB_USER', IS_LOCAL ? 'root' : 'u891495087_lishan_db2');
+define('DB_PASS', IS_LOCAL ? '' : 'vtaf!0xT');
+define('DB_NAME', IS_LOCAL ? 'luxe_haven' : 'u891495087_lishan_db2');
 
 function getDB(): mysqli
 {

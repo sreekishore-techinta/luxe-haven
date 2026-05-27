@@ -4,7 +4,7 @@ import {
   Plus, X, Loader2, Save, ArrowLeft, 
   CheckCircle, Camera, Image as LucideImage, Package,
   Info, Tag, Box, Settings, Truck, Star, Percent,
-  Upload, FileText, Trash2
+  Upload, FileText, Trash2, Sparkles
 } from "lucide-react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ const BASE_URL = API.replace("/api", "");
 
 const emptyForm = {
     name: "", 
-    category_id: "1",
+    category_id: "1", // Default to Sarees
     saree_type_id: "",
     blouse_style_id: "",
     fabric_id: "",
@@ -31,6 +31,9 @@ const emptyForm = {
     on_sale: 0,
     colour_id: "", 
     size_id: "", 
+    fabric_care: "To preserve the elegance and longevity of this fabric, we recommend gentle care. Prefer dry cleaning or a mild hand wash using cold water. Avoid harsh detergents and direct sunlight.",
+    saree_specifications: "",
+    selected_add_ons: [] as number[],
 };
 
 type Combination = {
@@ -67,18 +70,26 @@ export default function AdminProductForm() {
     const combinationInputRef = useRef<HTMLInputElement>(null);
 
     // Masters
-    const [masters, setMasters] = useState<Record<string, any[]>>({
+    const [masters, setMasters] = useState<{
+        categories: any[],
+        saree_types: any[],
+        colours: any[],
+        fabric_types: any[],
+        sizes: any[],
+        blouse_styles: any[],
+        add_ons: any[]
+    }>({
         categories: [], saree_types: [], colours: [], fabric_types: [], 
-        sizes: [], blouse_styles: []
+        sizes: [], blouse_styles: [], add_ons: []
     });
 
     const fetchMasters = async () => {
-        const types = ["categories", "saree_types", "colours", "fabric_types", "sizes", "blouse_styles"];
+        const types = ["categories", "saree_types", "colours", "fabric_types", "sizes", "blouse_styles", "add_ons"];
         const results: Record<string, any[]> = {};
         for (const t of types) {
             try {
-                let endpoint = (t === 'saree_types') ? 'public/saree_types.php' : `masters/index.php?type=${t}`;
-                const res = await fetch(`${API}/${endpoint}`, { credentials: "include" });
+                let endpoint = (t === 'saree_types') ? `public/saree_types.php?_t=${Date.now()}` : `masters/index.php?type=${t}&per_page=100&_t=${Date.now()}`;
+                const res = await fetch(`${API}/${endpoint}`, { credentials: "include", cache: "no-store" });
                 const json = await res.json();
                 if (json.status === "success") {
                     results[t] = t === 'saree_types' ? json.data : json.data.filter((i: any) => i.status === 'Active');
@@ -118,6 +129,9 @@ export default function AdminProductForm() {
                             on_sale: p.on_sale || 0,
                             colour_id: String(p.colour_id || ""),
                             size_id: String(p.size_id || ""),
+                            fabric_care: p.fabric_care || "To preserve the elegance and longevity of this fabric, we recommend gentle care. Prefer dry cleaning or a mild hand wash using cold water. Avoid harsh detergents and direct sunlight.",
+                            saree_specifications: p.saree_specifications || "",
+                            selected_add_ons: p.add_ons ? p.add_ons.map((ao: any) => ao.id) : [],
                         });
                         
                         const images = p.gallery || p.images || [];
@@ -210,6 +224,27 @@ export default function AdminProductForm() {
         }
     };
 
+    const removeOtherPhoto = (index: number) => {
+        setOtherFiles(prev => prev.filter((_, i) => i !== index));
+        setOtherPreviews(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const removeExistingImage = async (imageId: number) => {
+        if (!confirm("Are you sure you want to remove this photo?")) return;
+        try {
+            const res = await fetch(`${API}/products/delete_image.php?id=${imageId}`, { method: 'DELETE', credentials: "include" });
+            const json = await res.json();
+            if (json.status === 'success') {
+                setExistingImages(prev => prev.filter(img => img.id !== imageId));
+                toast.success("Image removed");
+            } else {
+                toast.error(json.message || "Failed to remove image");
+            }
+        } catch (e) {
+            toast.error("Error removing image");
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -233,6 +268,9 @@ export default function AdminProductForm() {
                 return_policy: form.return_policy,
                 free_delivery: form.free_delivery,
                 on_sale: form.on_sale,
+                fabric_care: form.fabric_care,
+                saree_specifications: form.saree_specifications,
+                add_ons: form.selected_add_ons,
                 combinations: combinations.map(c => ({
                     id: c.id,
                     colour_id: parseInt(c.colour_id) || null,
@@ -330,9 +368,32 @@ export default function AdminProductForm() {
                         </div>
                         <div className="md:col-span-4 space-y-3">
                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Category <span className="text-rose-500">*</span></label>
-                            <select required value={form.saree_type_id} onChange={e => setForm({...form, saree_type_id: e.target.value})}
-                                className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:border-indigo-400 focus:bg-white text-sm font-bold text-slate-800 outline-none">
+                            <select required value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})}
+                                className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:border-indigo-400 focus:bg-white text-sm font-bold text-slate-800 outline-none cursor-pointer">
                                 <option value="">Select Category</option>
+                                {masters.categories?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="md:col-span-4 space-y-3">
+                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Saree Type</label>
+                            <select value={form.saree_type_id} onChange={e => {
+                                const typeId = e.target.value;
+                                const selectedType = masters.saree_types.find(t => String(t.id) === typeId);
+                                
+                                let newCatId = form.category_id;
+                                if (selectedType) {
+                                    // Automatically find matching category by name
+                                    const matchingCat = masters.categories.find(c => 
+                                        c.name.toLowerCase() === selectedType.name.toLowerCase() ||
+                                        c.name.toLowerCase().includes(selectedType.name.toLowerCase())
+                                    );
+                                    if (matchingCat) newCatId = String(matchingCat.id);
+                                }
+                                
+                                setForm({...form, saree_type_id: typeId, category_id: newCatId});
+                            }}
+                                className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:border-indigo-400 focus:bg-white text-sm font-bold text-slate-800 outline-none cursor-pointer">
+                                <option value="">Select Saree Type</option>
                                 {masters.saree_types?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                             </select>
                         </div>
@@ -358,7 +419,7 @@ export default function AdminProductForm() {
                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">MRP</label>
                             <div className="relative">
                                 <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-black">₹</span>
-                                <input type="number" value={form.mrp} onChange={e => setForm({...form, mrp: e.target.value})}
+                                <input type="number" value={form.mrp} onChange={e => setForm({...form, mrp: e.target.value})} onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                     className="w-full pl-12 pr-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-sm outline-none" placeholder="0.00" />
                             </div>
                         </div>
@@ -366,7 +427,7 @@ export default function AdminProductForm() {
                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Old Price</label>
                             <div className="relative">
                                 <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-black">₹</span>
-                                <input type="number" value={form.old_price} onChange={e => setForm({...form, old_price: e.target.value})}
+                                <input type="number" value={form.old_price} onChange={e => setForm({...form, old_price: e.target.value})} onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                     className="w-full pl-12 pr-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-sm outline-none" placeholder="0.00" />
                             </div>
                         </div>
@@ -374,12 +435,121 @@ export default function AdminProductForm() {
                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Current Price *</label>
                             <div className="relative">
                                 <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-black">₹</span>
-                                <input required type="number" value={form.current_price} onChange={e => setForm({...form, current_price: e.target.value})}
+                                <input required type="number" value={form.current_price} onChange={e => setForm({...form, current_price: e.target.value})} onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                     className="w-full pl-12 pr-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 font-black text-indigo-600 text-sm outline-none shadow-inner" placeholder="0.00" />
-                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Product Add-ons Section - Premium Grouped Management */}
+            <div className="bg-white rounded-[24px] p-10 border border-slate-200/60 shadow-sm space-y-10 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#D4AF37]" />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-[#D4AF37] shadow-xl">
+                            <Sparkles size={24} />
+                        </div>
+                        <div className="flex flex-col">
+                            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Service Personalization</h2>
+                            <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Configure premium upgrades for this product</p>
+                        </div>
+                    </div>
+                    <Link to="/admin/general-master?type=add_ons" className="px-6 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all flex items-center gap-2">
+                        <Settings size={14} /> Manage Master Options
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-1 gap-12 pt-4">
+                    {/* Dynamic Grouping Logic */}
+                    {Object.entries(
+                        (masters.add_ons || []).reduce((acc: any, ao: any) => {
+                            const group = ao.group_name || 'General Services';
+                            if (!acc[group]) acc[group] = [];
+                            acc[group].push(ao);
+                            return acc;
+                        }, {})
+                    ).sort(([a], [b]) => {
+                        if (a === 'General Services') return -1;
+                        if (b === 'General Services') return 1;
+                        return a.localeCompare(b);
+                    }).map(([groupName, items]: [string, any]) => (
+                        <div key={groupName} className="space-y-6">
+                            <div className="flex items-center gap-4">
+                                <h3 className="text-xs font-black text-slate-800 uppercase tracking-[0.3em] whitespace-nowrap">{groupName}</h3>
+                                <div className="h-[2px] w-full bg-gradient-to-r from-slate-100 to-transparent" />
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {items.map((ao: any) => {
+                                    const isSelected = form.selected_add_ons.includes(ao.id);
+                                    const isRadio = ao.input_type === 'radio';
+                                    
+                                    return (
+                                        <button
+                                            key={ao.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setForm(prev => {
+                                                    let newSelection = [...prev.selected_add_ons];
+                                                    
+                                                    if (isSelected) {
+                                                        // Toggle off if it's a checkbox, or if it's a radio but we want to allow deselecting (optional)
+                                                        newSelection = newSelection.filter(id => id !== ao.id);
+                                                    } else {
+                                                        if (isRadio) {
+                                                            // If radio, remove all other IDs from the same group
+                                                            const groupIds = items.map((i: any) => i.id);
+                                                            newSelection = newSelection.filter(id => !groupIds.includes(id));
+                                                            newSelection.push(ao.id);
+                                                        } else {
+                                                            newSelection.push(ao.id);
+                                                        }
+                                                    }
+
+                                                    return {
+                                                        ...prev,
+                                                        selected_add_ons: newSelection
+                                                    };
+                                                });
+                                            }}
+                                            className={`group relative flex items-center justify-between p-5 rounded-2xl transition-all duration-300 border-2 ${
+                                                isSelected 
+                                                    ? "border-slate-900 bg-slate-900 shadow-2xl shadow-slate-200" 
+                                                    : "border-slate-100 bg-white hover:border-[#D4AF37]/40 hover:bg-slate-50/50"
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-6 h-6 flex items-center justify-center border-2 transition-all ${
+                                                    isRadio ? 'rounded-full' : 'rounded-lg'
+                                                } ${
+                                                    isSelected ? 'border-[#D4AF37] bg-[#D4AF37]/20' : 'border-slate-200 group-hover:border-[#D4AF37]/50'
+                                                }`}>
+                                                    {isSelected && (
+                                                        isRadio ? 
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-[#D4AF37]" /> : 
+                                                        <Plus size={14} className="text-[#D4AF37]" strokeWidth={4} />
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col items-start">
+                                                    <span className={`text-sm font-black tracking-tight ${isSelected ? 'text-white' : 'text-slate-700'}`}>{ao.name}</span>
+                                                    <span className={`text-[10px] font-bold ${isSelected ? 'text-slate-400' : 'text-slate-400'}`}>+₹{Number(ao.price).toLocaleString('en-IN')}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            {isSelected && (
+                                                <div className="w-2 h-2 rounded-full bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.8)]" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+
 
                 {/* 3. Inventory Management (Modified) */}
                 <div className="bg-white rounded-[24px] p-10 border border-slate-200/60 shadow-sm space-y-8 relative overflow-hidden group">
@@ -394,7 +564,7 @@ export default function AdminProductForm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                         <div className="space-y-3">
                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Default Stock Quantity</label>
-                            <input type="number" value={form.stock_qty} onChange={e => setForm({...form, stock_qty: e.target.value})}
+                            <input type="number" value={form.stock_qty} onChange={e => setForm({...form, stock_qty: e.target.value})} onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                 className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-indigo-200 transition-all" placeholder="0" />
                         </div>
                         <div className="space-y-3">
@@ -408,10 +578,60 @@ export default function AdminProductForm() {
                         </div>
                     </div>
 
-                    <div className="h-px bg-slate-100 w-full mb-10" />
 
                     <div className="flex items-center justify-between mb-8">
                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Product Combinations / Variants</h3>
+                    </div>
+
+                    {/* Saree Color Palette - Quick Creation */}
+                    <div className="mb-12 p-8 bg-slate-50/50 rounded-[32px] border border-slate-200/60 shadow-inner">
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="w-10 h-10 rounded-2xl bg-white shadow-md flex items-center justify-center text-indigo-600">
+                                <Sparkles size={20} />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-black text-slate-800 uppercase tracking-[0.1em]">Saree Color Palette</h4>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Quickly manifest new color variations</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            {masters.colours?.map(c => {
+                                const isAdded = combinations.some(comb => String(comb.colour_id) === String(c.id));
+                                return (
+                                    <button
+                                        key={c.id}
+                                        type="button"
+                                        onClick={() => {
+                                            if (isAdded) {
+                                                setCombinations(combinations.filter(comb => String(comb.colour_id) !== String(c.id)));
+                                            } else {
+                                                setCombinations(prev => [
+                                                    ...prev.filter(comb => comb.colour_id !== ""),
+                                                    { colour_id: String(c.id), size_id: "", stock_qty: "100", image_file: null, image_preview: null }
+                                                ]);
+                                            }
+                                        }}
+                                        className={`group relative p-3 rounded-2xl border-2 transition-all duration-300 flex items-center gap-3 ${
+                                            isAdded 
+                                                ? "bg-slate-900 border-slate-900 shadow-xl shadow-slate-200 scale-105" 
+                                                : "bg-white border-slate-100 hover:border-indigo-200"
+                                        }`}
+                                    >
+                                        <div className="w-6 h-6 rounded-lg border border-black/5 shadow-inner shrink-0" style={{ backgroundColor: c.hex_code }} />
+                                        <div className="flex flex-col items-start overflow-hidden">
+                                            <span className={`text-[9px] font-black uppercase tracking-tighter truncate w-full ${isAdded ? 'text-white' : 'text-slate-600'}`}>{c.name}</span>
+                                            {isAdded && <span className="text-[7px] font-black text-indigo-400 uppercase">ACTIVE</span>}
+                                        </div>
+                                        {isAdded && (
+                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 text-white rounded-full flex items-center justify-center shadow-lg">
+                                                <Plus size={10} strokeWidth={4} />
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
                     {/* Combinations List */}
@@ -442,7 +662,7 @@ export default function AdminProductForm() {
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock</label>
-                                    <input type="number" value={comb.stock_qty} onChange={e => updateCombination(index, "stock_qty", e.target.value)}
+                                    <input type="number" value={comb.stock_qty} onChange={e => updateCombination(index, "stock_qty", e.target.value)} onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                         className="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none" placeholder="0" />
                                 </div>
 
@@ -515,7 +735,23 @@ export default function AdminProductForm() {
                         <div className="space-y-4">
                              <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Other Photos</label>
                              <div className="flex flex-wrap gap-4">
-                                {otherPreviews.map((url, i) => <div key={i} className="w-24 h-32 rounded-xl border border-slate-100 overflow-hidden shadow-sm"><img src={url} className="w-full h-full object-cover" /></div>)}
+                                {existingImages.filter(img => !featuredPreview?.includes(img.image_path)).map((img, i) => (
+                                    <div key={`ex-${i}`} className="w-24 h-32 rounded-xl border border-slate-100 overflow-hidden shadow-sm relative group/thumb">
+                                        <img src={img.image_path.startsWith('http') ? img.image_path : `${BASE_URL}/${img.image_path}`} className="w-full h-full object-cover" />
+                                        <button type="button" onClick={() => removeExistingImage(img.id)} className="absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[2px]">
+                                            <Trash2 size={16} className="text-white" />
+                                        </button>
+                                    </div>
+                                ))}
+
+                                {otherPreviews.map((url, i) => (
+                                    <div key={`new-${i}`} className="w-24 h-32 rounded-xl border border-slate-100 overflow-hidden shadow-sm relative group/thumb">
+                                        <img src={url} className="w-full h-full object-cover" />
+                                        <button type="button" onClick={() => removeOtherPhoto(i)} className="absolute top-1 right-1 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-600 active:scale-90 transition-all z-10">
+                                            <X size={12} strokeWidth={3} />
+                                        </button>
+                                    </div>
+                                ))}
                                 <button type="button" onClick={() => otherInputRef.current?.click()} className="w-24 h-32 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:text-orange-500 hover:border-orange-200 transition-all"><Plus size={24} /></button>
                                 <input ref={otherInputRef} type="file" multiple className="hidden" accept="image/*" onChange={handleOtherChange} />
                              </div>
@@ -534,6 +770,31 @@ export default function AdminProductForm() {
                     </div>
                     <textarea rows={4} value={form.return_policy} onChange={e => setForm({...form, return_policy: e.target.value})}
                         className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none" placeholder="Specify policies..." />
+                </div>
+
+                {/* 6. Fabric Care Details */}
+                <div className="bg-white rounded-[24px] p-10 border border-slate-200/60 shadow-sm space-y-8 relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600" />
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <Sparkles size={20} />
+                        </div>
+                        <h2 className="text-xl font-black text-slate-800 tracking-tight">Fabric Care & Saree Specifications</h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Fabric Care Note</label>
+                            <textarea rows={4} value={form.fabric_care} onChange={e => setForm({...form, fabric_care: e.target.value})}
+                                className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-indigo-200 transition-all" placeholder="Enter fabric care instructions..." />
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-2 italic">Garment maintenance guide.</p>
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Saree Specifications</label>
+                            <textarea rows={4} value={form.saree_specifications} onChange={e => setForm({...form, saree_specifications: e.target.value})}
+                                className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-indigo-200 transition-all" placeholder="Enter saree specifications (e.g. Length, Work, etc.)" />
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-2 italic">Detailed technical specs for the saree.</p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* 6. Settings */}

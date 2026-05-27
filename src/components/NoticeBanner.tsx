@@ -35,11 +35,11 @@ const NoticeBanner = () => {
                 exit={{ height: 0, opacity: 0 }}
                 className="bg-[#FDF5E6] text-[#1A1A1A] relative overflow-hidden"
             >
-                <div className="container mx-auto px-4 py-2.5 flex items-center justify-center text-center">
-                    <div className="flex items-center gap-2 text-[11px] md:text-xs font-bold uppercase tracking-widest">
-                        <Sparkles size={14} className="text-[#B48C5E] animate-pulse" />
-                        <span>{notice}</span>
-                        <Sparkles size={14} className="text-[#B48C5E] animate-pulse" />
+                <div className="container mx-auto px-10 py-2.5 flex items-center justify-center text-center">
+                    <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest max-w-[85%] mx-auto">
+                        <Sparkles size={12} className="text-[#B48C5E] animate-pulse shrink-0" />
+                        <span className="truncate">{notice}</span>
+                        <Sparkles size={12} className="text-[#B48C5E] animate-pulse shrink-0" />
                     </div>
                     <button
                         onClick={() => setIsVisible(false)}

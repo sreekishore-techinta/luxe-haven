@@ -15,7 +15,6 @@ import { BASE_PATH } from "@/api_config";
 // Public Pages
 import Index from "./pages/Index";
 import Collections from "./pages/Collections";
-import Blouses from "./pages/Blouses";
 import SuitSets from "./pages/SuitSets";
 import NewArrivals from "./pages/NewArrivals";
 import BestSellers from "./pages/BestSellers";
@@ -29,7 +28,7 @@ const About = lazy(() => import("./pages/About"));
 const Account = lazy(() => import("./pages/Account"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
-const DesignerBlouseStyles = lazy(() => import("./pages/DesignerBlouseStyles"));
+const TrackOrder = lazy(() => import("./pages/TrackOrder"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin Pages (All Lazy)
@@ -99,8 +98,6 @@ const App = () => {
                     {/* Public Routes */}
                     <Route path="/" element={<Layout><Index /></Layout>} />
                     <Route path="/collections" element={<Layout><Collections /></Layout>} />
-                    <Route path="/blouse-styles" element={<Layout><DesignerBlouseStyles /></Layout>} />
-                    <Route path="/blouses" element={<Layout><Blouses /></Layout>} />
                     <Route path="/suit-sets" element={<Layout><SuitSets /></Layout>} />
                     <Route path="/new-arrivals" element={<Layout><NewArrivals /></Layout>} />
                     <Route path="/best-sellers" element={<Layout><BestSellers /></Layout>} />
@@ -112,6 +109,7 @@ const App = () => {
                     <Route path="/checkout" element={<Layout><Checkout /></Layout>} />
                     <Route path="/category/:slug" element={<Layout><CategoryPage /></Layout>} />
                     <Route path="/product/:id/:slug?" element={<Layout><ProductDetail /></Layout>} />
+                    <Route path="/track-order" element={<Layout><TrackOrder /></Layout>} />
                     <Route path="*" element={<Layout><NotFound /></Layout>} />
                   </Routes>
                 </Suspense>

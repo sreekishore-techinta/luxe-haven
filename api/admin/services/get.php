@@ -9,7 +9,7 @@ if (!isset($_GET['id'])) {
 }
 
 $id = intval($_GET['id']);
-$sql = "SELECT id, title, image_url, tag, display_order, is_active FROM service_categories WHERE id = $id";
+$sql = "SELECT id, title, image_url, link_url, linked_category_id, tag, display_order, is_active FROM service_categories WHERE id = $id";
 $result = $conn->query($sql);
 
 if ($result && $result->num_rows > 0) {

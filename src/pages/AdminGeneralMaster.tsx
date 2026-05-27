@@ -17,11 +17,12 @@ type MasterType = {
 };
 
 const MASTER_TYPES: MasterType[] = [
-    { id: "categories", label: "Categories", icon: List },
-    { id: "saree_types", label: "Saree Styles", icon: Tag },
+    { id: "categories", label: "Categories", icon: LayoutGrid },
+    { id: "saree_types", label: "Saree Types", icon: Tag },
+    { id: "fabric_types", label: "Fabric Types", icon: ShoppingBasket },
     { id: "colours", label: "Colours", icon: Palette },
-    { id: "fabric_types", label: "Fabric Types", icon: Scissors },
     { id: "sizes", label: "Sizes", icon: Maximize },
+    { id: "add_ons", label: "Add-on Services", icon: Scissors },
 ];
 
 const ModalPortal = ({ children }: { children: React.ReactNode }) => {
@@ -67,6 +68,8 @@ export default function AdminGeneralMaster() {
         sleeve_length: "",
         neck_depth: "",
         inseam: "",
+        input_type: "checkbox",
+        group_name: "General"
     });
 
     const [categories, setCategories] = useState<any[]>([]);
@@ -80,7 +83,7 @@ export default function AdminGeneralMaster() {
 
     const fetchCategories = async () => {
         try {
-            const res = await fetch(`${API}/masters/index.php?type=categories&limit=1000`, { credentials: "include" });
+            const res = await fetch(`${API}/masters/index.php?type=categories&per_page=200&_t=${Date.now()}`, { credentials: "include", cache: "no-store" });
             const json = await res.json();
             if (json.status === "success") setCategories(json.data);
         } catch (e) {}
@@ -89,7 +92,7 @@ export default function AdminGeneralMaster() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API}/masters/index.php?type=${activeType}&page=${page}&search=${search}`, { credentials: "include" });
+            const res = await fetch(`${API}/masters/index.php?type=${activeType}&page=${page}&per_page=100&search=${search}&_t=${Date.now()}`, { credentials: "include", cache: "no-store" });
             const json = await res.json();
             if (json.status === "success") {
                 setData(json.data);
@@ -113,6 +116,7 @@ export default function AdminGeneralMaster() {
             hex_code: "#000000", meta_title: "", meta_description: "",
             chest_size: "", waist_size: "", hip_size: "", shoulder_size: "", length: "",
             sleeve_length: "", neck_depth: "", inseam: "",
+            input_type: "checkbox", group_name: "General"
         });
         setShowModal(true);
     };
@@ -139,7 +143,8 @@ export default function AdminGeneralMaster() {
         try {
             const method = editMode ? "PUT" : "POST";
             const body = editMode ? { ...form, id: selectedId } : form;
-            const res = await fetch(`${API}/masters/index.php?type=${activeType}`, {
+            const endpoint = editMode ? `${API}/masters/index.php?type=${activeType}&id=${selectedId}` : `${API}/masters/index.php?type=${activeType}`;
+            const res = await fetch(endpoint, {
                 method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
@@ -287,74 +292,22 @@ export default function AdminGeneralMaster() {
                         <table className="w-full text-left border-collapse min-w-[900px]">
                             <thead className="z-20">
                                 <tr className="border-b border-slate-100 shadow-sm">
-                                    <th className="sticky top-20 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[15%] bg-white z-30 shadow-sm border-b border-slate-100">Registry ID</th>
-                                    <th className="sticky top-20 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[25%] bg-white z-30 shadow-sm border-b border-slate-100">Designation</th>
-                                    {(activeType === 'sub_categories' || activeType === 'sizes') && <th className="sticky top-20 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[20%] bg-white z-30 shadow-sm border-b border-slate-100">Origin</th>}
-                                    {(activeType === 'categories' || activeType === 'sub_categories' || activeType === 'saree_types') && <th className="sticky top-20 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[15%] text-center bg-white z-30 shadow-sm border-b border-slate-100">Asset</th>}
-                                    {activeType === 'colours' && <th className="sticky top-20 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[15%] bg-white z-30 shadow-sm border-b border-slate-100">Spectrum</th>}
+                                    <th className="sticky top-20 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[40%] bg-white z-30 shadow-sm border-b border-slate-100">Designation</th>
+                                    <th className="sticky top-20 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[20%] bg-white z-30 shadow-sm border-b border-slate-100 text-center">Index Order</th>
                                     <th className="sticky top-20 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] w-[20%] bg-white z-30 shadow-sm border-b border-slate-100">Status</th>
-                                    <th className="sticky top-20 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] text-right w-[15%] min-w-[120px] bg-white z-30 shadow-sm border-b border-slate-100">Actions</th>
+                                    <th className="sticky top-20 py-6 px-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] text-right w-[20%] min-w-[120px] bg-white z-30 shadow-sm border-b border-slate-100">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 {data.map((item, i) => (
                                     <tr key={item.id}
                                         className="hover:bg-slate-50/50 transition-all duration-300 group">
-                                        <td className="py-6 px-8 text-[11px] font-black text-slate-500 font-mono tracking-tighter">OBJ_{String(item.id).padStart(4, '0')}</td>
                                         <td className="py-6 px-8">
                                             <p className="text-sm font-black text-slate-950 group-hover:text-[#D4AF37] transition-colors">{item.name}</p>
-                                            <div className="flex items-center gap-3 mt-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
-                                                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Order: {item.sort_order}</span>
-                                                {(item.is_featured === 1 || item.is_featured === "1") && <span className="px-2 py-0.5 bg-amber-500/10 text-amber-700 text-[8px] font-black rounded-md uppercase tracking-widest border border-amber-500/30 ml-2">Premium</span>}
-                                            </div>
                                         </td>
-                                        {(activeType === 'sub_categories' || activeType === 'sizes') && (
-                                            <td className="py-8 px-6">
-                                                <span className="px-3 py-1 bg-white border border-slate-300 rounded-lg text-[9px] font-black text-slate-800 uppercase tracking-widest shadow-sm">
-                                                    {item.category_name || "General"}
-                                                </span>
-                                            </td>
-                                        )}
-                                        {(activeType === 'categories' || activeType === 'sub_categories' || activeType === 'saree_types') && (
-                                            <td className="py-6 px-8">
-                                                <label
-                                                    htmlFor={`asset-inline-${item.id}`}
-                                                    className="block w-16 h-14 mx-auto rounded-xl bg-slate-100 border-2 border-dashed border-slate-200 overflow-hidden shadow-inner flex items-center justify-center group-hover:border-[#D4AF37]/50 transition-all cursor-pointer relative"
-                                                    title="Click to upload image"
-                                                >
-                                                    {uploadingId === item.id ? (
-                                                        <Loader2 size={14} className="text-[#D4AF37] animate-spin" />
-                                                    ) : (item.image || item.hero_image) ? (
-                                                        <>
-                                                            <img src={getFullUrl(item.image || item.hero_image)} className="w-full h-full object-cover" />
-                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                                                                <Upload size={12} className="text-white opacity-0 group-hover:opacity-100 transition-all" />
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <div className="flex flex-col items-center gap-1">
-                                                            <Upload size={12} className="text-slate-300 group-hover:text-[#D4AF37] transition-colors" />
-                                                            <span className="text-[7px] font-black text-slate-300 group-hover:text-[#D4AF37] uppercase tracking-wider transition-colors">Upload</span>
-                                                        </div>
-                                                    )}
-                                                    <input
-                                                        id={`asset-inline-${item.id}`}
-                                                        type="file"
-                                                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                                                        className="hidden"
-                                                        onChange={(e) => handleInlineImageUpload(e, item)}
-                                                    />
-                                                </label>
-                                            </td>
-                                        )}
-                                        {activeType === 'colours' && (
-                                            <td className="py-6 px-8">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-6 rounded-lg shadow-lg shadow-slate-200 border-2 border-white ring-1 ring-slate-100" style={{ backgroundColor: item.hex_code }} />
-                                                    <span className="text-[10px] font-mono font-black text-slate-700 uppercase">{item.hex_code}</span>
-                                                </div>
-                                            </td>
-                                        )}
+                                        <td className="py-6 px-8 text-center">
+                                            <span className="text-sm font-black text-slate-600">{item.sort_order}</span>
+                                        </td>
                                         <td className="py-6 px-8">
                                             <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${item.status === 'Active' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-700 border border-slate-300 font-black'}`}>
                                                 <div className={`w-1.5 h-1.5 rounded-full ${item.status === 'Active' ? 'bg-emerald-500 animate-pulse outline outline-offset-1 outline-emerald-200' : 'bg-slate-500'}`}></div>
@@ -488,187 +441,6 @@ export default function AdminGeneralMaster() {
                                             </div>
                                         </div>
 
-                                        {/* Configuration Card */}
-                                        {(activeType === 'categories' || activeType === 'sub_categories' || activeType === 'saree_types') && (
-                                            <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm space-y-8">
-                                                <div className="flex items-center justify-between border-b border-slate-50 pb-6">
-                                                    <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em]">Asset Configuration</h3>
-                                                    <div className="flex gap-6">
-                                                        <label className="flex items-center gap-3 cursor-pointer group">
-                                                            <div className={`w-9 h-5 rounded-full flex items-center p-1 transition-all ${form.is_featured ? 'bg-[#D4AF37]' : 'bg-slate-200'}`} onClick={() => setForm({ ...form, is_featured: form.is_featured ? 0 : 1 })}>
-                                                                <div className={`w-3 h-3 bg-white rounded-full transition-all transform ${form.is_featured ? 'translate-x-4' : 'translate-x-0'} shadow-sm`} />
-                                                            </div>
-                                                            <span className={`text-[9px] font-black uppercase tracking-widest ${form.is_featured ? 'text-[#D4AF37]' : 'text-slate-600'}`}>Featured</span>
-                                                        </label>
-                                                        {(activeType === 'categories' || activeType === 'sub_categories') && (
-                                                            <label className="flex items-center gap-3 cursor-pointer group">
-                                                                <div className={`w-9 h-5 rounded-full flex items-center p-1 transition-all ${form.show_on_menu ? 'bg-slate-950' : 'bg-slate-200'}`} onClick={() => setForm({ ...form, show_on_menu: form.show_on_menu ? 0 : 1 })}>
-                                                                    <div className={`w-3 h-3 bg-white rounded-full transition-all transform ${form.show_on_menu ? 'translate-x-4' : 'translate-x-0'} shadow-sm`} />
-                                                                </div>
-                                                                <span className={`text-[9px] font-black uppercase tracking-widest ${form.show_on_menu ? 'text-slate-950' : 'text-slate-600'}`}>In Menu</span>
-                                                            </label>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {activeType === 'sub_categories' && (
-                                                    <div className="space-y-3">
-                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-2">Parent Classification</label>
-                                                        <div className="relative">
-                                                            <select
-                                                                required
-                                                                value={form.category_id}
-                                                                onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-                                                                className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-black text-slate-950 outline-none transition-all cursor-pointer appearance-none"
-                                                            >
-                                                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                            </select>
-                                                            <Layers size={16} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                <div className="grid md:grid-cols-2 gap-8">
-                                                    <div className="space-y-3">
-                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-2">Display Slug</label>
-                                                        <input type="text" value={form.slug || ""} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="unique-handle"
-                                                            className="w-full px-5 py-4 bg-slate-50 rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-xs font-black font-mono text-slate-950" />
-                                                    </div>
-                                                    <div className="space-y-3">
-                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-2">Visual Asset</label>
-                                                        <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-2xl border border-dashed border-slate-200 group/asset">
-                                                            <div className="w-16 h-16 rounded-xl bg-white border border-slate-100 overflow-hidden flex items-center justify-center shrink-0 shadow-inner group-hover/asset:border-[#D4AF37]/30 transition-colors">
-                                                                {form.image || form.hero_image ? (
-                                                                    <img src={getFullUrl(form.image || form.hero_image)}
-                                                                        onError={(e) => { (e.target as HTMLImageElement).src = "https://placehold.co/400x600/f8f9fa/dee2e6?text=No+Asset"; }}
-                                                                        className="w-full h-full object-cover" />
-                                                                ) : <LucideImage size={24} className="text-slate-300" strokeWidth={1.5} />}
-                                                            </div>
-                                                            <div className="flex-1 space-y-2">
-                                                                <input type="text" placeholder="Visual path or URL" value={form.image || form.hero_image || ""}
-                                                                    onChange={(e) => setForm({ ...form, [activeType === 'categories' || activeType === 'saree_types' ? 'hero_image' : 'image']: e.target.value })}
-                                                                    className="w-full px-3 py-2 bg-white/50 rounded-lg border border-transparent text-[10px] font-black outline-none focus:bg-white placeholder:text-slate-400" />
-                                                                <input type="file" className="hidden" id="asset-upload" onChange={(e) => handleImageUpload(e, activeType === 'categories' || activeType === 'saree_types' ? 'hero_image' : 'image')} />
-                                                                <label htmlFor="asset-upload" className="block text-center cursor-pointer text-[8px] font-black uppercase tracking-[0.2em] text-[#D4AF37] hover:underline transition-all">Upload Master Asset</label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-3">
-                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-2">Registry Biography</label>
-                                                    <div className="bg-slate-50 p-4 rounded-2xl border border-transparent focus-within:border-[#D4AF37]/20 transition-all">
-                                                        <textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detailed narration for this registry masterpiece..."
-                                                            className="w-full bg-transparent text-sm font-black text-slate-950 min-h-[120px] resize-none outline-none leading-relaxed italic placeholder:text-slate-400" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Color Specification */}
-                                        {activeType === 'colours' && (
-                                            <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm space-y-3">
-                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-2">Chroma Specification</label>
-                                                <div className="flex gap-6 items-center">
-                                                    <div className="relative group shrink-0">
-                                                        <input
-                                                            type="color"
-                                                            value={form.hex_code}
-                                                            onChange={(e) => setForm({ ...form, hex_code: e.target.value })}
-                                                            className="w-24 h-20 rounded-3xl border-4 border-slate-50 overflow-hidden cursor-pointer shadow-xl transition-transform group-hover:scale-105 p-0"
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1 space-y-2">
-                                                        <input
-                                                            type="text"
-                                                            value={form.hex_code}
-                                                            onChange={(e) => setForm({ ...form, hex_code: e.target.value })}
-                                                            className="w-full px-6 py-5 bg-slate-50 rounded-3xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-lg font-mono font-black uppercase text-slate-950 outline-none transition-all tracking-wider"
-                                                            placeholder="#000000"
-                                                        />
-                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] ml-4">Defined Spectral Index</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Sizes Configuration */}
-                                        {activeType === 'sizes' && (
-                                            <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm space-y-8">
-                                                <div className="space-y-3 border-b border-slate-50 pb-6">
-                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-2">Category Assignment</label>
-                                                    <div className="relative">
-                                                        <select
-                                                            value={form.category_id || ""}
-                                                            onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-                                                            className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-black text-slate-950 outline-none transition-all cursor-pointer appearance-none"
-                                                        >
-                                                            <option value="">General / All Categories</option>
-                                                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                        </select>
-                                                        <Layers size={16} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-x-6 gap-y-6">
-                                                    {[
-                                                        { label: 'Chest Size', field: 'chest_size' },
-                                                        { label: 'Waist Size', field: 'waist_size' },
-                                                        { label: 'Hip Size', field: 'hip_size' },
-                                                        { label: 'Shoulder', field: 'shoulder_size' },
-                                                        { label: 'Total Length', field: 'length' },
-                                                        { label: 'Sleeve Length', field: 'sleeve_length' },
-                                                        { label: 'Neck Depth', field: 'neck_depth' },
-                                                        { label: 'Inseam', field: 'inseam' },
-                                                    ].map(f => (
-                                                        <div key={f.field} className="space-y-2">
-                                                            <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-2">{f.label}</label>
-                                                            <input
-                                                                type="text"
-                                                                value={form[f.field] || ""}
-                                                                onChange={(e) => setForm({ ...form, [f.field]: e.target.value })}
-                                                                placeholder="e.g. 38 in"
-                                                                className="w-full px-5 py-4 bg-slate-50 rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-xs font-black text-slate-950 outline-none transition-all"
-                                                            />
-                                                        </div>
-                                                    ))}
-                                                </div>
-
-                                                <div className="space-y-3 pt-4 border-t border-slate-50">
-                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-2">Size Guidance Notes</label>
-                                                    <textarea
-                                                        value={form.description || ""}
-                                                        onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                                        placeholder="Detailed fit recommendations for artisan sizing..."
-                                                        className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-black text-slate-950 outline-none transition-all min-h-[100px] resize-none italic"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* SEO Suite */}
-                                        {(activeType === 'categories' || activeType === 'sub_categories' || activeType === 'saree_types' || activeType === 'sizes') && (
-                                            <div className="bg-slate-900 rounded-[32px] p-8 space-y-6 shadow-xl shadow-slate-200">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-6 h-px bg-[#D4AF37]" />
-                                                    <h4 className="text-[9px] font-black text-[#D4AF37] uppercase tracking-[0.3em]">SEO Enhancement Suite</h4>
-                                                </div>
-                                                <div className="grid grid-cols-1 gap-6">
-                                                    <div className="space-y-3">
-                                                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Meta Title Tag</label>
-                                                        <input type="text" value={form.meta_title || ""} onChange={e => setForm({ ...form, meta_title: e.target.value })}
-                                                            className="w-full px-6 py-4 bg-slate-800 border border-slate-700 rounded-2xl text-xs font-bold text-white outline-none focus:border-[#D4AF37]/30"
-                                                            placeholder="Premium SEO Title" />
-                                                    </div>
-                                                    <div className="space-y-3">
-                                                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Meta Narrative</label>
-                                                        <textarea rows={3} value={form.meta_description || ""} onChange={e => setForm({ ...form, meta_description: e.target.value })}
-                                                            className="w-full px-6 py-4 bg-slate-800 border border-slate-700 rounded-2xl text-xs font-bold text-white outline-none focus:border-[#D4AF37]/30 resize-none"
-                                                            placeholder="Strategic search description..." />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
                                     </form>
                                 </div>
 

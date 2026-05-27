@@ -122,6 +122,15 @@ switch ($method) {
                     $p['image'] = $p['primary_image'];
                 }
             }
+            
+            // Dynamically evaluate status based on final stock quantity
+            if ($p['status'] !== 'Draft' && $p['status'] !== 'Hidden') {
+                if ((int)$p['stock_qty'] <= 0) {
+                    $p['status'] = 'Out of Stock';
+                } else {
+                    $p['status'] = ((int)$p['stock_qty'] <= 5) ? 'Low Stock' : 'In Stock';
+                }
+            }
         }
 
         unset($p);
@@ -161,7 +170,8 @@ switch ($method) {
             $mrp = !empty($data['mrp_price']) ? (float) $data['mrp_price'] : $price;
             $stock = (isset($data['stock_qty']) && $data['stock_qty'] !== '') ? (int)$data['stock_qty'] : (isset($data['stock']) ? (int)$data['stock'] : 50);
             $sku = !empty($data['sku']) ? $data['sku'] : strtoupper('LH-' . substr(uniqid(), -6));
-            $status = $data['status'] ?? 'Active';
+            $status = $data['status'] ?? 'In Stock';
+            if ($status === 'Active') $status = 'In Stock';
             if ($stock <= 0) $status = 'Out of Stock';
 
             $work = $data['work_type'] ?? '';
@@ -172,8 +182,18 @@ switch ($method) {
             $meta_t = $data['meta_title'] ?? '';
             $meta_d = $data['meta_description'] ?? '';
 
+            $fabric_care = $data['fabric_care'] ?? '';
+            $return_policy = $data['return_policy'] ?? '';
+            $saree_specifications = $data['saree_specifications'] ?? '';
+
+            // Ensure saree_specifications column exists in products table
+            $checkSareeSpecs = $conn->query("SHOW COLUMNS FROM products LIKE 'saree_specifications'");
+            if ($checkSareeSpecs && $checkSareeSpecs->num_rows === 0) {
+                $conn->query("ALTER TABLE products ADD COLUMN saree_specifications TEXT DEFAULT NULL");
+            }
+
             // Using the columns confirmed by most migration scripts
-            $sql = "INSERT INTO products (name, slug, category_id, saree_type_id, description, price, mrp_price, stock_qty, sku, status, fabric_id, colour_id, size_id, work_type, blouse_included, saree_length, is_bestseller, is_new, meta_title, meta_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO products (name, slug, category_id, saree_type_id, description, price, mrp_price, stock_qty, sku, status, fabric_id, colour_id, size_id, work_type, blouse_included, saree_length, is_bestseller, is_new, meta_title, meta_description, fabric_care, return_policy, saree_specifications) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
@@ -181,8 +201,8 @@ switch ($method) {
             }
 
             $stmt->bind_param(
-                "ssiisddissiiisisiiss",
-                $name, $slug, $cat_id, $saree_type_id, $desc, $price, $mrp, $stock, $sku, $status, $fabric_id, $color_id, $size_id, $work, $blouse, $length, $is_bestseller, $is_new, $meta_t, $meta_d
+                "ssiisddissiiisisiisssss",
+                $name, $slug, $cat_id, $saree_type_id, $desc, $price, $mrp, $stock, $sku, $status, $fabric_id, $color_id, $size_id, $work, $blouse, $length, $is_bestseller, $is_new, $meta_t, $meta_d, $fabric_care, $return_policy, $saree_specifications
             );
 
             if ($stmt->execute()) {
@@ -220,6 +240,17 @@ switch ($method) {
                         $cStmt->execute();
                     }
                     $cStmt->close();
+                }
+
+                // ── Handle Add-ons ──────────────────────────────────────────
+                if (isset($data['add_ons']) && is_array($data['add_ons'])) {
+                    $aoStmt = $conn->prepare("INSERT INTO product_add_ons (product_id, add_on_id) VALUES (?, ?)");
+                    foreach ($data['add_ons'] as $aoId) {
+                        $ao_id = (int)$aoId;
+                        $aoStmt->bind_param("ii", $id, $ao_id);
+                        $aoStmt->execute();
+                    }
+                    $aoStmt->close();
                 }
 
                 jsonResponse(['status' => 'success', 'message' => 'Product created', 'id' => $id], 201);

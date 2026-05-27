@@ -86,9 +86,11 @@ export default function AdminProducts() {
         const results: Record<string, any[]> = {};
         for (const t of types) {
             try {
-                const res = await fetch(`${API}/masters/index.php?type=${t}&per_page=100`, { credentials: "include" });
+                const res = await fetch(`${API}/masters/index.php?type=${t}&per_page=100&_t=${Date.now()}`, { credentials: "include", cache: "no-store" });
                 const json = await res.json();
-                if (json.status === "success") results[t] = json.data.filter((i: any) => i.status === 'Active');
+                if (json.status === "success") {
+                    results[t] = json.data.filter((i: any) => t === 'saree_types' || t === 'blouse_styles' ? true : i.status === 'Active');
+                }
             } catch (e) { }
         }
         setMasters(results);
@@ -415,6 +417,16 @@ export default function AdminProducts() {
                                             className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                                             <option value="">Select Category</option>
                                             {masters.categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Saree Style / Type</label>
+                                        <select value={form.saree_type_id} onChange={e => setForm(f => ({ ...f, saree_type_id: e.target.value }))}
+                                            disabled={isViewMode}
+                                            className="w-full px-6 py-4 bg-[#041E18]/[0.02] rounded-2xl border border-transparent focus:border-[#D4AF37]/30 focus:bg-white text-sm font-bold text-[#041E18] outline-none transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+                                            <option value="">Select Saree Style</option>
+                                            {masters.saree_types?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>
                                     </div>
 

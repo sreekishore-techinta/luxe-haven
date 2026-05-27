@@ -229,12 +229,15 @@ switch ($method) {
             $tPrice = $qty * $uPrice;
             $sku = $item['sku'] ?? '';
             $pName = $item['product_name'];
+            $stitching = $item['stitching_service'] ?? null;
+            $giftWrap = (int)($item['has_gift_wrapping'] ?? 0);
+            $selectedAddOns = $item['selected_add_ons'] ?? null;
 
             $iStmt = $conn->prepare(
-                "INSERT INTO order_items (order_id, product_id, product_name, product_sku, quantity, unit_price, total_price)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO order_items (order_id, product_id, product_name, product_sku, stitching_service, has_gift_wrapping, selected_add_ons, quantity, unit_price, total_price)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
-            $iStmt->bind_param("iissidd", $orderId, $pId, $pName, $sku, $qty, $uPrice, $tPrice);
+            $iStmt->bind_param("iisssisidd", $orderId, $pId, $pName, $sku, $stitching, $giftWrap, $selectedAddOns, $qty, $uPrice, $tPrice);
             if (!$iStmt->execute()) {
                 file_put_contents($logFile, "Item Insert Error: " . $iStmt->error . "\n", FILE_APPEND);
             }

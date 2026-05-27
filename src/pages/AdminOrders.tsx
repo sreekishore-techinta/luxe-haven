@@ -405,7 +405,32 @@ export default function AdminOrders() {
                                                         </td>
                                                         <td className="px-8 py-4">
                                                             <p className="text-sm font-black text-slate-950">{item.product_name}</p>
-                                                            <p className="text-[10px] font-bold text-slate-500 font-mono italic">{item.product_sku}</p>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <p className="text-[10px] font-bold text-slate-500 font-mono italic">{item.product_sku}</p>
+                                                                {item.stitching_service && (
+                                                                    <span className="text-[9px] bg-slate-100 text-[#D4AF37] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-slate-200">
+                                                                        + {item.stitching_service}
+                                                                    </span>
+                                                                )}
+                                                                {item.has_gift_wrapping === 1 && (
+                                                                    <span className="text-[9px] bg-slate-100 text-rose-500 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-slate-200">
+                                                                        + Gift Wrap
+                                                                    </span>
+                                                                )}
+                                                                
+                                                                {/* Dynamic Add-ons Display */}
+                                                                {item.selected_add_ons && (() => {
+                                                                    try {
+                                                                        const ads = JSON.parse(item.selected_add_ons);
+                                                                        if (!Array.isArray(ads)) return null;
+                                                                        return ads.map((ad: any, i: number) => (
+                                                                            <span key={i} className="text-[9px] bg-white text-indigo-600 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-indigo-100 shadow-sm">
+                                                                                + {ad.name}
+                                                                            </span>
+                                                                        ));
+                                                                    } catch (e) { return null; }
+                                                                })()}
+                                                            </div>
                                                         </td>
                                                         <td className="px-8 py-4 text-center text-sm font-black text-slate-950">x {item.quantity}</td>
                                                         <td className="px-8 py-4 text-right text-sm font-black text-slate-950">₹{Number(item.unit_price).toLocaleString('en-IN')}</td>

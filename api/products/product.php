@@ -30,6 +30,24 @@ if ($checkCols && $checkCols->num_rows === 0) {
     $conn->query("ALTER TABLE product_combinations ADD COLUMN image_path VARCHAR(255) AFTER price");
 }
 
+// Ensure fabric_care column exists in products table
+$checkFabricCare = $conn->query("SHOW COLUMNS FROM products LIKE 'fabric_care'");
+if ($checkFabricCare && $checkFabricCare->num_rows === 0) {
+    $conn->query("ALTER TABLE products ADD COLUMN fabric_care TEXT DEFAULT NULL");
+}
+
+// Ensure return_policy column exists in products table
+$checkReturnPolicy = $conn->query("SHOW COLUMNS FROM products LIKE 'return_policy'");
+if ($checkReturnPolicy && $checkReturnPolicy->num_rows === 0) {
+    $conn->query("ALTER TABLE products ADD COLUMN return_policy TEXT DEFAULT NULL");
+}
+
+// Ensure saree_specifications column exists in products table
+$checkSareeSpecs = $conn->query("SHOW COLUMNS FROM products LIKE 'saree_specifications'");
+if ($checkSareeSpecs && $checkSareeSpecs->num_rows === 0) {
+    $conn->query("ALTER TABLE products ADD COLUMN saree_specifications TEXT DEFAULT NULL");
+}
+
 switch ($method) {
     // ─── GET ─────────────────────────────────────────────────────────────────
     case 'GET':
@@ -99,6 +117,18 @@ switch ($method) {
         $combStmt->close();
         $product['combinations'] = $combs;
 
+        // Fetch add-ons
+        $addons = [];
+        $aoStmt = $conn->prepare("SELECT ao.* FROM add_ons ao JOIN product_add_ons pao ON pao.add_on_id = ao.id WHERE pao.product_id = ?");
+        $aoStmt->bind_param("i", $id);
+        $aoStmt->execute();
+        $aoRes = $aoStmt->get_result();
+        while($ao = $aoRes->fetch_assoc()) {
+            $addons[] = $ao;
+        }
+        $aoStmt->close();
+        $product['add_ons'] = $addons;
+
         jsonResponse(['status' => 'success', 'data' => $product]);
         break;
 
@@ -146,8 +176,16 @@ switch ($method) {
                 'sku',
                 'availability_status',
                 'fabric',
-                'occasion'
+                'occasion',
+                'fabric_care',
+                'return_policy',
+                'saree_specifications'
             ];
+
+            // Normalize 'status'
+            if (array_key_exists('status', $data)) {
+                if ($data['status'] === 'Active') $data['status'] = 'In Stock';
+            }
 
             foreach ($stringFields as $f) {
                 if (array_key_exists($f, $data)) {
@@ -286,6 +324,18 @@ switch ($method) {
                         $cStmt->execute();
                     }
                     $cStmt->close();
+                }
+
+                // ── Handle Add-ons ──────────────────────────────────────────
+                if (isset($data['add_ons']) && is_array($data['add_ons'])) {
+                    $conn->query("DELETE FROM product_add_ons WHERE product_id = $id");
+                    $aoStmt = $conn->prepare("INSERT INTO product_add_ons (product_id, add_on_id) VALUES (?, ?)");
+                    foreach ($data['add_ons'] as $aoId) {
+                        $ao_id = (int)$aoId;
+                        $aoStmt->bind_param("ii", $id, $ao_id);
+                        $aoStmt->execute();
+                    }
+                    $aoStmt->close();
                 }
 
                 jsonResponse([

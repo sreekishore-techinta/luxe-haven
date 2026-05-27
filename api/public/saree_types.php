@@ -5,7 +5,7 @@ setCORSHeaders();
 $conn = getDB();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $sql = "SELECT * FROM saree_types ORDER BY id ASC";
+    $sql = "SELECT * FROM saree_types WHERE status = 'Active' AND show_on_menu = 1 ORDER BY sort_order ASC, id ASC";
     $result = $conn->query($sql);
     $data = [];
     while ($row = $result->fetch_assoc()) {

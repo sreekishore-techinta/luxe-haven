@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             FROM products p 
             LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
             WHERE (p.saree_type_id = ? OR p.category_id = ?) AND p.status != 'Inactive'
+            GROUP BY p.id
             ORDER BY p.id DESC";
 
     $stmt = $conn->prepare($sql);

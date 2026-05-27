@@ -6,7 +6,7 @@ $conn = getDB();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Fetch categories
-    $sql = "SELECT id, name, slug FROM master_categories WHERE status = 'Active' ORDER BY sort_order ASC, name ASC";
+    $sql = "SELECT id, name, slug, show_on_menu, is_featured FROM master_categories WHERE status = 'Active' ORDER BY sort_order ASC, name ASC";
     $result = $conn->query($sql);
 
     $categories = [];

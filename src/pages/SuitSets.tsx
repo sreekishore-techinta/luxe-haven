@@ -15,7 +15,7 @@ const sortOptions = [
     { label: "Newest", value: "newest" },
 ];
 
-const fabricFilters = ["All", "Art Silk", "Chanderi", "Cotton", "Georgette"];
+// We will derive fabric filters dynamically from the api response
 
 const SuitSets = () => {
     const [sortBy, setSortBy] = useState("featured");
@@ -31,12 +31,9 @@ const SuitSets = () => {
         const fetchSuits = async () => {
             setLoading(true);
             try {
-                const url = new URL(`${API}/public/products.php`);
-                url.searchParams.append("category", "Suit Sets");
-                url.searchParams.append("page", String(currentPage));
-                url.searchParams.append("per_page", String(itemsPerPage));
+                const url = `${API}/public/products.php?category=suits and sets&page=${currentPage}&per_page=${itemsPerPage}&show_oos=1`;
 
-                const res = await fetch(url.toString());
+                const res = await fetch(url);
                 const json = await res.json();
                 if (json.status === 'success') {
                     const mapped = json.data.map((p: any) => ({
@@ -45,9 +42,9 @@ const SuitSets = () => {
                         price: parseFloat(p.price),
                         discount_price: p.discount_price ? parseFloat(p.discount_price) : undefined,
                         image: p.image || "",
-                        category: "Suit Sets",
+                        category: p.category_name || "Suit Sets",
                         description: p.description,
-                        fabric: p.fabric,
+                        fabric: p.saree_type_name || p.fabric_name || p.fabric || "Premium",
                         isNew: p.is_new === 1,
                         isBestSeller: p.is_bestseller === 1,
                         status: p.status,
@@ -69,6 +66,11 @@ const SuitSets = () => {
         fetchSuits();
     }, [currentPage]);
 
+    const dynamicFabricFilters = useMemo(() => {
+        const fabrics = new Set(apiProducts.map(p => p.fabric));
+        return ["All", ...Array.from(fabrics)].filter(Boolean);
+    }, [apiProducts]);
+
     const sorted = useMemo(() => {
         let filtered = [...apiProducts];
 
@@ -87,29 +89,14 @@ const SuitSets = () => {
     return (
         <div>
             <CategoryHero
-                title="Kurtha & Suit Sets"
-                description="Experience luxury with our hand-crafted, beautifully tailored Kurtha and Suit Sets designed for timeless elegance."
+                title="Suits & Sets"
+                description="Experience luxury with our hand-crafted, beautifully tailored Suit Sets designed for timeless elegance."
                 backgroundImage={suitSetsHero}
-                imagePosition="center 60%"
+                imagePosition="80% 30%"
                 align="left"
             />
 
             <div id="collection-grid" className="container mx-auto px-4 lg:px-8 py-10 lg:py-16">
-                {/* Fabric Filters */}
-                <div className="flex flex-wrap gap-2 mb-8">
-                    {fabricFilters.map((f) => (
-                        <button
-                            key={f}
-                            onClick={() => { setFabricFilter(f); setCurrentPage(1); }}
-                            className={`font-body text-[10px] uppercase tracking-[0.2em] px-6 py-3 border transition-all duration-300 min-h-[44px] ${fabricFilter === f
-                                ? "border-foreground bg-foreground text-background"
-                                : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
-                                }`}
-                        >
-                            {f}
-                        </button>
-                    ))}
-                </div>
 
                 {/* Toolbar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-border">
@@ -156,13 +143,29 @@ const SuitSets = () => {
                 ) : sorted.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                         <p className="font-display text-xl mb-2">No products found</p>
-                        <p className="font-body text-sm text-muted-foreground mb-4">Try a different filter</p>
+                        <p className="font-body text-sm text-muted-foreground mb-4">Check back later for new arrivals or try a different filter.</p>
                         <button onClick={() => { setFabricFilter("All"); setCurrentPage(1); }} className="btn-outline text-xs inline-flex items-center gap-2 min-h-[44px] px-8">
                             <X size={12} /> Clear Filters
                         </button>
                     </div>
                 ) : (
                     <>
+                        <div className="mb-8 flex flex-wrap gap-2">
+                           {dynamicFabricFilters.length > 1 && dynamicFabricFilters.map((tab: string) => (
+                               <button
+                                   key={tab}
+                                   onClick={() => setFabricFilter(tab)}
+                                   className={`px-4 py-2 font-body text-[10px] tracking-widest uppercase transition-all rounded-sm border ${
+                                       fabricFilter === tab 
+                                          ? "bg-foreground text-background border-foreground" 
+                                          : "bg-background text-muted-foreground border-border hover:border-foreground"
+                                   }`}
+                               >
+                                   {tab}
+                               </button>
+                           ))}
+                        </div>
+
                         <div className={`grid grid-cols-2 ${gridCols === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-4 lg:gap-6`}>
                             {sorted.map((product, i) => (
                                 <ProductCard key={product.id} product={product} index={i} />

@@ -40,8 +40,8 @@ const SlideTicker = () => {
             <div className="absolute inset-y-0 left-0 w-8 md:w-16 bg-gradient-to-r from-[#1A1A1A] to-transparent z-10 pointer-events-none"></div>
             <div className="absolute inset-y-0 right-0 w-8 md:w-16 bg-gradient-to-l from-[#1A1A1A] to-transparent z-10 pointer-events-none"></div>
 
-            <div className="marquee-container flex items-center whitespace-nowrap overflow-hidden">
-                <div className="marquee-content flex items-center hover:[animation-play-state:paused] uppercase tracking-widest text-[10px] sm:text-[11px] font-bold">
+            <div className="marquee-container flex items-center whitespace-nowrap overflow-hidden w-full max-w-full">
+                <div className="marquee-content flex items-center hover:[animation-play-state:paused] uppercase tracking-widest text-[9px] sm:text-[11px] font-bold w-full">
                     {/* Render the slides twice to create the infinite loop effect smoothly */}
                     {[...slides, ...slides, ...slides, ...slides].map((slide, index) => (
                         <div key={`${slide.id}-${index}`} className="flex items-center gap-3 px-8 md:px-16 shrink-0 text-[#EADDCD]">

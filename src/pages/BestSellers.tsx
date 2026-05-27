@@ -4,6 +4,7 @@ import ProductCard from "@/components/ProductCard";
 import CategoryHero from "@/components/CategoryHero";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import SkeletonCard from "@/components/SkeletonCard";
+import FilterDrawer from "@/components/FilterDrawer";
 import bestSellersHero from "@/assets/new-collections-hero.jpg";
 
 import { API_URL as API } from "@/api_config";
@@ -13,19 +14,18 @@ const BestSellers = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState("featured");
+  const [fabricFilter, setFabricFilter] = useState("All");
   const itemsPerPage = 12;
 
   useEffect(() => {
     const fetchBest = async () => {
       setLoading(true);
       try {
-        const url = new URL(`${API}/public/products.php`);
-        url.searchParams.append("is_bestseller", "1");
-        url.searchParams.append("page", String(currentPage));
-        url.searchParams.append("per_page", String(itemsPerPage));
-        url.searchParams.append("show_oos", "1");
+        const url = `${API}/public/products.php?is_bestseller=1&page=${currentPage}&per_page=${itemsPerPage}&show_oos=1`;
 
-        const res = await fetch(url.toString());
+        const res = await fetch(url);
         const json = await res.json();
         if (json.status === 'success') {
           const mapped = json.data.map((p: any) => ({
@@ -36,7 +36,7 @@ const BestSellers = () => {
             image: p.image || "",
             category: p.category_name || p.category,
             description: p.description,
-            fabric: p.fabric,
+            fabric: p.saree_type_name || p.fabric_name || p.fabric || "Premium",
             isNew: p.is_new === 1,
             isBestSeller: p.is_bestseller === 1,
             status: p.status,
@@ -55,8 +55,23 @@ const BestSellers = () => {
   }, [currentPage]);
 
   const displayProducts = useMemo(() => {
-    return apiProducts;
-  }, [apiProducts]);
+    let filtered = [...apiProducts];
+    if (fabricFilter !== "All") {
+      const searchTerm = fabricFilter.toLowerCase().replace(/ silk| saree/gi, "").trim();
+      filtered = filtered.filter((p) => {
+        const src = [p.name, p.fabric, p.category].join(" ").toLowerCase();
+        return src.includes(searchTerm);
+      });
+    }
+    return filtered.sort((a, b) => {
+      const priceA = a.discount_price || a.price;
+      const priceB = b.discount_price || b.price;
+      if (sortBy === "price-asc") return priceA - priceB;
+      if (sortBy === "price-desc") return priceB - priceA;
+      if (sortBy === "newest") return a.isNew ? -1 : 1;
+      return 0;
+    });
+  }, [apiProducts, sortBy, fabricFilter]);
 
   return (
     <div>
@@ -90,6 +105,20 @@ const BestSellers = () => {
           ))}
         </motion.div>
 
+        {/* Filter Button */}
+        <div className="flex justify-end mb-8">
+          <FilterDrawer
+            isOpen={isFilterOpen}
+            onOpen={() => setIsFilterOpen(true)}
+            onClose={() => setIsFilterOpen(false)}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            fabricFilter={fabricFilter}
+            onFabricChange={setFabricFilter}
+            resultCount={displayProducts.length}
+          />
+        </div>
+
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -109,7 +138,6 @@ const BestSellers = () => {
               ))}
             </div>
 
-            {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="mt-16 flex items-center justify-center gap-2">
                 <button

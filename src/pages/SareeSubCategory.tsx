@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import CategoryHero from "@/components/CategoryHero";
 import { ArrowLeft, ChevronLeft, ChevronRight, Grid3X3, LayoutGrid } from "lucide-react";
 import SkeletonCard from "@/components/SkeletonCard";
+import FilterDrawer from "@/components/FilterDrawer";
 import defaultHero from "@/assets/new-arrivals-hero-2.jpg";
 
 import { API_URL as API, BASE_PATH } from "@/api_config";
@@ -17,18 +18,17 @@ const SareeSubCategory = () => {
     const [gridCols, setGridCols] = useState<3 | 4>(4);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [sortBy, setSortBy] = useState("featured");
+    const [fabricFilter, setFabricFilter] = useState("All");
     const itemsPerPage = 12;
 
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
             try {
-                const url = new URL(`${API}/public/products_by_subcategory.php`);
-                url.searchParams.append("subcategory", slug || "");
-                url.searchParams.append("page", String(currentPage));
-                url.searchParams.append("per_page", String(itemsPerPage));
-
-                const res = await fetch(url.toString());
+                const url = `${API}/public/products_by_subcategory.php?subcategory=${slug || ""}&page=${currentPage}&per_page=${itemsPerPage}`;
+                const res = await fetch(url);
                 const json = await res.json();
                 if (json.status === 'success') {
                     const mapped = json.data.map((p: any) => ({
@@ -73,6 +73,25 @@ const SareeSubCategory = () => {
         fetchProducts();
     }, [slug, currentPage]);
 
+    const displayProducts = useMemo(() => {
+        let filtered = [...products];
+        if (fabricFilter !== "All") {
+            const searchTerm = fabricFilter.toLowerCase().replace(/ silk| saree/gi, "").trim();
+            filtered = filtered.filter((p) => {
+                const src = [p.name, p.fabric, p.category].join(" ").toLowerCase();
+                return src.includes(searchTerm);
+            });
+        }
+        return filtered.sort((a, b) => {
+            const priceA = a.discount_price || a.price;
+            const priceB = b.discount_price || b.price;
+            if (sortBy === "price-asc") return priceA - priceB;
+            if (sortBy === "price-desc") return priceB - priceA;
+            if (sortBy === "newest") return a.isNew ? -1 : 1;
+            return 0;
+        });
+    }, [products, sortBy, fabricFilter]);
+
     return (
         <div>
             <CategoryHero
@@ -99,11 +118,21 @@ const SareeSubCategory = () => {
                             <ArrowLeft size={14} /> Back to All
                         </Link>
                         <p className="font-body text-xs sm:text-sm text-muted-foreground sm:ml-4">
-                            {!loading && `${products.length} Items found`}
+                            {!loading && `${displayProducts.length} Items found`}
                         </p>
                     </div>
 
                     <div className="flex items-center gap-4">
+                        <FilterDrawer
+                            isOpen={isFilterOpen}
+                            onOpen={() => setIsFilterOpen(true)}
+                            onClose={() => setIsFilterOpen(false)}
+                            sortBy={sortBy}
+                            onSortChange={setSortBy}
+                            fabricFilter={fabricFilter}
+                            onFabricChange={setFabricFilter}
+                            resultCount={displayProducts.length}
+                        />
                         <div className="hidden lg:flex items-center gap-1">
                             <button
                                 onClick={() => setGridCols(3)}
@@ -127,7 +156,7 @@ const SareeSubCategory = () => {
                             <SkeletonCard key={i} index={i} />
                         ))}
                     </div>
-                ) : products.length === 0 ? (
+                ) : displayProducts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                         <p className="font-display text-xl mb-2">No products found in this category</p>
                         <p className="font-body text-sm text-muted-foreground mb-8">We are currently updating our collection with fresh arrivals.</p>
@@ -136,7 +165,7 @@ const SareeSubCategory = () => {
                 ) : (
                     <>
                         <div className={`grid grid-cols-2 ${gridCols === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-4 lg:gap-6`}>
-                            {products.map((product, i) => (
+                            {displayProducts.map((product, i) => (
                                 <ProductCard key={product.id} product={product} index={i} />
                             ))}
                         </div>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, ShoppingBag, Trash2, ArrowRight, Loader2 } from "lucide-react";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
+import ProductCard from "@/components/ProductCard";
 
 const Wishlist = () => {
   const { wishlist, toggleWishlist, isLoading } = useWishlist();
@@ -51,66 +52,17 @@ const Wishlist = () => {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
               {wishlist.map((product, i) => (
-                <motion.div
+                <ProductCard 
                   key={product.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className="group bg-white border border-border/50 rounded-sm overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500"
-                >
-                  {/* Product Image */}
-                  <div className="relative aspect-[3/4] overflow-hidden">
-                    <Link to={`/product/${product.id}`}>
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                    </Link>
-                    <button
-                      onClick={() => toggleWishlist(product)}
-                      className="absolute top-4 right-4 p-2.5 bg-white/90 backdrop-blur-sm rounded-full text-muted-foreground hover:text-burgundy hover:bg-white transition-all shadow-sm"
-                      title="Remove from wishlist"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-
-                  {/* Product Content */}
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-burgundy font-bold mb-1">{product.fabric}</p>
-                      <Link to={`/product/${product.id}`}>
-                        <h3 className="font-display text-base font-semibold text-[#0D3B2E] line-clamp-1 italic group-hover:text-gold transition-colors">
-                          {product.name}
-                        </h3>
-                      </Link>
-                    </div>
-
-                    <div className="flex items-end justify-between">
-                      <div className="flex flex-col">
-                        <span className="font-body text-lg font-black text-[#0D3B2E]">
-                          {formatPrice(product.discount_price || product.price)}
-                        </span>
-                        {product.discount_price && (
-                          <span className="font-body text-xs text-muted-foreground line-through">
-                            {formatPrice(product.price)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => addToCart(product as any)}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 luxury-gradient text-champagne font-body text-[10px] uppercase tracking-[0.15em] hover:opacity-90 transition-opacity"
-                    >
-                      <ShoppingBag size={14} />
-                      Add to Bag
-                    </button>
-                  </div>
-                </motion.div>
+                  product={{
+                    ...product,
+                    price: product.price,
+                    discount_price: product.discount_price || undefined,
+                  } as any}
+                  index={i}
+                />
               ))}
             </div>
           </div>

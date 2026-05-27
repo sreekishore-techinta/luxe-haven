@@ -144,7 +144,7 @@ const FeaturedProducts = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+              className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
             >
               {displayedItems.map((product, i) => (
                 <ProductCard key={product.id} product={product} index={i} />

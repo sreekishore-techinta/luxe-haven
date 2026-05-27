@@ -11,19 +11,19 @@ const isLocal =
 // Port detection to differentiate between Vite dev server (8080) and Apache (80/443)
 const isVite = isLocal && (window.location.port === '8080' || window.location.port === '5173');
 
-// For XAMPP local environment, the app is usually in a subdirectory /luxe-haven
-// In production, it's usually at the root level.
-// BASE_PATH should include the leading slash if it exists, otherwise be an empty string for the Router's basename.
-export const BASE_PATH = (isLocal && !isVite && window.location.pathname.startsWith("/luxe-haven")) ? "/luxe-haven" : "";
+// Detect base path: check if we are in /luxe-haven subdirectory
+const pathname = window.location.pathname;
+export const BASE_PATH = pathname.startsWith("/luxe-haven") ? "/luxe-haven" : "";
 
-export const BASE_URL = isLocal 
-    ? `${window.location.protocol}//${window.location.host}${BASE_PATH}`
-    : window.location.origin;
-
-// API_URL should be absolute to avoid "Invalid URL" errors in the URL constructor
+// For local Vite dev server, we use absolute origin for API
+// For production or XAMPP, we use root-relative paths for maximum compatibility with subdirectories
 export const API_URL = isVite 
     ? window.location.origin + "/api" 
-    : (isLocal ? `${BASE_URL}/api` : window.location.origin + "/api");
+    : `${BASE_PATH}/api`;
+
+export const BASE_URL = isVite
+    ? window.location.origin
+    : `${window.location.origin}${BASE_PATH}`;
 
 export default {
     BASE_PATH,

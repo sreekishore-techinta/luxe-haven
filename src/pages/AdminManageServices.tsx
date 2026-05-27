@@ -91,7 +91,7 @@ export default function AdminManageServices() {
                 <div>
                     <h1 className="font-display text-4xl font-black text-slate-950 tracking-tight flex items-center gap-3">
                         <Sparkles className="text-[#D4AF37]" size={32} />
-                        Service Categories
+                        Curated Lookbook
                     </h1>
                     <p className="text-slate-500 font-bold mt-1">Manage and moderate the Curated Lookbook layout.</p>
                 </div>

@@ -18,7 +18,7 @@ const CartDrawer = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[200] bg-foreground/40 backdrop-blur-sm"
             onClick={() => setIsCartOpen(false)}
           />
 
@@ -28,7 +28,7 @@ const CartDrawer = () => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-background shadow-2xl flex flex-col"
+            className="fixed right-0 top-0 bottom-0 z-[201] w-full max-w-md bg-background shadow-2xl flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-border">
@@ -62,6 +62,18 @@ const CartDrawer = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-body text-sm font-medium truncate">{item.product.name}</h3>
+                        
+                        {/* Selected Add-ons - Premium Badges */}
+                        {item.product.selectedAddOnDetails && item.product.selectedAddOnDetails.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {item.product.selectedAddOnDetails.map((ao: any, idx: number) => (
+                              <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-full bg-accent/[0.08] border border-accent/20 font-body text-[9px] text-accent uppercase tracking-widest font-black">
+                                {ao.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
                         <p className="font-body text-sm text-accent mt-1">{formatPrice(item.product.discount_price || item.product.price)}</p>
                         <div className="flex items-center gap-3 mt-2">
                           <button

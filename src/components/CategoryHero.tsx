@@ -127,7 +127,11 @@ const CategoryHero = ({
                                 {slide.subtitle}
                             </motion.p>
                         )}
-                        <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="font-display text-5xl md:text-7xl lg:text-[84px] font-semibold text-white mb-8 leading-[1.05] [text-shadow:_0_4px_15px_rgba(0,0,0,0.4)]">
+                        <motion.h1 
+                          initial={{ opacity: 0, y: 30 }} 
+                          animate={{ opacity: 1, y: 0 }} 
+                          className="font-display text-4xl md:text-7xl lg:text-[84px] font-semibold text-white mb-6 lg:mb-8 leading-[1.1] md:leading-[1.05] [text-shadow:_0_4px_15px_rgba(0,0,0,0.4)]"
+                        >
                             {slide.title}
                         </motion.h1>
                         {slide.description && (
@@ -145,8 +149,20 @@ const CategoryHero = ({
 
                 {sliders.length > 1 && (
                     <>
-                        <button onClick={prevSlide} className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/10 bg-black/10 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"><ChevronLeft size={24}/></button>
-                        <button onClick={nextSlide} className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/10 bg-black/10 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"><ChevronRight size={24}/></button>
+                        <button 
+                            onClick={prevSlide} 
+                            className="absolute left-4 lg:left-8 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full border border-white/10 bg-black/10 text-white flex items-center justify-center transition-all backdrop-blur-md z-30 group/btn"
+                            aria-label="Previous slide"
+                        >
+                            <ChevronLeft size={28} className="transition-transform group-hover/btn:-translate-x-1" />
+                        </button>
+                        <button 
+                            onClick={nextSlide} 
+                            className="absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full border border-white/10 bg-black/10 text-white flex items-center justify-center transition-all backdrop-blur-md z-30 group/btn"
+                            aria-label="Next slide"
+                        >
+                            <ChevronRight size={28} className="transition-transform group-hover/btn:translate-x-1" />
+                        </button>
                     </>
                 )}
             </section>
@@ -172,7 +188,7 @@ const CategoryHero = ({
             <div className={`container mx-auto px-4 lg:px-20 relative z-20 h-full flex items-center ${align === "left" ? "justify-center lg:justify-start" : "justify-center"}`}>
                 <div className={`${align === "left" ? "max-w-[720px] text-center lg:text-left" : "max-w-3xl text-center"}`}>
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
-                        <h1 className={`font-display font-semibold text-white mb-6 leading-[1.05] [text-shadow:_0_4px_15px_rgba(0,0,0,0.5)] ${align === "left" ? "text-[48px] md:text-8xl" : "text-[52px] md:text-9xl"}`}>
+                        <h1 className={`font-display font-semibold text-white mb-6 leading-[1.1] md:leading-[1.05] [text-shadow:_0_4px_15px_rgba(0,0,0,0.5)] ${align === "left" ? "text-[36px] md:text-8xl" : "text-[40px] md:text-9xl"}`}>
                             {fallbackTitle}
                         </h1>
                         {fallbackDescription && (

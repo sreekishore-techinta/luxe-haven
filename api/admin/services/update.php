@@ -24,6 +24,7 @@ $link_url = sanitize($conn, $data['link_url'] ?? '');
 $tag = sanitize($conn, $data['tag'] ?? '');
 $display_order = (int)($data['display_order'] ?? 0);
 $is_active = (int)($data['is_active'] ?? 1);
+$linked_category_id = isset($data['linked_category_id']) && $data['linked_category_id'] !== null ? (int)$data['linked_category_id'] : "NULL";
 
 if (!$title || !$image_url) {
     jsonResponse(['status' => 'error', 'message' => 'Title and Image URL are required'], 400);
@@ -33,6 +34,7 @@ $sql = "UPDATE service_categories SET
         title = '$title', 
         image_url = '$image_url', 
         link_url = '$link_url',
+        linked_category_id = $linked_category_id,
         tag = '$tag', 
         display_order = $display_order, 
         is_active = $is_active 

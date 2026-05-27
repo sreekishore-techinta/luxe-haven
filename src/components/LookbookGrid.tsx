@@ -26,10 +26,10 @@ const panels = [
     },
     {
         image: categoryBlouses,
-        title: "Designer Blouses",
+        title: "Ready Made",
         subtitle: "Contemporary Craft",
         tag: "Exclusive",
-        link: "/collections",
+        link: "/category/ready-made",
         span: "",
     },
     {

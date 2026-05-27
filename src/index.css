@@ -72,15 +72,16 @@
     @apply bg-background text-foreground font-body antialiased;
     width: 100%;
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow-x: hidden !important;
+    position: relative;
     -webkit-overflow-scrolling: touch;
     scrollbar-gutter: stable;
   }
 
   #root {
     width: 100%;
-    margin: 0;
-    padding: 0;
+    overflow-x: hidden !important;
+    position: relative;
   }
 
   h1,
@@ -146,15 +147,15 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full luxury-gradient text-champagne font-body text-sm uppercase tracking-[0.2em] shadow-md hover:shadow-xl hover:-translate-y-1 hover:opacity-90 active:scale-95 transition-all duration-500 ease-out;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full luxury-gradient text-champagne font-body text-[10px] uppercase tracking-[0.2em] shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:opacity-90 active:scale-95 transition-all duration-300 ease-out;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full border border-foreground text-foreground font-body text-sm uppercase tracking-[0.2em] hover:bg-foreground hover:text-background hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all duration-500 ease-out;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border border-foreground/20 text-foreground font-body text-[10px] uppercase tracking-[0.2em] hover:bg-foreground hover:text-background hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all duration-300 ease-out;
   }
 
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full gold-gradient text-accent-foreground font-body text-sm uppercase tracking-[0.2em] shadow-md hover:shadow-xl hover:-translate-y-1 hover:opacity-90 active:scale-95 transition-all duration-500 ease-out;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full gold-gradient text-accent-foreground font-body text-[10px] uppercase tracking-[0.2em] shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:opacity-90 active:scale-95 transition-all duration-300 ease-out;
   }
 
   .input-luxury {
@@ -430,6 +431,14 @@ body.modal-open {
 }
 
 .custom-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import CategoryHero from "@/components/CategoryHero";
 import SkeletonCard from "@/components/SkeletonCard";
+import FilterDrawer from "@/components/FilterDrawer";
 import newArrivalsHero from "@/assets/new-arrivals-hero-2.jpg";
 
 import { API_URL as API } from "@/api_config";
@@ -10,6 +11,9 @@ import { API_URL as API } from "@/api_config";
 const NewArrivals = () => {
   const [apiProducts, setApiProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState("featured");
+  const [fabricFilter, setFabricFilter] = useState("All");
 
   useEffect(() => {
     const fetchNew = async () => {
@@ -26,7 +30,7 @@ const NewArrivals = () => {
             image: p.image || "",
             category: p.category_name || p.category,
             description: p.description,
-            fabric: p.fabric,
+            fabric: p.saree_type_name || p.fabric_name || p.fabric || "Premium",
             isNew: p.is_new === 1,
             isBestSeller: p.is_bestseller === 1,
             status: p.status,
@@ -44,8 +48,23 @@ const NewArrivals = () => {
   }, []);
 
   const displayProducts = useMemo(() => {
-    return apiProducts;
-  }, [apiProducts]);
+    let filtered = [...apiProducts];
+    if (fabricFilter !== "All") {
+      const searchTerm = fabricFilter.toLowerCase().replace(/ silk| saree/gi, "").trim();
+      filtered = filtered.filter((p) => {
+        const src = [p.name, p.fabric, p.category].join(" ").toLowerCase();
+        return src.includes(searchTerm);
+      });
+    }
+    return filtered.sort((a, b) => {
+      const priceA = a.discount_price || a.price;
+      const priceB = b.discount_price || b.price;
+      if (sortBy === "price-asc") return priceA - priceB;
+      if (sortBy === "price-desc") return priceB - priceA;
+      if (sortBy === "newest") return a.isNew ? -1 : 1;
+      return 0;
+    });
+  }, [apiProducts, sortBy, fabricFilter]);
 
   return (
     <div>
@@ -59,6 +78,20 @@ const NewArrivals = () => {
       />
 
       <div id="collection-grid" className="container mx-auto px-4 lg:px-8 py-12 lg:py-20">
+        {/* Filter Button Row */}
+        <div className="flex justify-end mb-8">
+          <FilterDrawer
+            isOpen={isFilterOpen}
+            onOpen={() => setIsFilterOpen(true)}
+            onClose={() => setIsFilterOpen(false)}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            fabricFilter={fabricFilter}
+            onFabricChange={setFabricFilter}
+            resultCount={displayProducts.length}
+          />
+        </div>
+
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {Array.from({ length: 8 }).map((_, i) => (

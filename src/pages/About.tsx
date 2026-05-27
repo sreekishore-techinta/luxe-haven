@@ -17,15 +17,15 @@ const About = () => {
     <div>
       <PageHeroBanner
         title="Our Story"
-        subtitle="About LuxeDrape"
-        description="Born from a love for India's textile heritage, LuxeDrape bridges the gap between master artisans and those who appreciate the art of fine silk."
+        subtitle="About Luxe Haven"
+        description="Born from a love for India's textile heritage, Luxe Haven bridges the gap between master artisans and those who appreciate the art of fine silk."
         backgroundImage={heroImage}
       />
 
-      {/* Mission */}
-      <section className="py-12 lg:py-16">
+      {/* Mission Section */}
+      <section className="py-12 lg:py-24 overflow-hidden">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-0 items-stretch overflow-hidden">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="aspect-[4/3] lg:aspect-auto overflow-hidden">
               <motion.img
                 initial={{ opacity: 0, scale: 1.05 }}
@@ -34,7 +34,7 @@ const About = () => {
                 transition={{ duration: 0.8 }}
                 src={heroImage2}
                 alt="Handcrafted luxury textiles"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover rounded-[2rem] shadow-2xl"
               />
             </div>
             <motion.div
@@ -42,7 +42,7 @@ const About = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="flex flex-col justify-center bg-card p-10 lg:p-16 xl:p-20"
+              className="flex flex-col justify-center bg-card p-8 md:p-12 lg:p-16 xl:p-20 rounded-[2rem]"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-px bg-accent" />

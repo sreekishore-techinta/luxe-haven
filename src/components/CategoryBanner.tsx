@@ -26,10 +26,10 @@ const CategoryBanner = () => {
             if (cat.name.toLowerCase().includes('saree')) {
               img = categorySarees;
               accent = "from-amber-900/60";
-            } else if (cat.name.toLowerCase().includes('blouse')) {
+            } else if (cat.name.toLowerCase().includes('ready made')) {
               img = categoryBlouses;
               accent = "from-rose-900/60";
-            } else if (cat.name.toLowerCase().includes('suit')) {
+            } else if (cat.name.toLowerCase().includes('suit') || cat.name.toLowerCase().includes('material')) {
               img = categorySuits;
               accent = "from-emerald-900/60";
             }

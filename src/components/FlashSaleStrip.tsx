@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const offers = [
     "🔥 Diwali Special — Upto 40% OFF on Silk Sarees",
     "✨ Use Code LUXE200 for ₹200 Off on Orders Above ₹3,999",
-    "🎁 Free Blouse Piece on Every Saree Above ₹6,000",
+    "🎁 Free Delivery on Orders Above ₹6,000",
     "💛 New Kanjivaram Collections Just Landed",
 ];
 

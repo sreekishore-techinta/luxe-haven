@@ -23,18 +23,27 @@ interface WishlistContextType {
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
+const WISHLIST_STORAGE_KEY = "luxe_haven_wishlist";
 
 export const WishlistProvider = ({ children }: { children: ReactNode }) => {
-    const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);
+    const [wishlist, setWishlist] = useState<WishlistProduct[]>(() => {
+        try {
+            const saved = localStorage.getItem(WISHLIST_STORAGE_KEY);
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            return [];
+        }
+    });
     const [isLoading, setIsLoading] = useState(false);
     const { isLoggedIn } = useAuth();
 
-    // Fetch when login state changes
+    useEffect(() => {
+        localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist));
+    }, [wishlist]);
+
     useEffect(() => {
         if (isLoggedIn) {
             fetchWishlist();
-        } else {
-            setWishlist([]);
         }
     }, [isLoggedIn]);
 

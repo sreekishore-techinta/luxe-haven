@@ -20,21 +20,13 @@ const adminLinks = [
             { name: "Colours", path: "/admin/general-master?type=colours", icon: Palette },
             { name: "Fabric Types", path: "/admin/general-master?type=fabric_types", icon: Scissors },
             { name: "Sizes", path: "/admin/general-master?type=sizes", icon: Maximize },
+            { name: "Add-on Services", path: "/admin/general-master?type=add_ons", icon: Sparkles },
         ]
     },
     { name: "Product Master", path: "/admin/products", icon: Package },
-    { name: "Blouse Styles", path: "/admin/blouse-styles", icon: Camera },
     { name: "Slide Cards", path: "/admin/slide-cards", icon: Target },
     { name: "Web Sliders", path: "/admin/web-sliders", icon: ImageIcon },
-    {
-        name: "Services",
-        path: "/admin/services",
-        icon: Sparkles,
-        subItems: [
-            { name: "Add Service Category", path: "/admin/services/add", icon: List },
-            { name: "Manage Service Categories", path: "/admin/services/list", icon: Tag },
-        ]
-    },
+    { name: "Curated Lookbook", path: "/admin/services/list", icon: Sparkles },
     { name: "Orders", path: "/admin/orders", icon: ShoppingBag },
     { name: "Feedback", path: "/admin/feedback", icon: MessageSquare },
     { name: "Customers", path: "/admin/customers", icon: Users },

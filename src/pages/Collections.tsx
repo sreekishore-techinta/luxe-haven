@@ -3,8 +3,9 @@ import { useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import CategoryHero from "@/components/CategoryHero";
-import { SlidersHorizontal, Grid3X3, LayoutGrid, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Grid3X3, LayoutGrid, ChevronLeft, ChevronRight } from "lucide-react";
 import SkeletonCard from "@/components/SkeletonCard";
+import FilterDrawer from "@/components/FilterDrawer";
 
 const sortOptions = [
   { label: "Featured", value: "featured" },
@@ -39,20 +40,17 @@ const Collections = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const url = new URL(`${API}/public/products.php`);
-        url.searchParams.append("page", String(currentPage));
-        url.searchParams.append("per_page", String(itemsPerPage));
-        url.searchParams.append("show_oos", "1");
+        let url = `${API}/public/products.php?page=${currentPage}&per_page=${itemsPerPage}&show_oos=1`;
         
         if (categoryParam && categoryParam !== "All") {
-          url.searchParams.append("category", categoryParam);
+          url += `&category=${encodeURIComponent(categoryParam)}`;
         }
 
         if (searchParam) {
-          url.searchParams.append("search", searchParam);
+          url += `&search=${encodeURIComponent(searchParam)}`;
         }
 
-        const res = await fetch(url.toString());
+        const res = await fetch(url);
         const json = await res.json();
         
         if (json.status === 'success') {
@@ -141,14 +139,16 @@ const Collections = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
-             <button 
-                onClick={() => setIsFilterOpen(true)}
-                className="flex items-center gap-3 bg-white px-8 py-4 rounded-full border border-[#041E18]/5 shadow-sm hover:shadow-md transition-all group"
-             >
-                <SlidersHorizontal size={14} className="text-[#D4AF37] group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#041E18]">Open Filter</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] opacity-50" />
-             </button>
+             <FilterDrawer
+               isOpen={isFilterOpen}
+               onOpen={() => setIsFilterOpen(true)}
+               onClose={() => setIsFilterOpen(false)}
+               sortBy={sortBy}
+               onSortChange={setSortBy}
+               fabricFilter={fabricFilter}
+               onFabricChange={setFabricFilter}
+               resultCount={sorted.length}
+             />
 
              <div className="flex items-center gap-1 bg-[#041E18]/5 p-1 rounded-2xl border border-[#041E18]/5">
                 <button 
@@ -167,81 +167,7 @@ const Collections = () => {
           </div>
         </div>
 
-        <AnimatePresence>
-          {isFilterOpen && (
-            <>
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsFilterOpen(false)}
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
-              />
-              <motion.div 
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[#FBFAF7] z-[101] shadow-2xl p-10 flex flex-col"
-              >
-                  <div className="flex items-center justify-between mb-12">
-                      <div className="space-y-1">
-                          <h2 className="font-display text-2xl font-black text-[#041E18] tracking-tight">Fine Filters</h2>
-                          <div className="h-1 w-12 bg-[#D4AF37]" />
-                      </div>
-                      <button onClick={() => setIsFilterOpen(false)} className="p-2 hover:bg-[#041E18]/5 rounded-full transition-colors">
-                        <X size={24} className="text-[#041E18]" />
-                      </button>
-                  </div>
 
-                  <div className="flex-1 space-y-12 overflow-y-auto pr-2 custom-scrollbar">
-                      <section className="space-y-6">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#D4AF37]">Sort Collections</h3>
-                        <div className="grid grid-cols-1 gap-3">
-                          {sortOptions.map((opt) => (
-                            <button
-                              key={opt.value}
-                              onClick={() => setSortBy(opt.value)}
-                              className={`text-left px-6 py-4 rounded-2xl text-[11px] font-bold tracking-wide transition-all border ${
-                                sortBy === opt.value ? "bg-[#041E18] text-white border-[#041E18]" : "bg-white text-[#041E18] border-[#041E18]/5 hover:border-[#D4AF37]/40"
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </section>
-
-                      <section className="space-y-6">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#D4AF37]">Select Fabric</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                          {fabricFilters.map((fabric) => (
-                            <button
-                              key={fabric}
-                              onClick={() => setFabricFilter(fabric)}
-                              className={`text-left px-4 py-3 rounded-xl text-[10px] font-bold tracking-wide transition-all border ${
-                                fabricFilter === fabric ? "bg-[#D4AF37] text-white border-[#D4AF37]" : "bg-white text-[#041E18] border-[#041E18]/5 hover:border-[#D4AF37]/40"
-                              }`}
-                            >
-                              {fabric}
-                            </button>
-                          ))}
-                        </div>
-                      </section>
-                  </div>
-
-                  <div className="pt-10 border-t border-[#041E18]/5">
-                    <button 
-                       onClick={() => setIsFilterOpen(false)}
-                       className="w-full bg-[#041E18] text-white py-5 rounded-full text-[11px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all shadow-xl shadow-[#041E18]/20"
-                    >
-                      Apply Discoveries
-                    </button>
-                  </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
 
         {loading ? (
           <div className="space-y-20">
