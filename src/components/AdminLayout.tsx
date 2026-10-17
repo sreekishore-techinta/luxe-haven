@@ -131,6 +131,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
     const [admin, setAdmin] = useState<any>(null);
+    const [dynamicLogo, setDynamicLogo] = useState<string>("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -155,6 +156,28 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         };
         checkAuth();
     }, [navigate]);
+
+    // Fetch dynamic logo — re-fetches when user navigates to logo page and back
+    useEffect(() => {
+        const fetchLogo = () => {
+            fetch(`${API}/admin/logo/get.php`, { credentials: "include" })
+                .then(res => res.json())
+                .then(json => {
+                    if (json.status === "success" && json.logo_full_url) {
+                        setDynamicLogo(json.logo_full_url);
+                    } else {
+                        setDynamicLogo("");
+                    }
+                })
+                .catch(() => setDynamicLogo(""));
+        };
+
+        fetchLogo();
+
+        // Listen for logo change events dispatched by AdminLogoUpload page
+        window.addEventListener("admin:logo-updated", fetchLogo);
+        return () => window.removeEventListener("admin:logo-updated", fetchLogo);
+    }, []);
 
     const handleLogout = async () => {
         try {
@@ -192,7 +215,19 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                 <div className={`h-20 flex flex-col shrink-0 border-b border-slate-100 bg-white p-4 transition-all ${sidebarOpen ? "items-stretch" : "items-center"}`}>
                     <div className={`flex items-center gap-3 ${sidebarOpen ? "justify-between" : "justify-center mb-4"}`}>
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-[#0F172A] rounded-xl flex items-center justify-center text-[#D4AF37] font-bold shadow-sm shrink-0">L</div>
+                            {/* Dynamic logo — shows uploaded image or fallback "L" monogram */}
+                            <div className="w-10 h-10 bg-[#0F172A] rounded-xl flex items-center justify-center shadow-sm shrink-0 overflow-hidden border border-slate-700">
+                                {dynamicLogo ? (
+                                    <img
+                                        src={dynamicLogo}
+                                        alt="Store Logo"
+                                        className="w-full h-full object-cover"
+                                        onError={() => setDynamicLogo("")}
+                                    />
+                                ) : (
+                                    <span className="text-[#D4AF37] font-bold text-lg">L</span>
+                                )}
+                            </div>
                             {sidebarOpen && (
                                 <motion.span
                                     initial={{ opacity: 0 }}
@@ -225,10 +260,19 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                     {!sidebarOpen && (
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="hidden lg:flex w-full h-10 items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-xl transition-all text-[#D4AF37]"
+                            className="hidden lg:flex w-full h-10 items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-xl transition-all overflow-hidden border border-slate-200"
                             title="Expand Sidebar"
                         >
-                            <ChevronsRight size={18} strokeWidth={3} />
+                            {dynamicLogo ? (
+                                <img
+                                    src={dynamicLogo}
+                                    alt="Logo"
+                                    className="w-8 h-8 object-cover rounded-lg"
+                                    onError={() => setDynamicLogo("")}
+                                />
+                            ) : (
+                                <ChevronsRight size={18} strokeWidth={3} className="text-[#D4AF37]" />
+                            )}
                         </button>
                     )}
                 </div>

@@ -20,6 +20,8 @@ const Navbar = () => {
   const [isSuitsOpen, setIsSuitsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  // Dynamic logo from admin upload — falls back to static PNG when empty
+  const [dynamicLogo, setDynamicLogo] = useState<string>("");
 
   const staticLinks = [
     { name: "Home", path: "/" },
@@ -28,6 +30,16 @@ const Navbar = () => {
   ];
 
   useEffect(() => {
+    // Fetch dynamic logo from API
+    fetch(`${API}/public/get_settings.php`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.status === 'success' && json.data?.logo_full_url) {
+          setDynamicLogo(json.data.logo_full_url);
+        }
+      })
+      .catch(() => {}); // silently fall back to static logo
+
     fetch(`${API}/public/nav_categories.php`)
       .then(res => res.json())
       .then(json => {
@@ -100,7 +112,7 @@ const Navbar = () => {
               {/* Logo Icon (Cropped Square) */}
               <div className="w-[65px] h-[65px] md:w-[75px] md:h-[75px] flex-shrink-0 overflow-hidden relative rounded-xl border border-[#B48C5E]/20 shadow-lg bg-[#2C1810]">
                 <img
-                  src={logoLishan}
+                  src={dynamicLogo || logoLishan}
                   alt="Lishan"
                   className="absolute top-0 left-0 w-full h-auto object-cover scale-[1.05]"
                   style={{ objectPosition: 'center 0px' }}
@@ -447,7 +459,7 @@ const Navbar = () => {
                 >
                   <div className="w-[50px] h-[50px] overflow-hidden relative rounded-lg border border-[#B48C5E]/10 bg-[#2C1810]">
                     <img 
-                      src={logoLishan} 
+                      src={dynamicLogo || logoLishan} 
                       alt="Lishan" 
                       className="absolute top-0 left-0 w-full h-auto object-cover scale-[1.05]" 
                       style={{ objectPosition: 'center 0px' }}

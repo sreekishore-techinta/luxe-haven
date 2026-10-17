@@ -78,6 +78,8 @@ const AdminLogoUpload = () => {
                 setCurrentLogo(json.logo_url);
                 setFile(null);
                 setPreview(null);
+                // Notify AdminLayout sidebar to refresh logo
+                window.dispatchEvent(new Event("admin:logo-updated"));
                 toast.success("Logo uploaded successfully", {
                     description: "The new logo is now live on your storefront.",
                 });
@@ -108,6 +110,8 @@ const AdminLogoUpload = () => {
                 setCurrentLogo("");
                 setFile(null);
                 setPreview(null);
+                // Notify AdminLayout sidebar to refresh logo
+                window.dispatchEvent(new Event("admin:logo-updated"));
                 toast.success("Logo removed");
             } else {
                 throw new Error(json.message);
