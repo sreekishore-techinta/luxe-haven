@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Edit2, Trash2, Loader2, GripVertical, Check, X, Image as ImageIcon, Search, Globe } from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2, GripVertical, Check, X, Image as ImageIcon, Search, Globe, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { API_URL as API, BASE_URL } from "@/api_config";
 
@@ -20,6 +20,7 @@ interface WebSlider {
     button_text: string | null;
     button_link: string | null;
     image_url: string;
+    logo_url: string | null;
     order_index: number;
     is_active: number;
 }
@@ -47,6 +48,11 @@ const AdminWebSliders = () => {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [removeLogo, setRemoveLogo] = useState(false);
+    const logoInputRef = useRef<HTMLInputElement>(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -87,6 +93,7 @@ const AdminWebSliders = () => {
                 is_active: slider.is_active
             });
             setImagePreview(slider.image_url.startsWith('http') ? slider.image_url : `${BASE_URL}${slider.image_url}`);
+            setLogoPreview(slider.logo_url ? (slider.logo_url.startsWith('http') ? slider.logo_url : `${BASE_URL}${slider.logo_url}`) : null);
         } else {
             setEditingSlider(null);
             setFormData({
@@ -100,8 +107,11 @@ const AdminWebSliders = () => {
                 is_active: 1
             });
             setImagePreview(null);
+            setLogoPreview(null);
         }
         setImageFile(null);
+        setLogoFile(null);
+        setRemoveLogo(false);
         setPageSearch("");
         setIsMenuOpen(true);
     };
@@ -111,6 +121,9 @@ const AdminWebSliders = () => {
         setEditingSlider(null);
         setImageFile(null);
         setImagePreview(null);
+        setLogoFile(null);
+        setLogoPreview(null);
+        setRemoveLogo(false);
     };
 
     const handlePageToggle = (key: string) => {
@@ -130,6 +143,23 @@ const AdminWebSliders = () => {
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
         }
+    };
+
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setLogoFile(file);
+            setLogoPreview(URL.createObjectURL(file));
+            setRemoveLogo(false);
+        }
+    };
+
+    const handleRemoveLogo = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setLogoFile(null);
+        setLogoPreview(null);
+        setRemoveLogo(true);
+        if (logoInputRef.current) logoInputRef.current.value = "";
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -161,6 +191,8 @@ const AdminWebSliders = () => {
             data.append("is_active", formData.is_active.toString());
             data.append("pages", JSON.stringify(formData.selectedPages));
             if (imageFile) data.append("image", imageFile);
+            if (logoFile) data.append("logo", logoFile);
+            if (removeLogo) data.append("remove_logo", "1");
 
             const res = await fetch(url, {
                 method: "POST",
@@ -288,6 +320,12 @@ const AdminWebSliders = () => {
                                 </div>
                                 <div className="w-full md:w-48 h-28 bg-slate-100 rounded-lg overflow-hidden shrink-0 relative border border-slate-200">
                                     <img src={slider.image_url.startsWith('http') ? slider.image_url : `${BASE_URL}${slider.image_url}`} alt="Slider" className="w-full h-full object-cover" />
+                                    {slider.logo_url && (
+                                        <div className="absolute top-2 right-2 bg-slate-900/85 backdrop-blur-md px-2 py-1 rounded-md border border-[#D4AF37]/50 shadow-md flex items-center gap-1.5" title="Brand Logo Attached">
+                                            <Sparkles size={11} className="text-[#D4AF37]" />
+                                            <img src={slider.logo_url.startsWith('http') ? slider.logo_url : `${BASE_URL}${slider.logo_url}`} alt="Logo" className="h-3.5 w-auto object-contain max-w-[42px]" />
+                                        </div>
+                                    )}
                                 </div>
                                 
                                 <div className="flex-1 min-w-0 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -458,46 +496,92 @@ const AdminWebSliders = () => {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-4">
+                                        {/* Banner Image */}
+                                        <div className="space-y-3">
                                             <label className="block text-sm font-black text-slate-800 uppercase tracking-wider">Banner Image <span className="text-rose-500">*</span></label>
                                             <div 
                                                 onClick={() => fileInputRef.current?.click()}
-                                                className="w-full h-44 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 hover:border-[#D4AF37] transition-all relative overflow-hidden group/img"
+                                                className="w-full h-48 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 hover:border-[#D4AF37] transition-all relative overflow-hidden group/img"
                                             >
                                                 {imagePreview ? (
                                                     <>
-                                                        <img src={imagePreview} className="w-full h-full object-cover transition-transform group-hover/img:scale-105" />
+                                                        <img src={imagePreview} className="w-full h-full object-cover transition-transform group-hover/img:scale-105" alt="Banner Preview" />
                                                         <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-all">
-                                                            <span className="bg-white text-slate-900 px-4 py-2 rounded-xl text-xs font-black uppercase">Change Image</span>
+                                                            <span className="bg-white text-slate-900 px-4 py-2 rounded-xl text-xs font-black uppercase shadow-lg">Change Banner</span>
                                                         </div>
                                                     </>
                                                 ) : (
-                                                    <div className="flex flex-col items-center text-slate-400">
-                                                        <ImageIcon size={32} className="mb-2" />
-                                                        <span className="font-black text-[10px] uppercase tracking-widest">Click to upload</span>
+                                                    <div className="flex flex-col items-center text-slate-400 p-4 text-center">
+                                                        <ImageIcon size={32} className="mb-2 text-slate-400" />
+                                                        <span className="font-black text-[10px] uppercase tracking-widest text-slate-700">Click to upload banner</span>
+                                                        <span className="text-[10px] text-slate-400 mt-1">High-res landscape image (1920x800)</span>
                                                     </div>
                                                 )}
                                                 <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
                                             </div>
                                         </div>
-                                        <div className="space-y-4">
-                                             <label className="block text-sm font-black text-slate-800 uppercase tracking-wider">Call-to-Action</label>
-                                             <div className="space-y-3">
-                                                <input
-                                                    type="text"
-                                                    value={formData.button_text}
-                                                    onChange={(e) => setFormData({...formData, button_text: e.target.value})}
-                                                    placeholder="Button Text (e.g. Shop Now)"
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    value={formData.button_link}
-                                                    onChange={(e) => setFormData({...formData, button_link: e.target.value})}
-                                                    placeholder="Button Link (e.g. /sarees/banarasi)"
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
-                                                />
-                                             </div>
+
+                                        {/* Brand Logo / Emblem Upload */}
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <label className="block text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                                    Brand Logo / Emblem 
+                                                    <span className="text-[10px] font-bold text-[#B8960C] bg-[#D4AF37]/15 px-2 py-0.5 rounded-full border border-[#D4AF37]/30 normal-case tracking-normal">Premium</span>
+                                                </label>
+                                                {logoPreview && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRemoveLogo}
+                                                        className="text-xs font-bold text-rose-500 hover:text-rose-700 flex items-center gap-1 transition-colors px-2 py-0.5 rounded hover:bg-rose-50"
+                                                    >
+                                                        <Trash2 size={13} /> Remove
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div 
+                                                onClick={() => logoInputRef.current?.click()}
+                                                className="w-full h-48 border-2 border-dashed border-[#D4AF37]/40 rounded-2xl bg-amber-500/[0.03] hover:bg-amber-500/[0.08] hover:border-[#D4AF37] flex flex-col items-center justify-center cursor-pointer transition-all relative overflow-hidden group/logo"
+                                            >
+                                                {logoPreview ? (
+                                                    <div className="w-full h-full p-6 flex flex-col items-center justify-center relative bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:12px_12px]">
+                                                        <img src={logoPreview} className="max-h-24 max-w-[85%] object-contain drop-shadow-md transition-transform group-hover/logo:scale-105" alt="Logo Preview" />
+                                                        <span className="text-[10px] font-bold text-[#B8960C] mt-2 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300/60 shadow-xs">Custom Logo Attached</span>
+                                                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/logo:opacity-100 flex items-center justify-center transition-all">
+                                                            <span className="bg-white text-slate-900 px-4 py-2 rounded-xl text-xs font-black uppercase shadow-lg">Change Logo</span>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col items-center text-slate-400 group-hover/logo:text-[#D4AF37] transition-colors p-4 text-center">
+                                                        <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-200 group-hover/logo:border-[#D4AF37] flex items-center justify-center mb-2.5 transition-all group-hover/logo:scale-110">
+                                                            <Sparkles size={20} className="text-[#D4AF37]" />
+                                                        </div>
+                                                        <span className="font-black text-[10px] uppercase tracking-widest text-slate-700">Upload Brand Logo</span>
+                                                        <span className="text-[10px] text-slate-400 mt-1 max-w-[200px]">Transparent PNG, SVG, or WEBP overlaid on slider banner</span>
+                                                    </div>
+                                                )}
+                                                <input type="file" ref={logoInputRef} onChange={handleLogoChange} className="hidden" accept="image/png,image/svg+xml,image/webp,image/jpeg,image/avif" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Call-to-Action */}
+                                    <div className="space-y-3 pt-2">
+                                        <label className="block text-sm font-black text-slate-800 uppercase tracking-wider">Call-to-Action (Button)</label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <input
+                                                type="text"
+                                                value={formData.button_text}
+                                                onChange={(e) => setFormData({...formData, button_text: e.target.value})}
+                                                placeholder="Button Text (e.g. Shop Now)"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={formData.button_link}
+                                                onChange={(e) => setFormData({...formData, button_link: e.target.value})}
+                                                placeholder="Button Link (e.g. /sarees/banarasi)"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+                                            />
                                         </div>
                                     </div>
                                 </div>

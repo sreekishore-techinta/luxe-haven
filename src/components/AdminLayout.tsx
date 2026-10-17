@@ -4,7 +4,7 @@ import {
     LayoutDashboard, Package, ShoppingBag, Users, Settings,
     Bell, Search, Menu, X, LogOut, Loader2, Database, Camera, Layers,
     ChevronsLeft, ChevronsRight, PanelLeftClose, ChevronDown, ChevronRight, List, Tag, Palette, Scissors, Maximize, Target, Image as ImageIcon,
-    MessageSquare, Sparkles
+    MessageSquare, Sparkles, ImagePlus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,6 +28,7 @@ const adminLinks = [
     { name: "Web Sliders", path: "/admin/web-sliders", icon: ImageIcon },
     { name: "Curated Lookbook", path: "/admin/services/list", icon: Sparkles },
     { name: "Orders", path: "/admin/orders", icon: ShoppingBag },
+    { name: "Logo Upload", path: "/admin/logo", icon: ImagePlus },
     { name: "Feedback", path: "/admin/feedback", icon: MessageSquare },
     { name: "Customers", path: "/admin/customers", icon: Users },
     { name: "Settings", path: "/admin/settings", icon: Settings },

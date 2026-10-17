@@ -19,17 +19,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($pages)) $pages = ['home'];
 
     $image_url = null;
+    $logo_url = null;
 
     if (empty($title)) {
         jsonResponse(["status" => "error", "message" => "Title is required."]);
     }
 
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = __DIR__ . '/../../uploads/hero/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
+    $uploadDir = __DIR__ . '/../../uploads/hero/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
 
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $fileInfo = pathinfo($_FILES['image']['name']);
         $extension = strtolower($fileInfo['extension'] ?? '');
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
@@ -50,11 +51,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          jsonResponse(["status" => "error", "message" => "An image is required."]);
     }
 
+    // Optional Logo Upload
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+        $logoInfo = pathinfo($_FILES['logo']['name']);
+        $logoExt = strtolower($logoInfo['extension'] ?? '');
+        $allowedLogoExtensions = ['png', 'svg', 'webp', 'jpg', 'jpeg', 'avif'];
+
+        if (in_array($logoExt, $allowedLogoExtensions)) {
+            $newLogoName = uniqid('slider_logo_') . '.' . $logoExt;
+            $logoTargetPath = $uploadDir . $newLogoName;
+
+            if (move_uploaded_file($_FILES['logo']['tmp_name'], $logoTargetPath)) {
+                $logo_url = '/uploads/hero/' . $newLogoName;
+            }
+        }
+    }
+
     $conn->begin_transaction();
     try {
-        $stmt = $conn->prepare("INSERT INTO web_sliders (page_name, title, subtitle, description, button_text, button_link, image_url, order_index, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO web_sliders (page_name, title, subtitle, description, button_text, button_link, image_url, logo_url, order_index, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $first_page = $pages[0]; // Set one page for legacy compatibility
-        $stmt->bind_param("sssssssii", $first_page, $title, $subtitle, $description, $button_text, $button_link, $image_url, $order_index, $is_active);
+        $stmt->bind_param("ssssssssii", $first_page, $title, $subtitle, $description, $button_text, $button_link, $image_url, $logo_url, $order_index, $is_active);
         $stmt->execute();
         $slider_id = $conn->insert_id;
 

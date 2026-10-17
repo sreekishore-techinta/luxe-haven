@@ -181,9 +181,9 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               e.preventDefault(); e.stopPropagation();
               if (inStock) requireAuth(() => addToCart(cartProduct), "Please login to add to bag");
             }}
-            className={`flex items-center justify-center rounded-xl font-body text-[9px] font-black uppercase tracking-[0.15em] shadow-2xl transition-all active:scale-95 group/btn ${
+            className={`flex items-center justify-center rounded-full font-body text-[9px] font-black uppercase tracking-[0.15em] shadow-xl transition-all active:scale-95 group/btn ${
               inStock 
-                ? "bg-[#0D3B2E] text-white hover:bg-[#0D3B2E]/90 shadow-black/10" 
+                ? "bg-[#0D3B2E] text-white hover:bg-[#0D3B2E]/90 shadow-[#0D3B2E]/20 hover:shadow-[#0D3B2E]/35" 
                 : "bg-rose-600 text-white border border-rose-500 shadow-rose-600/10 cursor-not-allowed shadow-xl capitalize tracking-tighter"
             } w-9 h-9 md:w-full md:h-auto md:py-3`}
           >

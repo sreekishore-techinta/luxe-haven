@@ -59,30 +59,32 @@ $recentOrders = $recentResult->fetch_all(MYSQLI_ASSOC);
 
 // ─── Inventory Summary ─────────────────────────────────────────────────
 $inventoryResult = $conn->query("
-    SELECT category,
-           COUNT(*) as total_products,
-           SUM(stock_qty) as total_stock,
-           SUM(CASE WHEN status='In Stock' THEN 1 ELSE 0 END) as in_stock,
-           SUM(CASE WHEN status='Low Stock' THEN 1 ELSE 0 END) as low_stock,
-           SUM(CASE WHEN status='Out of Stock' THEN 1 ELSE 0 END) as out_of_stock
-    FROM products
-    GROUP BY category
+    SELECT COALESCE(c.name, 'Uncategorized') AS category,
+           COUNT(p.id) AS total_products,
+           COALESCE(SUM(p.stock_qty), 0) AS total_stock,
+           SUM(CASE WHEN p.status='In Stock' THEN 1 ELSE 0 END) AS in_stock,
+           SUM(CASE WHEN p.status='Low Stock' THEN 1 ELSE 0 END) AS low_stock,
+           SUM(CASE WHEN p.status='Out of Stock' THEN 1 ELSE 0 END) AS out_of_stock
+    FROM products p
+    LEFT JOIN master_categories c ON c.id = p.category_id
+    GROUP BY c.id, c.name
 ");
-$inventory = $inventoryResult->fetch_all(MYSQLI_ASSOC);
+$inventory = $inventoryResult ? $inventoryResult->fetch_all(MYSQLI_ASSOC) : [];
 
 // ─── Sales by Category ─────────────────────────────────────────────────
 $salesResult = $conn->query("
-    SELECT p.category, 
-           COUNT(oi.id) as total_sold,
-           COALESCE(SUM(oi.total_price), 0) as revenue
+    SELECT COALESCE(c.name, 'Uncategorized') AS category,
+           COUNT(oi.id) AS total_sold,
+           COALESCE(SUM(oi.total_price), 0) AS revenue
     FROM order_items oi
     JOIN products p ON p.id = oi.product_id
+    LEFT JOIN master_categories c ON c.id = p.category_id
     JOIN orders o ON o.id = oi.order_id
     WHERE o.status != 'Cancelled'
-    GROUP BY p.category
+    GROUP BY c.id, c.name
     ORDER BY revenue DESC
 ");
-$salesByCategory = $salesResult->fetch_all(MYSQLI_ASSOC);
+$salesByCategory = $salesResult ? $salesResult->fetch_all(MYSQLI_ASSOC) : [];
 
 $conn->close();
 

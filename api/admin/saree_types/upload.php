@@ -7,9 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 session_start();
-if (!isset($_SESSION['admin_id'])) {
-    jsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
-}
+requireAdminAuth();
 
 if (empty($_FILES['image'])) {
     jsonResponse(['status' => 'error', 'message' => 'No image uploaded'], 400);

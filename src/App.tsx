@@ -27,6 +27,7 @@ import Checkout from "./pages/Checkout";
 const About = lazy(() => import("./pages/About"));
 const Account = lazy(() => import("./pages/Account"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
+const Cart = lazy(() => import("./pages/Cart"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const TrackOrder = lazy(() => import("./pages/TrackOrder"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -48,6 +49,7 @@ const AdminReviews = lazy(() => import("./pages/AdminReviews"));
 const AdminAddService = lazy(() => import("./pages/AdminAddService"));
 const AdminManageServices = lazy(() => import("./pages/AdminManageServices"));
 const AdminProductForm = lazy(() => import("./pages/AdminProductForm"));
+const AdminLogoUpload = lazy(() => import("./pages/AdminLogoUpload"));
 
 const LoadingOverlay = () => (
   <div className="fixed inset-0 bg-background/50 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center gap-4">
@@ -93,6 +95,7 @@ const App = () => {
                     <Route path="/admin/services/list" element={<AdminLayout><AdminManageServices /></AdminLayout>} />
 
                     <Route path="/admin/feedback" element={<AdminLayout><AdminReviews /></AdminLayout>} />
+                    <Route path="/admin/logo" element={<AdminLayout><AdminLogoUpload /></AdminLayout>} />
                     <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
 
                     {/* Public Routes */}
@@ -106,6 +109,8 @@ const App = () => {
                     <Route path="/about" element={<Layout><About /></Layout>} />
                     <Route path="/account" element={<Layout><Account /></Layout>} />
                     <Route path="/wishlist" element={<Layout><Wishlist /></Layout>} />
+                    <Route path="/cart" element={<Layout><Cart /></Layout>} />
+                    <Route path="/bag" element={<Layout><Cart /></Layout>} />
                     <Route path="/checkout" element={<Layout><Checkout /></Layout>} />
                     <Route path="/category/:slug" element={<Layout><CategoryPage /></Layout>} />
                     <Route path="/product/:id/:slug?" element={<Layout><ProductDetail /></Layout>} />

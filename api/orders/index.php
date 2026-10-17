@@ -47,11 +47,16 @@ switch ($method) {
 
         // Total count
         $countStmt = $conn->prepare("SELECT COUNT(*) as total FROM orders o WHERE $whereStr");
-        if ($types && $params)
-            $countStmt->bind_param($types, ...$params);
-        $countStmt->execute();
-        $total = $countStmt->get_result()->fetch_assoc()['total'];
-        $countStmt->close();
+        if ($countStmt) {
+            if ($types && $params) {
+                $countStmt->bind_param($types, ...$params);
+            }
+            $countStmt->execute();
+            $total = $countStmt->get_result()->fetch_assoc()['total'];
+            $countStmt->close();
+        } else {
+            $total = 0;
+        }
 
         $sql = "SELECT o.*, 
                     COUNT(oi.id) as item_count,
@@ -65,10 +70,14 @@ switch ($method) {
         $allTypes = $types . "ii";
         $allParams = array_merge($params, [$per_page, $offset]);
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param($allTypes, ...$allParams);
-        $stmt->execute();
-        $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-        $stmt->close();
+        if ($stmt) {
+            $stmt->bind_param($allTypes, ...$allParams);
+            $stmt->execute();
+            $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+        } else {
+            $orders = [];
+        }
         $conn->close();
 
         jsonResponse([
@@ -77,42 +86,46 @@ switch ($method) {
             'total' => (int) $total,
             'page' => $page,
             'per_page' => $per_page,
-            'total_pages' => (int) ceil($total / $per_page),
+            'total_pages' => (int) ceil(($total ?: 1) / $per_page),
         ]);
         break;
 
     // ─── POST: Create new order ──────────────────────────────────────────
     case 'POST':
-        $logFile = 'c:/xampp/htdocs/luxe-haven/tmp/order_debug.log';
-        $jsonInput = file_get_contents('php://input');
-        file_put_contents($logFile, "Payload: $jsonInput\n", FILE_APPEND);
-
-        $data = json_decode($jsonInput, true);
+        $rawInput = file_get_contents('php://input');
+        $data = json_decode($rawInput, true);
+        if (!is_array($data)) {
+            $data = $_POST;
+        }
 
         if (!$data) {
-            file_put_contents($logFile, "Error: Invalid JSON\n", FILE_APPEND);
             jsonResponse(['status' => 'error', 'message' => 'Invalid JSON payload'], 400);
         }
 
         $required = ['customer_name', 'customer_email', 'shipping_address', 'total', 'items'];
         foreach ($required as $f) {
             if (empty($data[$f])) {
-                file_put_contents($logFile, "Error: Missing field $f\n", FILE_APPEND);
-                jsonResponse(['status' => 'error', 'message' => "Field '$f' required"], 400);
+                jsonResponse(['status' => 'error', 'message' => "Field '$f' is required"], 400);
             }
         }
 
-        // ── 1. Start Transaction & Validate stock ─────────────────────
+        if (!is_array($data['items']) || count($data['items']) === 0) {
+            jsonResponse(['status' => 'error', 'message' => 'Order must contain at least one item'], 400);
+        }
+
         $conn->begin_transaction();
 
         try {
+            // ── 1. Validate stock ──────────────────────────────────────────
             foreach ($data['items'] as $item) {
                 if (!empty($item['product_id'])) {
                     $pId = (int) $item['product_id'];
-                    $qty = (int) ($item['quantity'] ?? 1);
+                    $qty = max(1, (int) ($item['quantity'] ?? 1));
 
-                    // Use FOR UPDATE to lock the row and prevent race conditions
-                    $chk = $conn->prepare("SELECT stock_quantity, status, name FROM products WHERE id = ? FOR UPDATE");
+                    $chk = $conn->prepare("SELECT stock_qty, stock_quantity, status, name FROM products WHERE id = ? FOR UPDATE");
+                    if (!$chk) {
+                        throw new Exception("Product check failed: " . $conn->error);
+                    }
                     $chk->bind_param("i", $pId);
                     $chk->execute();
                     $prod = $chk->get_result()->fetch_assoc();
@@ -122,178 +135,191 @@ switch ($method) {
                         throw new Exception("Product ID $pId not found");
                     }
 
-                    $availableStock = (int) $prod['stock_quantity'];
+                    $availableStock = (int) ($prod['stock_quantity'] ?? $prod['stock_qty'] ?? 50);
                     if ($prod['status'] === 'Out of Stock' || $availableStock < $qty) {
                         throw new Exception("'{$prod['name']}' does not have enough stock (available: {$availableStock})");
                     }
                 }
             }
-        } catch (Exception $e) {
-            $conn->rollback();
-            file_put_contents($logFile, "Error: " . $e->getMessage() . "\n", FILE_APPEND);
-            jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 400);
-        }
 
-        // ── 2. Look up or create customer record ───────────────────────
-        $custEmail = $data['customer_email'];
-        $custStmt = $conn->prepare("SELECT id FROM customers WHERE email = ? LIMIT 1");
-        $custStmt->bind_param("s", $custEmail);
-        $custStmt->execute();
-        $custRow = $custStmt->get_result()->fetch_assoc();
-        $custStmt->close();
+            // ── 2. Look up or create customer record ───────────────────────
+            $custEmail = trim($data['customer_email']);
+            $custStmt = $conn->prepare("SELECT id FROM customers WHERE email = ? LIMIT 1");
+            $custStmt->bind_param("s", $custEmail);
+            $custStmt->execute();
+            $custRow = $custStmt->get_result()->fetch_assoc();
+            $custStmt->close();
 
-        $customerId = null;
-        if ($custRow) {
-            $customerId = (int) $custRow['id'];
-        } else {
-            $cName = $data['customer_name'];
-            $cPhone = $data['customer_phone'] ?? '';
-            $cStmt = $conn->prepare("INSERT INTO customers (name, email, phone, is_active) VALUES (?, ?, ?, 1)");
-            $cStmt->bind_param("sss", $cName, $custEmail, $cPhone);
-            if ($cStmt->execute()) {
-                $customerId = $conn->insert_id;
+            $customerId = null;
+            if ($custRow) {
+                $customerId = (int) $custRow['id'];
+            } else {
+                $cName = trim($data['customer_name']);
+                $cPhone = trim($data['customer_phone'] ?? '');
+                $cStmt = $conn->prepare("INSERT INTO customers (name, email, phone, is_active) VALUES (?, ?, ?, 1)");
+                if ($cStmt) {
+                    $cStmt->bind_param("sss", $cName, $custEmail, $cPhone);
+                    if ($cStmt->execute()) {
+                        $customerId = $cStmt->insert_id;
+                    }
+                    $cStmt->close();
+                }
             }
-            $cStmt->close();
-        }
-        file_put_contents($logFile, "Customer ID: $customerId\n", FILE_APPEND);
 
-        // ── 3. Insert order ───────────────────────────────────────────
-        $orderNum = '#' . strtoupper(substr(md5(uniqid()), 0, 6));
-        $subtotal = (float) ($data['subtotal'] ?? $data['total']);
-        $shipping = (float) ($data['shipping_charge'] ?? 0);
-        $total = (float) $data['total'];
-        $payMethod = $data['payment_method'] ?? 'COD';
-        $pincode = $data['shipping_pincode'] ?? '';
-        $state = $data['shipping_state'] ?? '';
-        $city = $data['shipping_city'] ?? '';
-        $payStatus = ($payMethod === 'COD') ? 'Pending' : 'Paid';
+            // ── 3. Insert order ───────────────────────────────────────────
+            $orderNum = '#' . strtoupper(substr(md5(uniqid()), 0, 6));
+            $subtotal = (float) ($data['subtotal'] ?? $data['total']);
+            $shipping = (float) ($data['shipping_charge'] ?? 0);
+            $total = (float) $data['total'];
+            $payMethod = $data['payment_method'] ?? 'COD';
+            $pincode = $data['shipping_pincode'] ?? '';
+            $state = $data['shipping_state'] ?? '';
+            $city = $data['shipping_city'] ?? '';
+            $payStatus = ($payMethod === 'COD') ? 'Pending' : 'Paid';
 
-        $bName = $data['billing_name'] ?? $data['customer_name'];
-        $bAddr = $data['billing_address'] ?? $data['shipping_address'];
-        $bCity = $data['billing_city'] ?? $city;
-        $bState = $data['billing_state'] ?? $state;
-        $bPincode = $data['billing_pincode'] ?? $pincode;
+            $bName = $data['billing_name'] ?? $data['customer_name'];
+            $bAddr = $data['billing_address'] ?? $data['shipping_address'];
+            $bCity = $data['billing_city'] ?? $city;
+            $bState = $data['billing_state'] ?? $state;
+            $bPincode = $data['billing_pincode'] ?? $pincode;
 
-        $stmt = $conn->prepare(
-            "INSERT INTO orders (order_number, customer_id, user_id, customer_name, customer_email, customer_phone,
-             shipping_address, shipping_city, shipping_state, shipping_pincode,
-             billing_name, billing_address, billing_city, billing_state, billing_pincode,
-             subtotal, shipping_charge, total, total_amount, payment_method, payment_status, status, order_status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        );
+            $customerPhone = $data['customer_phone'] ?? '';
+            $shippingAddr = $data['shipping_address'];
+            $orderStatus = 'Pending';
 
-        $customerPhone = $data['customer_phone'] ?? '';
-        $shippingAddr = $data['shipping_address'];
-        $orderStatus = 'Pending';
+            $insertOrderSql = "INSERT INTO orders (
+                order_number, customer_id, user_id, customer_name, customer_email, customer_phone,
+                shipping_address, shipping_city, shipping_state, shipping_pincode,
+                billing_name, billing_address, billing_city, billing_state, billing_pincode,
+                subtotal, shipping_charge, total, total_amount, payment_method, payment_status, status, order_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        $stmt->bind_param(
-            "siissssssssssssddddssss",
-            $orderNum,       // 1
-            $customerId,     // 2
-            $customerId,     // 3 (user_id = customer_id)
-            $data['customer_name'], // 4
-            $data['customer_email'], // 5
-            $customerPhone,  // 6
-            $shippingAddr,   // 7
-            $city,           // 8
-            $state,          // 9
-            $pincode,        // 10
-            $bName,          // 11
-            $bAddr,          // 12
-            $bCity,          // 13
-            $bState,         // 14
-            $bPincode,       // 15
-            $subtotal,       // 16
-            $shipping,       // 17
-            $total,          // 18
-            $total,          // 19 (total_amount = total)
-            $payMethod,      // 20
-            $payStatus,      // 21
-            $orderStatus,    // 22 (status)
-            $orderStatus     // 23 (order_status)
-        );
+            $stmt = $conn->prepare($insertOrderSql);
+            if (!$stmt) {
+                throw new Exception("Order prepare failed: " . $conn->error);
+            }
 
-        if (!$stmt->execute()) {
-            file_put_contents($logFile, "Order Execute Error: " . $stmt->error . "\n", FILE_APPEND);
-            jsonResponse(['status' => 'error', 'message' => 'Order creation failed: ' . $stmt->error], 500);
-        }
-        $orderId = $stmt->insert_id;
-        $stmt->close();
-        file_put_contents($logFile, "Order ID: $orderId, Number: $orderNum\n", FILE_APPEND);
+            $stmt->bind_param(
+                "siissssssssssssddddssss",
+                $orderNum,
+                $customerId,
+                $customerId,
+                $data['customer_name'],
+                $data['customer_email'],
+                $customerPhone,
+                $shippingAddr,
+                $city,
+                $state,
+                $pincode,
+                $bName,
+                $bAddr,
+                $bCity,
+                $bState,
+                $bPincode,
+                $subtotal,
+                $shipping,
+                $total,
+                $total,
+                $payMethod,
+                $payStatus,
+                $orderStatus,
+                $orderStatus
+            );
 
-        // ── 4. Insert order items + deduct stock ──────────────────────
-        foreach ($data['items'] as $item) {
-            $pId = !empty($item['product_id']) ? (int) $item['product_id'] : null;
-            $qty = (int) ($item['quantity'] ?? 1);
-            $uPrice = (float) $item['unit_price'];
-            $tPrice = $qty * $uPrice;
-            $sku = $item['sku'] ?? '';
-            $pName = $item['product_name'];
-            $stitching = $item['stitching_service'] ?? null;
-            $giftWrap = (int)($item['has_gift_wrapping'] ?? 0);
-            $selectedAddOns = $item['selected_add_ons'] ?? null;
+            if (!$stmt->execute()) {
+                throw new Exception("Order creation failed: " . $stmt->error);
+            }
+            $orderId = $stmt->insert_id;
+            $stmt->close();
 
+            // ── 4. Insert order items + deduct stock ──────────────────────
             $iStmt = $conn->prepare(
                 "INSERT INTO order_items (order_id, product_id, product_name, product_sku, stitching_service, has_gift_wrapping, selected_add_ons, quantity, unit_price, total_price)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
-            $iStmt->bind_param("iisssisidd", $orderId, $pId, $pName, $sku, $stitching, $giftWrap, $selectedAddOns, $qty, $uPrice, $tPrice);
-            if (!$iStmt->execute()) {
-                file_put_contents($logFile, "Item Insert Error: " . $iStmt->error . "\n", FILE_APPEND);
+
+            if (!$iStmt) {
+                throw new Exception("Order items prepare failed: " . $conn->error);
+            }
+
+            foreach ($data['items'] as $item) {
+                $pId = !empty($item['product_id']) ? (int) $item['product_id'] : null;
+                $qty = max(1, (int) ($item['quantity'] ?? 1));
+                $uPrice = (float) $item['unit_price'];
+                $tPrice = $qty * $uPrice;
+                $sku = $item['sku'] ?? '';
+                $pName = $item['product_name'] ?? 'Product';
+                $stitching = $item['stitching_service'] ?? null;
+                $giftWrap = (int)($item['has_gift_wrapping'] ?? 0);
+                $selectedAddOns = is_string($item['selected_add_ons'] ?? null)
+                    ? $item['selected_add_ons']
+                    : json_encode($item['selected_add_ons'] ?? []);
+
+                $iStmt->bind_param("iisssisidd", $orderId, $pId, $pName, $sku, $stitching, $giftWrap, $selectedAddOns, $qty, $uPrice, $tPrice);
+                if (!$iStmt->execute()) {
+                    throw new Exception("Item insert failed: " . $iStmt->error);
+                }
+
+                if ($pId) {
+                    $upd = $conn->prepare(
+                        "UPDATE products 
+                         SET stock_quantity = GREATEST(0, COALESCE(stock_quantity, stock_qty, 50) - ?),
+                             stock_qty = GREATEST(0, COALESCE(stock_qty, stock_quantity, 50) - ?),
+                             status = CASE 
+                                 WHEN GREATEST(0, COALESCE(stock_qty, 50) - ?) <= 0 THEN 'Out of Stock'
+                                 WHEN GREATEST(0, COALESCE(stock_qty, 50) - ?) < 10 THEN 'Low Stock'
+                                 ELSE 'In Stock'
+                             END,
+                             availability_status = CASE 
+                                 WHEN GREATEST(0, COALESCE(stock_qty, 50) - ?) <= 0 THEN 'Out of Stock'
+                                 WHEN GREATEST(0, COALESCE(stock_qty, 50) - ?) < 10 THEN 'Low Stock'
+                                 ELSE 'In Stock'
+                             END
+                         WHERE id = ?"
+                    );
+                    if ($upd) {
+                        $upd->bind_param("iiiiiii", $qty, $qty, $qty, $qty, $qty, $qty, $pId);
+                        $upd->execute();
+                        $upd->close();
+                    }
+                }
             }
             $iStmt->close();
 
-            if ($pId) {
-                // Deduct only from stock_quantity column
-                $upd = $conn->prepare(
-                    "UPDATE products 
-                     SET stock_quantity = GREATEST(0, stock_quantity - ?),
-                         stock_qty = GREATEST(0, COALESCE(stock_qty, stock_quantity) - ?),
-                         status = CASE 
-                             WHEN GREATEST(0, stock_quantity - ?) <= 0 THEN 'Out of Stock'
-                             WHEN GREATEST(0, stock_quantity - ?) < 10 THEN 'Low Stock'
-                             ELSE 'In Stock'
-                         END,
-                         availability_status = CASE 
-                             WHEN GREATEST(0, stock_quantity - ?) <= 0 THEN 'Out of Stock'
-                             WHEN GREATEST(0, stock_quantity - ?) < 10 THEN 'Low Stock'
-                             ELSE 'In Stock'
-                         END
+            // ── 5. Commit transaction ─────────────────────────────────────
+            $conn->commit();
+
+            if ($customerId) {
+                $statsStmt = $conn->prepare(
+                    "UPDATE customers 
+                     SET total_orders = total_orders + 1, 
+                         total_spent  = total_spent + ?
                      WHERE id = ?"
                 );
-                $upd->bind_param("iiiiiii", $qty, $qty, $qty, $qty, $qty, $qty, $pId);
-                if (!$upd->execute()) {
-                    file_put_contents($logFile, "Stock Update Error: " . $upd->error . "\n", FILE_APPEND);
+                if ($statsStmt) {
+                    $statsStmt->bind_param("di", $total, $customerId);
+                    $statsStmt->execute();
+                    $statsStmt->close();
                 }
-                $upd->close();
             }
+
+            $conn->close();
+
+            jsonResponse([
+                'status' => 'success',
+                'message' => 'Order placed successfully',
+                'order_number' => $orderNum,
+                'order_id' => $orderId,
+            ], 201);
+
+        } catch (Throwable $e) {
+            $conn->rollback();
+            $conn->close();
+            jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 400);
         }
-
-        // Commit everything
-        $conn->commit();
-
-        if ($customerId) {
-            $statsStmt = $conn->prepare(
-                "UPDATE customers 
-                 SET total_orders = total_orders + 1, 
-                     total_spent  = total_spent + ?
-                 WHERE id = ?"
-            );
-            $statsStmt->bind_param("di", $total, $customerId);
-            $statsStmt->execute();
-            $statsStmt->close();
-        }
-
-        $conn->close();
-        file_put_contents($logFile, "Order Success\n", FILE_APPEND);
-        jsonResponse([
-            'status' => 'success',
-            'message' => 'Order placed successfully',
-            'order_number' => $orderNum,
-            'order_id' => $orderId,
-        ], 201);
         break;
 
     default:
+        $conn->close();
         jsonResponse(['status' => 'error', 'message' => 'Method not allowed'], 405);
 }

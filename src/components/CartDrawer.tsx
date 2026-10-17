@@ -110,13 +110,22 @@ const CartDrawer = () => {
                   <span className="text-muted-foreground text-sm uppercase tracking-wider">Subtotal</span>
                   <span className="text-lg font-semibold">{formatPrice(totalPrice)}</span>
                 </div>
-                <Link
-                  to="/checkout"
-                  onClick={() => setIsCartOpen(false)}
-                  className="block w-full py-3.5 text-center luxury-gradient text-champagne font-body text-sm uppercase tracking-[0.2em] hover:opacity-90 transition-opacity"
-                >
-                  Proceed to Checkout
-                </Link>
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    to="/cart"
+                    onClick={() => setIsCartOpen(false)}
+                    className="py-3 text-center border border-border text-foreground font-body text-xs font-bold uppercase tracking-[0.15em] hover:border-accent hover:text-accent transition-all rounded-full shadow-sm hover:shadow"
+                  >
+                    View Bag
+                  </Link>
+                  <Link
+                    to="/checkout"
+                    onClick={() => setIsCartOpen(false)}
+                    className="py-3 text-center luxury-gradient text-champagne font-body text-xs font-bold uppercase tracking-[0.15em] hover:opacity-95 transition-all rounded-full shadow-[0_4px_16px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_20px_rgba(180,140,94,0.3)]"
+                  >
+                    Checkout
+                  </Link>
+                </div>
               </div>
             )}
           </motion.div>

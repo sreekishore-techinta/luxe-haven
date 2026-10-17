@@ -5,9 +5,7 @@ setCORSHeaders();
 
 // Check authentication
 session_start();
-if (!isset($_SESSION['admin_id'])) {
-    jsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
-}
+requireAdminAuth();
 
 $conn = getDB();
 

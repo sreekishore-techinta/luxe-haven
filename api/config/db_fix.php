@@ -11,9 +11,9 @@ define('IS_LOCAL', (
 ));
 
 define('DB_HOST', IS_LOCAL ? 'localhost' : 'localhost');
-define('DB_USER', IS_LOCAL ? 'root' : 'u891495087_lishan_db2');
-define('DB_PASS', IS_LOCAL ? '' : 'vtaf!0xT');
-define('DB_NAME', IS_LOCAL ? 'luxe_haven' : 'u891495087_lishan_db2');
+define('DB_USER', IS_LOCAL ? 'root' : 'u891495087_lishan_db4');
+define('DB_PASS', IS_LOCAL ? '' : 'Techinta@2026');
+define('DB_NAME', IS_LOCAL ? 'luxe_haven' : 'u891495087_lishan_db4');
 
 function getDB(): mysqli
 {

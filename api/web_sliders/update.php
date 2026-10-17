@@ -45,12 +45,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         jsonResponse(["status" => "error", "message" => "Title is required."]);
     }
 
-    $res = $conn->query("SELECT image_url FROM web_sliders WHERE id = $id");
+    $res = $conn->query("SELECT image_url, logo_url FROM web_sliders WHERE id = $id");
     $existing = $res->fetch_assoc();
     $image_url = $existing ? $existing['image_url'] : null;
+    $logo_url = $existing ? $existing['logo_url'] : null;
+
+    $uploadDir = __DIR__ . '/../../uploads/hero/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
 
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = __DIR__ . '/../../uploads/hero/';
         $fileInfo = pathinfo($_FILES['image']['name']);
         $extension = strtolower($fileInfo['extension'] ?? '');
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
@@ -69,11 +74,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Handle Logo Removal
+    if (isset($_POST['remove_logo']) && $_POST['remove_logo'] === '1') {
+        if ($existing && $existing['logo_url']) {
+            $oldLogoPath = __DIR__ . '/../../uploads' . $existing['logo_url'];
+            if (file_exists($oldLogoPath)) unlink($oldLogoPath);
+        }
+        $logo_url = null;
+    }
+
+    // Handle Logo Upload
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+        $logoInfo = pathinfo($_FILES['logo']['name']);
+        $logoExt = strtolower($logoInfo['extension'] ?? '');
+        $allowedLogoExtensions = ['png', 'svg', 'webp', 'jpg', 'jpeg', 'avif'];
+
+        if (in_array($logoExt, $allowedLogoExtensions)) {
+            $newLogoName = uniqid('slider_logo_') . '.' . $logoExt;
+            $logoTargetPath = $uploadDir . $newLogoName;
+
+            if (move_uploaded_file($_FILES['logo']['tmp_name'], $logoTargetPath)) {
+                $logo_url = '/uploads/hero/' . $newLogoName;
+                if ($existing && $existing['logo_url']) {
+                    $oldLogoPath = __DIR__ . '/../../uploads' . $existing['logo_url'];
+                    if (file_exists($oldLogoPath)) unlink($oldLogoPath);
+                }
+            }
+        }
+    }
+
     $conn->begin_transaction();
     try {
         $first_page = !empty($pages) ? $pages[0] : 'home';
-        $stmt = $conn->prepare("UPDATE web_sliders SET page_name=?, title=?, subtitle=?, description=?, button_text=?, button_link=?, image_url=?, order_index=?, is_active=? WHERE id=?");
-        $stmt->bind_param("sssssssiii", $first_page, $title, $subtitle, $description, $button_text, $button_link, $image_url, $order_index, $is_active, $id);
+        $stmt = $conn->prepare("UPDATE web_sliders SET page_name=?, title=?, subtitle=?, description=?, button_text=?, button_link=?, image_url=?, logo_url=?, order_index=?, is_active=? WHERE id=?");
+        $stmt->bind_param("ssssssssiii", $first_page, $title, $subtitle, $description, $button_text, $button_link, $image_url, $logo_url, $order_index, $is_active, $id);
         $stmt->execute();
 
         // Sync mapping table

@@ -2,13 +2,30 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 0); // Prevent HTML error traces from corrupting JSON output
 
-define('IS_LOCAL', (
-    ($_SERVER['HTTP_HOST'] ?? '') === 'localhost' ||
-    ($_SERVER['REMOTE_ADDR'] ?? '') === '127.0.0.1' ||
-    ($_SERVER['REMOTE_ADDR'] ?? '') === '::1' ||
-    strpos($_SERVER['HTTP_HOST'] ?? '', '192.168.') === 0 ||
-    strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') === 0
-));
+// Fix session cookie for cross-port Vite proxy (dev environment)
+if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+    @ini_set('session.cookie_samesite', 'Lax');
+    @ini_set('session.cookie_httponly', '1');
+}
+
+$httpHost = $_SERVER['HTTP_HOST'] ?? '';
+$remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+$serverName = $_SERVER['SERVER_NAME'] ?? '';
+
+$isLocal = (
+    php_sapi_name() === 'cli' ||
+    stripos($httpHost, 'localhost') !== false ||
+    stripos($httpHost, '127.0.0.1') !== false ||
+    stripos($serverName, 'localhost') !== false ||
+    stripos($serverName, '127.0.0.1') !== false ||
+    $remoteAddr === '127.0.0.1' ||
+    $remoteAddr === '::1' ||
+    strpos($httpHost, '192.168.') === 0 ||
+    strpos($remoteAddr, '192.168.') === 0 ||
+    file_exists('C:\\xampp') ||
+    file_exists('C:/xampp')
+);
+define('IS_LOCAL', $isLocal);
 
 define('DB_HOST', IS_LOCAL ? 'localhost' : 'localhost');
 define('DB_USER', IS_LOCAL ? 'root' : 'u891495087_lishan_db4');
@@ -59,6 +76,56 @@ function jsonResponse(array $data, int $code = 200): void
 function sanitize(mysqli $conn, $value): string
 {
     return $conn->real_escape_string(trim($value));
+}
+
+/**
+ * Checks admin authentication via:
+ * 1. PHP session ($_SESSION['admin_id'])
+ * 2. admin_token cookie (set at login for cross-port proxy support)
+ * Returns admin_id on success, or sends 401 and exits.
+ */
+function requireAdminAuth(): int
+{
+    // Method 1: PHP session (works when same origin)
+    if (!empty($_SESSION['admin_id'])) {
+        return (int) $_SESSION['admin_id'];
+    }
+
+    // Method 2: admin_token cookie (works through Vite proxy)
+    $token = $_COOKIE['admin_token'] ?? '';
+    if ($token) {
+        $parts = explode('.', $token, 2);
+        if (count($parts) === 2) {
+            $payload = $parts[0];
+            $sig     = $parts[1];
+            $secret  = 'luxe_haven_admin_secret_2024';
+            if (hash_hmac('sha256', $payload, $secret) === $sig) {
+                $data = json_decode(base64_decode($payload), true);
+                if ($data && isset($data['admin_id']) && isset($data['exp']) && $data['exp'] > time()) {
+                    return (int) $data['admin_id'];
+                }
+            }
+        }
+    }
+
+    // Not authenticated
+    jsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
+    exit(); // unreachable but satisfies type checker
+}
+
+/**
+ * Creates a signed admin_token cookie value for the given admin.
+ */
+function createAdminToken(int $adminId, string $role): string
+{
+    $secret  = 'luxe_haven_admin_secret_2024';
+    $payload = base64_encode(json_encode([
+        'admin_id' => $adminId,
+        'role'     => $role,
+        'exp'      => time() + (86400 * 7), // 7 days
+    ]));
+    $sig = hash_hmac('sha256', $payload, $secret);
+    return $payload . '.' . $sig;
 }
 
 function getBaseUrl(): string

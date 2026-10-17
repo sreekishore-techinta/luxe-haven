@@ -236,13 +236,16 @@ const Account = () => {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-md mx-auto">
             {/* Toggle */}
-            <div className="flex border border-border rounded overflow-hidden mb-8">
+            <div className="flex p-1 bg-stone-100 rounded-full border border-stone-200/70 mb-8">
               {(["login", "register"] as const).map(mode => (
                 <button
                   key={mode}
                   onClick={() => { setAuthMode(mode); setError(null); }}
-                  className={`flex-1 py-3 font-body text-sm uppercase tracking-wider transition-all ${authMode === mode ? "luxury-gradient text-champagne" : "text-muted-foreground hover:bg-card"
-                    }`}
+                  className={`flex-1 py-2.5 rounded-full font-body text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                    authMode === mode 
+                      ? "luxury-gradient text-champagne shadow-md" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   {mode === "login" ? "Sign In" : "Register"}
                 </button>

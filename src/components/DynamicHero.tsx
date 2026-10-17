@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, ArrowRight } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { API_URL as API, BASE_URL } from "@/api_config";
@@ -12,6 +12,7 @@ interface WebSlider {
     button_text: string | null;
     button_link: string | null;
     image_url: string;
+    logo_url?: string | null;
 }
 
 const DynamicHero = ({ pageName }: { pageName?: string }) => {
@@ -134,6 +135,21 @@ const DynamicHero = ({ pageName }: { pageName?: string }) => {
 
             <div className="relative z-10 container mx-auto px-6 lg:px-20 h-full flex items-center">
                 <div className="max-w-3xl text-center lg:text-left mx-auto lg:mx-0">
+                    {slide.logo_url && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -15, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ duration: 0.8 }}
+                            className="mb-6 flex justify-center lg:justify-start"
+                        >
+                            <img
+                                src={getImageSrc(slide.logo_url)}
+                                alt="Brand Logo"
+                                className="max-h-14 md:max-h-20 w-auto object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.65)] filter brightness-105"
+                            />
+                        </motion.div>
+                    )}
+
                     {slide.subtitle && (
                         <motion.p
                             initial={{ opacity: 0, x: -20 }}
@@ -183,9 +199,10 @@ const DynamicHero = ({ pageName }: { pageName?: string }) => {
                         >
                             <Link
                                 to={slide.button_link}
-                                className="inline-block px-12 py-4 bg-[#B8960C] text-white text-xs font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all shadow-2xl"
+                                className="inline-flex items-center justify-center gap-3 px-10 py-3.5 sm:px-12 sm:py-4 bg-white/95 hover:bg-white text-[#1A1A1A] hover:text-[#B48C5E] text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.25em] rounded-full shadow-[0_12px_32px_rgba(0,0,0,0.35)] hover:shadow-[0_18px_40px_rgba(180,140,94,0.45)] hover:-translate-y-1 active:scale-95 transition-all duration-300 border border-white/60 backdrop-blur-sm group"
                             >
-                                {slide.button_text}
+                                <span>{slide.button_text}</span>
+                                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                             </Link>
                         </motion.div>
                     )}

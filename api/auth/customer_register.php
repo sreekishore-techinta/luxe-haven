@@ -7,11 +7,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['status' => 'error', 'message' => 'Method not allowed'], 405);
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$rawInput = file_get_contents('php://input');
+$data = json_decode($rawInput, true);
+if (!is_array($data)) {
+    $data = $_POST;
+}
+
 $name = trim($data['name'] ?? '');
 $email = trim($data['email'] ?? '');
 $phone = trim($data['phone'] ?? '');
-$password = $data['password'] ?? '';
+$password = (string)($data['password'] ?? '');
 
 if (empty($name) || empty($email) || empty($password)) {
     jsonResponse(['status' => 'error', 'message' => 'Name, email, and password are required'], 400);
@@ -32,21 +37,62 @@ if ($phone && !preg_match('/^[6-9]\d{9}$/', $phone)) {
 $conn = getDB();
 
 // Check duplicate email
-$check = $conn->prepare("SELECT id FROM customers WHERE email = ?");
+$check = $conn->prepare("SELECT id FROM customers WHERE email = ? LIMIT 1");
+if (!$check) {
+    jsonResponse(['status' => 'error', 'message' => 'Database prepare failed: ' . $conn->error], 500);
+}
 $check->bind_param("s", $email);
 $check->execute();
 $check->store_result();
 if ($check->num_rows > 0) {
+    $check->close();
+    $conn->close();
     jsonResponse(['status' => 'error', 'message' => 'An account with this email already exists'], 409);
 }
 $check->close();
 
 $hashed = password_hash($password, PASSWORD_BCRYPT);
 
-$stmt = $conn->prepare(
-    "INSERT INTO customers (name, email, phone, password_hash, is_active) VALUES (?, ?, ?, ?, 1)"
-);
-$stmt->bind_param("ssss", $name, $email, $phone, $hashed);
+// Inspect available columns dynamically
+$cols = [];
+$colRes = $conn->query("SHOW COLUMNS FROM customers");
+if ($colRes) {
+    while ($col = $colRes->fetch_assoc()) {
+        $cols[] = $col['Field'];
+    }
+}
+
+$fields = ['name', 'email', 'phone'];
+$placeholders = ['?', '?', '?'];
+$types = 'sss';
+$values = [$name, $email, $phone];
+
+if (in_array('password_hash', $cols)) {
+    $fields[] = 'password_hash';
+    $placeholders[] = '?';
+    $types .= 's';
+    $values[] = $hashed;
+}
+if (in_array('password', $cols)) {
+    $fields[] = 'password';
+    $placeholders[] = '?';
+    $types .= 's';
+    $values[] = $hashed;
+}
+if (in_array('is_active', $cols)) {
+    $fields[] = 'is_active';
+    $placeholders[] = '1';
+}
+
+$sql = "INSERT INTO customers (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
+$stmt = $conn->prepare($sql);
+
+if (!$stmt) {
+    $conn->close();
+    jsonResponse(['status' => 'error', 'message' => 'Prepare failed: ' . $conn->error], 500);
+}
+
+$stmt->bind_param($types, ...$values);
 
 if ($stmt->execute()) {
     $customerId = $stmt->insert_id;
@@ -63,5 +109,8 @@ if ($stmt->execute()) {
         'customer' => ['id' => $customerId, 'name' => $name, 'email' => $email, 'phone' => $phone]
     ], 201);
 } else {
-    jsonResponse(['status' => 'error', 'message' => 'Registration failed: ' . $conn->error], 500);
+    $err = $conn->error;
+    $stmt->close();
+    $conn->close();
+    jsonResponse(['status' => 'error', 'message' => 'Registration failed: ' . $err], 500);
 }

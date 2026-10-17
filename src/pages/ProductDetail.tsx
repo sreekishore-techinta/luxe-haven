@@ -641,7 +641,7 @@ const ProductDetail = () => {
                     category: product.category,
                     fabric: product.fabric
                   }), "Please login to add to wishlist")}
-                  className={`w-10 h-10 flex-shrink-0 flex items-center justify-center border border-border transition-colors ${isInWishlist(product.id) ? "text-rose-500 bg-rose-50 border-rose-200" : "text-foreground hover:text-accent hover:border-accent"}`}
+                  className={`w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-full border border-border transition-all shadow-sm hover:shadow hover:-translate-y-0.5 active:scale-95 ${isInWishlist(product.id) ? "text-rose-500 bg-rose-50 border-rose-200" : "text-foreground hover:text-accent hover:border-accent"}`}
                 >
                   <Heart size={16} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
                 </button>

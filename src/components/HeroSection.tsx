@@ -65,13 +65,13 @@ const HeroSection = () => {
               transition={{ duration: 0.6, delay: 0.9 }}
               className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6"
             >
-              <Link to="/collections" className="group relative px-12 py-4 bg-gold-dark text-white rounded-[4px] text-[11px] font-bold uppercase tracking-[0.3em] overflow-hidden transition-all shadow-2xl hover:bg-gold hover:scale-105 active:scale-95 text-center w-full sm:w-auto">
+              <Link to="/collections" className="group relative px-10 py-3.5 sm:px-12 sm:py-4 bg-gold-dark text-white rounded-full text-[11px] font-bold uppercase tracking-[0.3em] overflow-hidden transition-all shadow-[0_10px_30px_rgba(180,140,94,0.35)] hover:bg-gold hover:shadow-[0_16px_36px_rgba(180,140,94,0.5)] hover:-translate-y-0.5 active:scale-95 text-center w-full sm:w-auto">
                 <span className="relative z-10">Shop Collection</span>
                 <div className="absolute inset-0 bg-gold scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500 z-0" />
               </Link>
               <Link
                 to="/new-arrivals"
-                className="group inline-flex items-center justify-center gap-2 px-12 py-4 border border-white/40 lg:border-champagne/40 text-white lg:text-champagne font-body text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-white/10 transition-all duration-300 w-full sm:w-auto rounded-[4px]"
+                className="group inline-flex items-center justify-center gap-2 px-10 py-3.5 sm:px-12 sm:py-4 border border-white/40 lg:border-champagne/40 text-white lg:text-champagne font-body text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-white/10 hover:border-white/70 transition-all duration-300 w-full sm:w-auto rounded-full shadow-lg hover:-translate-y-0.5 active:scale-95"
               >
                 New Arrivals
               </Link>

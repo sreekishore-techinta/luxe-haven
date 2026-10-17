@@ -1,34 +1,38 @@
 /**
- * Configuration for the API and Base URL.
- * Detects whether the app is running on localhost (XAMPP) or production.
+ * API & Base URL Configuration
+ *
+ * Local dev  (Vite :8080)  → proxy /api → XAMPP at /uma/luxe-haven
+ * Production (lishansarees.com) → /api lives at the domain root
  */
 
-const isLocal = 
-    window.location.hostname === 'localhost' || 
-    window.location.hostname === '127.0.0.1' || 
-    window.location.hostname.startsWith('192.168.');
+const hostname = window.location.hostname;
 
-// Port detection to differentiate between Vite dev server (8080) and Apache (80/443)
-const isVite = isLocal && (window.location.port === '8080' || window.location.port === '5173');
+const isLocal =
+  hostname === "localhost" ||
+  hostname === "127.0.0.1" ||
+  hostname.startsWith("192.168.");
 
-// Detect base path: check if we are in /luxe-haven subdirectory
+const isVite =
+  isLocal &&
+  ["8080", "8081", "5173"].includes(window.location.port);
+
+// On production the app is at the domain root → BASE_PATH = ""
+// On local XAMPP (no Vite) it may be under /luxe-haven
 const pathname = window.location.pathname;
-export const BASE_PATH = pathname.startsWith("/luxe-haven") ? "/luxe-haven" : "";
+export const BASE_PATH =
+  !isVite && isLocal && pathname.startsWith("/luxe-haven")
+    ? "/luxe-haven"
+    : "";
 
-// For local Vite dev server, we use absolute origin for API
-// For production or XAMPP, we use root-relative paths for maximum compatibility with subdirectories
-export const API_URL = isVite 
-    ? window.location.origin + "/api" 
-    : `${BASE_PATH}/api`;
+// API base URL
+// - Vite dev server: use absolute origin so the proxy intercepts /api/*
+// - Production: relative /api (sits beside index.html at domain root)
+export const API_URL = isVite
+  ? window.location.origin + "/api"
+  : `${BASE_PATH}/api`;
 
 export const BASE_URL = isVite
-    ? window.location.origin
-    : `${window.location.origin}${BASE_PATH}`;
+  ? window.location.origin
+  : `${window.location.origin}${BASE_PATH}`;
 
-export default {
-    BASE_PATH,
-    BASE_URL,
-    API_URL,
-    isLocal,
-    isVite
-};
+export default { BASE_PATH, BASE_URL, API_URL, isLocal, isVite };

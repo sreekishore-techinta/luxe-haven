@@ -43,6 +43,21 @@ const SaleBanner = () => {
                 {/* Content */}
                 <div className="relative h-full container mx-auto px-4 lg:px-8 flex items-center">
                     <div className="max-w-xl">
+                        {slider?.logo_url && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6 }}
+                                className="mb-4"
+                            >
+                                <img
+                                    src={slider.logo_url.startsWith('http') ? slider.logo_url : `${BASE_URL}${slider.logo_url}`}
+                                    alt="Sale Brand Logo"
+                                    className="max-h-12 w-auto object-contain drop-shadow-md"
+                                />
+                            </motion.div>
+                        )}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}

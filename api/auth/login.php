@@ -38,6 +38,16 @@ $_SESSION['admin_name'] = $admin['name'];
 $_SESSION['admin_email'] = $admin['email'];
 $_SESSION['admin_role'] = $admin['role'];
 
+// Set a signed admin_token cookie that works through the Vite dev proxy
+$token = createAdminToken((int)$admin['id'], $admin['role']);
+setcookie('admin_token', $token, [
+    'expires'  => time() + (86400 * 7),
+    'path'     => '/',
+    'httponly' => false, // JS needs to be able to read if needed
+    'samesite' => 'Lax',
+    'secure'   => false,
+]);
+
 jsonResponse([
     'status' => 'success',
     'message' => 'Login successful',

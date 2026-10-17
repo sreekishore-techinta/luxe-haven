@@ -289,12 +289,12 @@ const Checkout = () => {
                         <p className="font-body text-sm font-semibold text-accent mb-3">{formatPrice(item.product.price)}</p>
                         <div className="flex items-center gap-3">
                           <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                            className="w-10 h-10 flex items-center justify-center border border-border hover:border-foreground transition-colors min-h-[44px]">
+                            className="w-9 h-9 rounded-full flex items-center justify-center border border-border hover:border-foreground transition-all active:scale-90">
                             <Minus size={12} />
                           </button>
-                          <span className="font-body text-sm w-6 text-center">{item.quantity}</span>
+                          <span className="font-body text-sm font-semibold w-6 text-center">{item.quantity}</span>
                           <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                            className="w-10 h-10 flex items-center justify-center border border-border hover:border-foreground transition-colors min-h-[44px]">
+                            className="w-9 h-9 rounded-full flex items-center justify-center border border-border hover:border-foreground transition-all active:scale-90">
                             <Plus size={12} />
                           </button>
                         </div>
